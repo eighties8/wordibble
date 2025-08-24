@@ -36,26 +36,25 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     // refs for each input
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+    
+    // ref to track when cells are being updated from parent
+    const isUpdatingFromParent = useRef(false);
 
     // keep cells in sync if parent sends new initialCells (e.g., new greens)
     useEffect(() => {
-      setCells(prev => {
-        const next = prev.slice(); // Start with current values
-        
-        for (let i = 0; i < wordLength; i++) {
-          // If it's a locked cell, use the locked value
-          if (locked[i] && initialCells[i]) {
-            next[i] = initialCells[i];
-          }
-          // For non-locked cells, keep the current value (don't clear as user types)
-        }
-        return next;
-      });
-    }, [initialCells, wordLength, locked]);
+      isUpdatingFromParent.current = true;
+      setCells(initialCells.slice(0, wordLength));
+      
+      // Clear flag after state update
+      setTimeout(() => {
+        isUpdatingFromParent.current = false;
+      }, 0);
+    }, [initialCells, wordLength]);
 
     // Handle force clear (for shake animation)
     useEffect(() => {
       if (forceClear) {
+        isUpdatingFromParent.current = true;
         setCells(prev => {
           const next = prev.slice();
           for (let i = 0; i < wordLength; i++) {
@@ -65,11 +64,18 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
           }
           return next;
         });
+        
+        // Clear flag after state update
+        setTimeout(() => {
+          isUpdatingFromParent.current = false;
+        }, 0);
       }
     }, [forceClear, wordLength, locked]);
 
     // bubble changes - only when cells actually change
     useEffect(() => {
+      // Skip onChange when cells are being updated from parent
+      if (isUpdatingFromParent.current) return;
       onChange(cells);
     }, [cells, onChange]);
 
@@ -190,7 +196,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     return (
       <div className={`flex justify-center ${isShaking ? 'animate-shake' : ''}`}>
-        <div className={`grid gap-1 ${wordLength === 5 ? 'grid-cols-5' : 'grid-cols-6'}`}>
+        <div className={`grid gap-0.5 md:gap-1 ${wordLength === 5 ? 'grid-cols-5' : 'grid-cols-6'}`}>
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
             return (
@@ -200,7 +206,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                 data-role="active-cell"
                 data-index={i}
                 data-locked={isLocked}
-                className={`w-14 h-14 text-center border rounded-lg font-semibold tracking-wider text-xl
+                className={`w-12 h-12 md:w-14 md:h-14 text-center border rounded-lg font-semibold tracking-wider text-lg md:text-xl
                   ${isLocked ? 'bg-green-500 text-white cursor-default' : 'bg-white text-gray-900 border-gray-300'}
                 `}
                 value={cells[i] ?? ''}

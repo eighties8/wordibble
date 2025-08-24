@@ -9,8 +9,8 @@ export default function ClueRibbon({ clue, targetWord }: Props) {
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
-      <div className="w-8 h-8 mr-3">
-        <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-gray-600">
+      <div className="w-8 h-8 mr-1 bg-gray-100 rounded-full flex items-center justify-center">
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-500">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
         </svg>
       </div>

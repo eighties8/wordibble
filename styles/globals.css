@@ -11,3 +11,8 @@
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
+
+.logo span {
+  color: #f97316;
+  color: #22c55e
+}

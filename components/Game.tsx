@@ -64,6 +64,9 @@ export default function Game() {
   // Imperative handle to control focus inside GuessInputRow
   // const inputRowRef = useRef<InputRowHandle | null>(null);
   const inputRowRef = useRef<GuessInputRowHandle | null>(null);
+  
+  // Flag to prevent input row onChange during keyboard input
+  const keyboardInputInProgress = useRef(false);
 
   // ===== Debug flag (persisted) =====
   useEffect(() => {
@@ -193,6 +196,8 @@ export default function Game() {
   useEffect(() => {
     if (!gameState.secretWord) return;
     if (Object.keys(gameState.lockedLetters).length === 0) return;
+    // Skip if keyboard input is in progress to prevent interference
+    if (keyboardInputInProgress.current) return;
 
     setCurrentGuess((prev) => {
       const next = prev.length === gameState.wordLength ? [...prev] : new Array(gameState.wordLength).fill('');
@@ -202,7 +207,7 @@ export default function Game() {
       }
       return next;
     });
-    // Don’t focus here; we’ll do it in targeted places
+    // Don't focus here; we'll do it in targeted places
   }, [gameState.lockedLetters, gameState.secretWord, gameState.wordLength]);
 
   // ===== Toast helpers =====
@@ -216,6 +221,8 @@ export default function Game() {
 
   // ===== Input row onChange -> source of truth for the active guess =====
   const handleGuessChange = useCallback((letters: string[]) => {
+    // Skip updating if keyboard input is in progress to prevent race condition
+    if (keyboardInputInProgress.current) return;
     setCurrentGuess(letters);
   }, []);
 
@@ -327,58 +334,106 @@ export default function Game() {
   }, [handleEnterKey]);
 
   // ===== Virtual keyboard handlers =====
-  const firstEmptyEditableIndex = useCallback(() => {
-    for (let i = 0; i < currentGuess.length; i++) {
-      if (!gameState.lockedLetters[i] && !currentGuess[i]) return i;
+  const findNextEditableIndex = useCallback((fromIndex: number) => {
+    // Find next editable cell starting from fromIndex + 1
+    for (let i = fromIndex + 1; i < gameState.wordLength; i++) {
+      if (!gameState.lockedLetters[i]) {
+        return i;
+      }
     }
-    return -1;
-  }, [currentGuess, gameState.lockedLetters]);
+    return -1; // No more editable cells
+  }, [gameState.wordLength, gameState.lockedLetters]);
 
-  const lastFilledEditableIndex = useCallback(() => {
-    for (let i = currentGuess.length - 1; i >= 0; i--) {
-      if (!gameState.lockedLetters[i] && currentGuess[i]) return i;
+  const findFirstEditableIndex = useCallback(() => {
+    // Find first editable cell
+    for (let i = 0; i < gameState.wordLength; i++) {
+      if (!gameState.lockedLetters[i]) {
+        return i;
+      }
     }
-    return -1;
-  }, [currentGuess, gameState.lockedLetters]);
+    return -1; // No editable cells
+  }, [gameState.wordLength, gameState.lockedLetters]);
+
+  const findFirstEmptyEditableIndex = useCallback(() => {
+    // Find first editable cell that is empty
+    for (let i = 0; i < gameState.wordLength; i++) {
+      if (!gameState.lockedLetters[i] && !currentGuess[i]) {
+        return i;
+      }
+    }
+    // If no empty editable cells, return first editable cell
+    return findFirstEditableIndex();
+  }, [currentGuess, gameState.wordLength, gameState.lockedLetters, findFirstEditableIndex]);
 
   const handleKeyboardKeyPress = useCallback(
     (key: string) => {
+      console.log('Keyboard key pressed:', key, 'Game status:', gameState.gameStatus);
       if (gameState.gameStatus !== 'playing') return;
-      const i = firstEmptyEditableIndex();
+      
+      const i = findFirstEmptyEditableIndex();
+      console.log('Found editable index:', i, 'Current guess:', currentGuess, 'Locked letters:', gameState.lockedLetters);
       if (i >= 0) {
+        // Set flag to prevent input row onChange interference
+        keyboardInputInProgress.current = true;
+        
         setCurrentGuess((prev) => {
-          if (prev[i] === key) return prev; // no-op if same
           const next = [...prev];
           next[i] = key;
+          console.log('Updated current guess:', next);
           return next;
         });
-        // Focus the next empty editable cell after typing
+        
+        // Clear flag after state update
         setTimeout(() => {
-          const nextIndex = i + 1;
-          if (nextIndex < gameState.wordLength) {
+          keyboardInputInProgress.current = false;
+        }, 0);
+        
+        // Advance to next editable cell
+        setTimeout(() => {
+          const nextIndex = findNextEditableIndex(i);
+          console.log('Moving to next index:', nextIndex);
+          if (nextIndex >= 0) {
             queueFocusSpecificIndex(nextIndex);
           }
         }, 50);
       }
     },
-    [gameState.gameStatus, firstEmptyEditableIndex, gameState.wordLength]
+    [gameState.gameStatus, findFirstEmptyEditableIndex, findNextEditableIndex, currentGuess, gameState.lockedLetters]
   );
 
   const handleKeyboardBackspace = useCallback(() => {
     if (gameState.gameStatus !== 'playing') return;
-    const i = lastFilledEditableIndex();
+    
+    // Find last filled editable cell
+    let i = -1;
+    for (let j = currentGuess.length - 1; j >= 0; j--) {
+      if (!gameState.lockedLetters[j] && currentGuess[j]) {
+        i = j;
+        break;
+      }
+    }
+    
     if (i >= 0) {
+      // Set flag to prevent input row onChange interference
+      keyboardInputInProgress.current = true;
+      
       setCurrentGuess((prev) => {
         const next = [...prev];
         next[i] = '';
         return next;
       });
-      // After backspace, keep focus where the deletion occurred
+      
+      // Clear flag after state update
+      setTimeout(() => {
+        keyboardInputInProgress.current = false;
+      }, 0);
+      
+      // Keep focus on the cell where deletion occurred
       setTimeout(() => {
         queueFocusSpecificIndex(i);
       }, 50);
     }
-  }, [gameState.gameStatus, lastFilledEditableIndex]);
+  }, [gameState.gameStatus, currentGuess, gameState.lockedLetters]);
 
   // ===== Memoized keyboard letter states =====
   const keyboardLetterStates = useMemo(() => {
@@ -453,24 +508,26 @@ export default function Game() {
     <div className="min-h-screen bg-white flex flex-col">
       <Header onSettingsClick={() => setIsSettingsOpen(true)} />
       
-      <main className="flex-1 py-8 px-4">
+      <main className="flex-1 py-4 md:py-8 px-4">
         <div className="max-w-md mx-auto">
           {/* Clue Ribbon */}
           {gameState.clue && settings.revealClue && (
-            <div className="text-center mb-8">
+            <div className="text-center mb-4 md:mb-8">
               <ClueRibbon clue={gameState.clue} targetWord={debugMode ? gameState.secretWord : undefined} />
             </div>
           )}
 
           {/* Game Grid */}
-          <div className="space-y-4 mb-8">
+          <div className="space-y-3 md:space-y-4 mb-4 md:mb-8">
             {/* Active Input Row */}
             <GuessInputRow
               ref={inputRowRef as any}
               key={`input-${Object.keys(gameState.lockedLetters).length}-${gameState.attemptIndex}`}
               wordLength={gameState.wordLength}
               locked={Array.from({ length: gameState.wordLength }, (_, i) => !!gameState.lockedLetters[i])}
-              initialCells={Array.from({ length: gameState.wordLength }, (_, i) => gameState.lockedLetters[i] || '')}
+              initialCells={Array.from({ length: gameState.wordLength }, (_, i) => 
+                gameState.lockedLetters[i] || currentGuess[i] || ''
+              )}
               onChange={handleGuessChange}
               isShaking={isShaking}
               forceClear={forceClear}
@@ -523,7 +580,7 @@ export default function Game() {
 
           {/* Virtual Keyboard */}
           {gameState.gameStatus === 'playing' && (
-            <div className="mt-8">
+            <div className="mt-4 md:mt-8">
               <Keyboard
                 onKeyPress={handleKeyboardKeyPress}
                 onEnter={handleSubmit}

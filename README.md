@@ -1,4 +1,4 @@
-# WordUp - Refined Wordle Game
+# Wordibble - Refined Word Search Game
 
 A refined Wordle-style game built with Next.js, TypeScript, and Tailwind CSS. Features better UX with switchable 5-or-6 letter modes, intelligent cursor management, and vowel reveals.
 

@@ -1,6 +1,6 @@
 # Game Data Files
 
-This directory contains the JSON data files for the WordUp game.
+This directory contains the JSON data files for the Wordibble game.
 
 ## Required Files
 

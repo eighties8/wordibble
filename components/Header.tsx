@@ -6,9 +6,9 @@ interface Props {
 
 export default function Header({ onSettingsClick }: Props) {
   return (
-    <header className="bg-white border-b border-gray-200 px-4 py-3">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
       <div className="max-w-md mx-auto flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">WordUp</h1>
+        <h1 className="logo text-xl font-bold text-gray-900">Wor<span>d<i>i</i>bble</span></h1>
         <button
           onClick={onSettingsClick}
           className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"

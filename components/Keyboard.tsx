@@ -10,8 +10,8 @@ interface Props {
 export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterStates }: Props) {
   const rows = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-    ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACKSPACE']
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'BACKSPACE'],
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER']
   ];
 
   const getKeyColor = (key: string) => {
@@ -30,6 +30,23 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
     }
   };
 
+  const getKeyClasses = (key: string) => {
+    const baseClasses = [
+      'px-1.5 py-2 md:px-3 md:py-4 rounded font-semibold text-white transition-colors touch-manipulation',
+      'text-center',
+      key === 'ENTER' || key === 'BACKSPACE' ? 'text-xs md:text-sm' : 'text-sm md:text-lg',
+      getKeyColor(key)
+    ];
+    
+    if (key === 'ENTER') {
+      baseClasses.push('flex-1 min-w-0'); // Make ENTER key fill remaining space
+    } else {
+      baseClasses.push('min-w-[32px] md:min-w-[48px]'); // Fixed width for other keys
+    }
+    
+    return baseClasses.join(' ');
+  };
+
   const handleKeyClick = (key: string) => {
     if (key === 'ENTER') {
       onEnter();
@@ -41,20 +58,15 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
   };
 
   return (
-    <div className="mt-8 space-y-2 select-none">
+    <div className="mt-4 md:mt-8 space-y-1 md:space-y-2 select-none">
       {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex justify-center gap-1">
+        <div key={rowIndex} className="flex justify-center gap-0.5 md:gap-1">
           {row.map((key) => (
             <button
               key={key}
               onClick={() => handleKeyClick(key)}
               onTouchStart={() => {}} // Ensure touch events work
-              className={[
-                'px-2 py-3 md:px-3 md:py-4 rounded font-semibold text-white transition-colors touch-manipulation',
-                'min-w-[40px] md:min-w-[48px] text-center',
-                key === 'ENTER' || key === 'BACKSPACE' ? 'text-sm' : 'text-base md:text-lg',
-                getKeyColor(key)
-              ].join(' ')}
+              className={getKeyClasses(key)}
             >
               {key === 'BACKSPACE' ? '⌫' : key}
             </button>

@@ -30,7 +30,7 @@ export async function loadDailyPuzzle(wordLength: 5 | 6): Promise<DailyPuzzle> {
 
     return {
       word: puzzle.word.toUpperCase(),
-      clue: clues[puzzle.word] || undefined,
+      clue: clues[puzzle.word] || "I literally have no clue",
       isToday: puzzle.date === today
     };
   } catch (error) {
