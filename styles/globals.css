@@ -20,6 +20,23 @@
 }
 
 .logo span {
-  color: #f97316;
-  color: #22c55e
+  /* color: #f97316; */
+  /* color: #22c55e */
+}
+.logo span i {
+  color:#fff;
+  background-color:#f59e0b; /* amber-500 */
+  background-color:#22c55e;
+  padding:0 4px;
+}
+
+/* Custom radio button styling */
+input[type="radio"]:checked {
+  background-color: #22c55e !important; /* green-600 */
+  border-color: #22c55e !important;
+}
+
+input[type="radio"]:focus {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important; /* green-600 with opacity */
 }

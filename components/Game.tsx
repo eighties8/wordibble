@@ -8,6 +8,7 @@ import {
   computeRevealsForWord,
   validateGuess,
 } from '../lib/gameLogic';
+import { Brain } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 import Settings from './Settings';
@@ -31,6 +32,7 @@ interface GameSettings {
   revealVowels: boolean;
   revealVowelCount: number;
   revealClue: boolean;
+  randomPuzzle: boolean;
 }
 
 export default function Game() {
@@ -40,6 +42,7 @@ export default function Game() {
     revealVowels: GAME_CONFIG.REVEAL_VOWELS,
     revealVowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT,
     revealClue: GAME_CONFIG.REVEAL_CLUE,
+    randomPuzzle: GAME_CONFIG.RANDOM_PUZZLE,
   });
 
   const [gameState, setGameState] = useState<GameState>({
@@ -86,7 +89,8 @@ export default function Game() {
         // Ensure wordLength is properly typed
         const typedSettings = {
           ...parsed,
-          wordLength: Number(parsed.wordLength) as 5 | 6 | 7
+          wordLength: Number(parsed.wordLength) as 5 | 6 | 7,
+          randomPuzzle: parsed.randomPuzzle ?? false
         };
         setSettings(typedSettings);
         // Update game state if word length changed
@@ -160,7 +164,7 @@ export default function Game() {
     (async () => {
       try {
         const [puzzle, dict] = await Promise.all([
-          loadDailyPuzzle(settings.wordLength),
+          loadDailyPuzzle(settings.wordLength, settings.randomPuzzle),
           loadDictionary(settings.wordLength),
         ]);
 
@@ -562,7 +566,7 @@ export default function Game() {
           {/* Game Status */}
           {gameState.gameStatus === 'won' && (
             <div className="text-center text-green-600 font-semibold text-lg mb-4">
-              🎉 You won in {gameState.attemptIndex} tries!
+              <Brain className="inline-block w-5 h-5 mr-2" /> Crushed it in {gameState.attemptIndex} tries!
             </div>
           )}
           {gameState.gameStatus === 'lost' && (
@@ -600,12 +604,13 @@ export default function Game() {
       <Footer />
 
       {/* Settings Overlay */}
-      <Settings
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSettingsChange={handleSettingsChange}
-        currentSettings={settings}
-      />
+              <Settings
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          onSettingsChange={handleSettingsChange}
+          currentSettings={settings}
+          debugMode={debugMode}
+        />
 
       {/* Toasts */}
       {toasts.map((toast) => (

@@ -6,6 +6,7 @@ interface SettingsConfig {
   revealVowels: boolean;
   revealVowelCount: number;
   revealClue: boolean;
+  randomPuzzle: boolean;
 }
 
 interface Props {
@@ -13,14 +14,27 @@ interface Props {
   onClose: () => void;
   onSettingsChange: (settings: SettingsConfig) => void;
   currentSettings: SettingsConfig;
+  debugMode: boolean;
 }
 
-export default function Settings({ isOpen, onClose, onSettingsChange, currentSettings }: Props) {
-  const [settings, setSettings] = useState<SettingsConfig>(currentSettings);
+export default function Settings({ isOpen, onClose, onSettingsChange, currentSettings, debugMode }: Props) {
+  const [settings, setSettings] = useState<SettingsConfig>({
+    ...currentSettings,
+    randomPuzzle: currentSettings.randomPuzzle ?? false
+  });
 
   useEffect(() => {
     if (isOpen) {
-      setSettings(currentSettings);
+      // Ensure all required properties exist with defaults
+      const settingsWithDefaults: SettingsConfig = {
+        wordLength: currentSettings.wordLength,
+        maxGuesses: currentSettings.maxGuesses,
+        revealVowels: currentSettings.revealVowels,
+        revealVowelCount: currentSettings.revealVowelCount,
+        revealClue: currentSettings.revealClue,
+        randomPuzzle: currentSettings.randomPuzzle ?? false
+      };
+      setSettings(settingsWithDefaults);
     }
   }, [isOpen, currentSettings]);
 
@@ -69,7 +83,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
                     value={length}
                     checked={settings.wordLength === length}
                     onChange={(e) => setSettings(prev => ({ ...prev, wordLength: Number(e.target.value) as 5 | 6 | 7 }))}
-                    className="mr-2 text-blue-600 focus:ring-blue-500"
+                    className="mr-2 text-green-600 focus:ring-green-500"
                   />
                   <span className="text-sm text-gray-700">{length} letters</span>
                 </label>
@@ -88,7 +102,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
               max="8"
               value={settings.maxGuesses}
               onChange={(e) => setSettings(prev => ({ ...prev, maxGuesses: Number(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
@@ -103,7 +117,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             <button
               onClick={() => setSettings(prev => ({ ...prev, revealVowels: !prev.revealVowels }))}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.revealVowels ? 'bg-blue-600' : 'bg-gray-200'
+                settings.revealVowels ? 'bg-green-600' : 'bg-gray-200'
               }`}
             >
               <span
@@ -129,7 +143,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
                   const value = Math.min(3, Math.max(1, Number(e.target.value)));
                   setSettings(prev => ({ ...prev, revealVowelCount: value }));
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">Range: 1-3</p>
             </div>
@@ -146,7 +160,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             <button
               onClick={() => setSettings(prev => ({ ...prev, revealClue: !prev.revealClue }))}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.revealClue ? 'bg-blue-600' : 'bg-gray-200'
+                settings.revealClue ? 'bg-green-600' : 'bg-gray-200'
               }`}
             >
               <span
@@ -156,19 +170,43 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
               />
             </button>
           </div>
+
+          {/* Random Puzzle Toggle (Debug Only) */}
+          {debugMode && (
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Random Puzzle (Debug)
+                </label>
+                <p className="text-xs text-gray-500">New puzzle on each page load</p>
+              </div>
+              <button
+                onClick={() => setSettings(prev => ({ ...prev, randomPuzzle: !prev.randomPuzzle }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.randomPuzzle ? 'bg-green-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.randomPuzzle ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}
         <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
           >
             Reset
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
           >
             Save
           </button>

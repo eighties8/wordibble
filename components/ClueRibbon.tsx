@@ -16,7 +16,7 @@ export default function ClueRibbon({ clue, targetWord }: Props) {
       </div>
       
       {/* Speech Bubble */}
-      <div className="bg-orange-500 text-white px-4 py-2 rounded-lg relative shadow-md">
+      <div className="bg-amber-500 text-white px-4 py-2 rounded-lg relative shadow-md">
         <div className="text-sm font-medium">
           {clue}
           {targetWord && (
@@ -26,7 +26,7 @@ export default function ClueRibbon({ clue, targetWord }: Props) {
           )}
         </div>
         {/* Speech bubble tail pointing from icon to bubble */}
-        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-r-orange-500 border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-r-amber-500 border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
       </div>
     </div>
   );

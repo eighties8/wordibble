@@ -1,6 +1,6 @@
 import { DailyPuzzle, PuzzleData, CluesData } from './types';
 
-export async function loadDailyPuzzle(wordLength: 5 | 6 | 7): Promise<DailyPuzzle> {
+export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false): Promise<DailyPuzzle> {
   try {
     // Load puzzles and clues based on word length from lib directory
     const [puzzlesResponse, cluesResponse] = await Promise.all([
@@ -15,13 +15,19 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7): Promise<DailyPuzzl
     const puzzles: PuzzleData[] = await puzzlesResponse.json();
     const clues: CluesData = await cluesResponse.json();
 
-    // Get today's date in YYYY-MM-DD format (browser local time)
-    const today = new Date().toISOString().split('T')[0];
+    let puzzle: PuzzleData;
     
-    // Find today's puzzle, fall back to first if missing
-    let puzzle = puzzles.find(p => p.date === today);
-    if (!puzzle && puzzles.length > 0) {
-      puzzle = puzzles[0];
+    if (randomMode) {
+      // Random puzzle for testing
+      const randomIndex = Math.floor(Math.random() * puzzles.length);
+      puzzle = puzzles[randomIndex];
+    } else {
+      // Normal date-based puzzle
+      const today = new Date().toISOString().split('T')[0];
+      puzzle = puzzles.find(p => p.date === today);
+      if (!puzzle && puzzles.length > 0) {
+        puzzle = puzzles[0];
+      }
     }
 
     if (!puzzle) {
@@ -31,7 +37,7 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7): Promise<DailyPuzzl
     return {
       word: puzzle.word.toUpperCase(),
       clue: clues[puzzle.word] || "I literally have no clue",
-      isToday: puzzle.date === today
+      isToday: !randomMode && puzzle.date === new Date().toISOString().split('T')[0]
     };
   } catch (error) {
     console.error('Error loading daily puzzle:', error);

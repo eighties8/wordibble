@@ -4,5 +4,6 @@ export const GAME_CONFIG = {
   REVEAL_VOWELS: true,                 // show vowel positions up-front
   REVEAL_VOWEL_COUNT: 3,                // number of vowels to reveal (0..N)
   REVEAL_CLUE: true,                    // show a clue ribbon
+  RANDOM_PUZZLE: false,                 // debug: random puzzle on each load
   DAILY_PUZZLE_TIMEZONE: 'America/New_York', // date rollover
 };
