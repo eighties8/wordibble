@@ -1,6 +1,6 @@
 # Wordibble - Refined Word Search Game
 
-A refined Wordle-style game built with Next.js, TypeScript, and Tailwind CSS. Features better UX with switchable 5, 6, or 7 letter modes, intelligent cursor management, and vowel reveals.
+A refined Wordle-style game built with Next.js, TypeScript, and Tailwind CSS. With a focus on UX and player friendly features: switchable 5, 6, or 7 letter modes, option for clues, intelligent cursor management, and vowel reveals.
 
 ## Features
 
@@ -25,7 +25,7 @@ A refined Wordle-style game built with Next.js, TypeScript, and Tailwind CSS. Fe
 ## Project Structure
 
 ```
-wordup/
+wordibble/
 ├── components/          # React components
 │   ├── Game.tsx        # Main game orchestrator
 │   ├── GuessInputRow.tsx # Smart input row with cursor management
@@ -36,17 +36,17 @@ wordup/
 │   ├── config.ts       # Game configuration
 │   ├── types.ts        # TypeScript type definitions
 │   ├── daily.ts        # Daily puzzle loader
-│   └── gameLogic.ts    # Game evaluation and utilities
-├── public/data/        # Game data files
-│   ├── dict5.json      # 5-letter dictionary
-│   ├── dict6.json      # 6-letter dictionary
-│   ├── dict7.json      # 7-letter dictionary
-│   ├── puzzles5-2025.json # 5-letter daily puzzles
-│   ├── puzzles6-2025.json # 6-letter daily puzzles
-│   ├── puzzles7-2025.json # 7-letter daily puzzles
+│   ├── gameLogic.ts    # Game evaluation and utilities
 │   ├── clues5.json     # 5-letter clues
 │   ├── clues6.json     # 6-letter clues
-│   └── clues7.json     # 7-letter clues
+│   ├── clues7.json     # 7-letter clues
+│   └── data/           # Game data files
+│       ├── dictionary5.json      # 5-letter dictionary
+│       ├── dictionary6.json      # 6-letter dictionary
+│       ├── dictionary7.json      # 7-letter dictionary
+│       ├── puzzles5-2025.json   # 5-letter daily puzzles
+│       ├── puzzles6-2025.json   # 6-letter daily puzzles
+│       └── puzzles7-2025.json   # 7-letter daily puzzles
 ├── scripts/            # Build scripts
 │   └── buildData.ts    # Data file generator
 ├── styles/             # Global styles
@@ -68,7 +68,7 @@ wordup/
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd wordup
+cd wordibble
 ```
 
 2. Install dependencies:
@@ -144,17 +144,17 @@ const revealedMask = computeRevealsForWord(targetWord, {
 
 ## Data Files
 
-The game loads data from JSON files in `/public/data`. You'll need to provide:
+The game loads data from JSON files in `/lib` and `/lib/data`. You'll need to provide:
 
 ### For 5-letter mode:
-- `puzzles5-2025.json` → Array of `{ "date": "2025-01-01", "word": "MOUTH" }`
-- `clues5.json` → Object `{ "MOUTH": "sassy lip cave", ... }`
-- `dict5.json` → Array of allowed guess words
+- `lib/data/puzzles5-2025.json` → Array of `{ "date": "2025-01-01", "word": "MOUTH" }`
+- `lib/clues5.json` → Object `{ "MOUTH": "sassy lip cave", ... }`
+- `lib/data/dictionary5.json` → Array of allowed guess words
 
 ### For 6-letter mode:
-- `puzzles6-2025.json` → Array of daily puzzles
-- `clues6.json` → Object mapping words to clues  
-- `dict6.json` → Array of allowed guess words
+- `lib/data/puzzles6-2025.json` → Array of daily puzzles
+- `lib/clues6.json` → Object mapping words to clues  
+- `lib/data/dictionary6.json` → Array of allowed guess words
 
 ## Building Data Files
 
@@ -210,11 +210,23 @@ The app can be deployed to any platform that supports Next.js:
 
 ## License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the **Business Source License 1.1 (BUSL-1.1)**.
+
+- **Non-Production Use (now until 2028-01-01)**:  
+  You may use, modify, and self-host Wordibble for **personal, educational, or non-commercial evaluation purposes**.
+
+- **Production Use**:  
+  Requires a **commercial license** from the Licensor (Scott Blanchard, eighties8) until the Change Date.
+
+- **Change Date**:  
+  On **2028-01-01**, this project will automatically convert to the **Apache License, Version 2.0**, permitting full commercial and production use.
+
+See the [LICENSE](LICENSE) file for details.
+
 
 ## Acknowledgments
 
 - Inspired by Wordle
 - Built with modern web technologies
 - Focus on accessibility and user experience
-# wordup
+# wordibble

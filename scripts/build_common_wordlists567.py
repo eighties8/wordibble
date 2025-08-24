@@ -46,7 +46,7 @@ def main():
 
     for L in args.lengths:
         lst = build_words(L, args.count)
-        fp = outdir / f"{args.prefix}{L}.json"
+        fp = outdir / f"dictionary{L}.json"
         with fp.open("w", encoding="utf-8") as f:
             json.dump(lst, f, ensure_ascii=False, indent=2)
         print(f"Wrote {len(lst)} words -> {fp}")

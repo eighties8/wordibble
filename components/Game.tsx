@@ -70,16 +70,16 @@ export default function Game() {
 
   // ===== Debug flag (persisted) =====
   useEffect(() => {
-    const savedDebugMode = localStorage.getItem('wordup-debug-mode');
+    const savedDebugMode = localStorage.getItem('wordibble-debug-mode');
     if (savedDebugMode) setDebugMode(JSON.parse(savedDebugMode));
   }, []);
   useEffect(() => {
-    localStorage.setItem('wordup-debug-mode', JSON.stringify(debugMode));
+    localStorage.setItem('wordibble-debug-mode', JSON.stringify(debugMode));
   }, [debugMode]);
 
   // ===== Settings (persisted) =====
   useEffect(() => {
-    const savedSettings = localStorage.getItem('wordup-settings');
+    const savedSettings = localStorage.getItem('wordibble-settings');
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);

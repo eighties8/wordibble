@@ -1,0 +1,61 @@
+Business Source License 1.1 (BUSL-1.1)
+
+License Parameters
+- Licensor: Scott Blanchard (eighties8)
+- Licensed Work: Wordibble (the “Licensed Work”)
+  The “Licensed Work” means the source code and associated materials in this repository.
+- Additional Use Grant (Non-Production Use): You may use, copy, modify, create derivative works of, and self-host the Licensed Work for non-production purposes, including personal, educational, academic research, internal evaluation, prototyping, and non-commercial demos.
+- Change Date: 2028-01-01 (YYYY-MM-DD)
+- Change License: Apache License, Version 2.0
+
+---
+
+## Business Source License 1.1 Terms
+
+1. Definitions.  
+   “Licensor” is the entity above. “Licensed Work” is defined in the License Parameters. “You” means the individual or entity exercising permissions granted by this License. “Production Use” means use of the Licensed Work in a live or user-facing or revenue-generating environment, or providing it as a managed/hosted service to third parties.
+
+2. License Grant (Non-Production & Additional Use).  
+   Subject to your compliance with this License, the Licensor grants you a non-exclusive, worldwide, non-transferable, non-sublicensable, royalty-free license to use, copy, modify, create derivative works of, and self-host the Licensed Work solely (a) for Non-Production Use and (b) as permitted by the Additional Use Grant in the License Parameters.
+
+3. Production Use Not Granted (Before Change Date).  
+   Except as expressly permitted by a separate commercial agreement with Licensor, Production Use of the Licensed Work is not permitted before the Change Date.
+
+4. Change Date; Change License.  
+   On and after the Change Date specified above, the Licensed Work is automatically made available under the Change License specified above (Apache License, Version 2.0). From that date forward, you may, at your option, continue to use the Licensed Work under this License for Non-Production Use, or under the Change License for any use allowed by that license.
+
+5. Combination & Larger Works.  
+   You may combine or link the Licensed Work with other code and distribute combined works for Non-Production Use under the terms of this License. This License does not restrict terms applying to your separate code that merely interfaces with unmodified Licensed Work via stable, documented APIs.
+
+6. No Trademark License.  
+   This License does not grant rights to use the Licensor’s trademarks, trade names, logos, or brand features.
+
+7. Notices & Preservation.  
+   You must retain in all copies of the Licensed Work (and significant portions of it) the copyright notice(s), this License text (including the License Parameters), and any required attribution notices.
+
+8. Termination.  
+   If you materially breach this License and do not cure the breach within 30 days of notice, your rights under this License terminate automatically. Upon termination, you must cease use and distribution of the Licensed Work (except as permitted under the Change License after the Change Date).
+
+9. Disclaimer of Warranty.  
+   THE LICENSED WORK IS PROVIDED “AS IS,” WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+10. Limitation of Liability.  
+    TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT WILL LICENSOR BE LIABLE FOR ANY INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, OR GOODWILL, ARISING OUT OF OR RELATING TO THIS LICENSE OR THE LICENSED WORK, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. LICENSOR’S AGGREGATE LIABILITY FOR DIRECT DAMAGES SHALL NOT EXCEED ONE HUNDRED U.S. DOLLARS (US$100).
+
+11. Patents.  
+    No patent rights are granted under this License. Any patent rights (if any) would need to be granted in a separate written license.
+
+12. Export Compliance.  
+    You are responsible for compliance with all applicable export laws and regulations.
+
+13. Severability.  
+    If any provision of this License is unenforceable, the remaining provisions will remain in full force and effect.
+
+14. Entire Agreement.  
+    This License constitutes the entire agreement between you and the Licensor regarding the Licensed Work, superseding any prior or contemporaneous understandings on that subject.
+
+---
+
+### Practical Summary (Non-Binding)
+- Before 2028-01-01: use/modify/self-host for **non-production** only.  
+- After 2028-01-01: code automatically switches to **Apache-2.0** for full use.

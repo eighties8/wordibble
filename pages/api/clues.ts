@@ -10,14 +10,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Read the dictionary file from lib/data directory
-    const filePath = path.join(process.cwd(), 'lib', 'data', `dictionary${length}.json`);
+    // Read the clues file from lib directory
+    const filePath = path.join(process.cwd(), 'lib', `clues${length}.json`);
     const fileContent = fs.readFileSync(filePath, 'utf8');
-    const words = JSON.parse(fileContent);
+    const clues = JSON.parse(fileContent);
     
-    res.status(200).json(words);
+    res.status(200).json(clues);
   } catch (error) {
-    console.error('Error reading dictionary file:', error);
-    res.status(500).json({ error: 'Failed to load dictionary' });
+    console.error('Error reading clues file:', error);
+    res.status(500).json({ error: 'Failed to load clues' });
   }
 }

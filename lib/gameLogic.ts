@@ -10,7 +10,7 @@ export async function loadDictionary(wordLength: WordLength): Promise<Set<string
   }
 
   try {
-    // Use the dictionary file from lib/data instead of public/data
+    // Use the dictionary file from lib/data via API
     const response = await fetch(`/api/dictionary?length=${wordLength}`);
     if (!response.ok) {
       throw new Error('Failed to load dictionary');

@@ -8,8 +8,9 @@
  * 
  * This script will:
  * 1. Filter words by length and ASCII letters
- * 2. Generate dict5.json and dict6.json
- * 3. Build dated puzzles{len}-2025.json from curated subsets
+ * 2. Generate dictionary5.json and dictionary6.json in lib/data
+ * 3. Build dated puzzles{len}-2025.json in lib/data
+ * 4. Generate clues5.json and clues6.json in lib
  */
 
 import * as fs from 'fs';
@@ -99,7 +100,7 @@ async function main() {
       'FREEDOM', 'JOURNEY', 'MYSTERY', 'HARMONY', 'SILENCE', 'WONDER', 'MAGIC'
     ];
     
-    const dataDir = path.join(__dirname, '../public/data');
+    const dataDir = path.join(__dirname, '../lib/data');
     
     // Ensure data directory exists
     if (!fs.existsSync(dataDir)) {
@@ -116,14 +117,16 @@ async function main() {
     const puzzles6 = buildPuzzles(dict6, 2025);
     const clues6 = buildClues(dict6);
     
-    // Write files
-    fs.writeFileSync(path.join(dataDir, 'dict5.json'), JSON.stringify(dict5, null, 2));
+    // Write dictionary and puzzle files to lib/data
+    fs.writeFileSync(path.join(dataDir, 'dictionary5.json'), JSON.stringify(dict5, null, 2));
     fs.writeFileSync(path.join(dataDir, 'puzzles5-2025.json'), JSON.stringify(puzzles5, null, 2));
-    fs.writeFileSync(path.join(dataDir, 'clues5.json'), JSON.stringify(clues5, null, 2));
-    
-    fs.writeFileSync(path.join(dataDir, 'dict6.json'), JSON.stringify(dict6, null, 2));
+    fs.writeFileSync(path.join(dataDir, 'dictionary6.json'), JSON.stringify(dict6, null, 2));
     fs.writeFileSync(path.join(dataDir, 'puzzles6-2025.json'), JSON.stringify(puzzles6, null, 2));
-    fs.writeFileSync(path.join(dataDir, 'clues6.json'), JSON.stringify(clues6, null, 2));
+    
+    // Write clues files to lib directory
+    const libDir = path.join(__dirname, '../lib');
+    fs.writeFileSync(path.join(libDir, 'clues5.json'), JSON.stringify(clues5, null, 2));
+    fs.writeFileSync(path.join(libDir, 'clues6.json'), JSON.stringify(clues6, null, 2));
     
     console.log('✅ Data files built successfully!');
     console.log(`📁 5-letter: ${dict5.length} words, ${puzzles5.length} puzzles`);

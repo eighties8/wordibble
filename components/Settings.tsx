@@ -26,7 +26,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
 
   const handleSave = () => {
     // Save to localStorage
-    localStorage.setItem('wordup-settings', JSON.stringify(settings));
+    localStorage.setItem('wordibble-settings', JSON.stringify(settings));
     onSettingsChange(settings);
     onClose();
   };

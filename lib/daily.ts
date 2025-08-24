@@ -2,10 +2,10 @@ import { DailyPuzzle, PuzzleData, CluesData } from './types';
 
 export async function loadDailyPuzzle(wordLength: 5 | 6 | 7): Promise<DailyPuzzle> {
   try {
-    // Load puzzles and clues based on word length
+    // Load puzzles and clues based on word length from lib directory
     const [puzzlesResponse, cluesResponse] = await Promise.all([
-      fetch(`/data/puzzles${wordLength}-2025.json`),
-      fetch(`/data/clues${wordLength}.json`)
+      fetch(`/api/puzzles?length=${wordLength}`),
+      fetch(`/api/clues?length=${wordLength}`)
     ]);
 
     if (!puzzlesResponse.ok || !cluesResponse.ok) {
