@@ -36,7 +36,7 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false)
 
     return {
       word: puzzle.word.toUpperCase(),
-      clue: clues[puzzle.word] || "I literally have no clue",
+      clue: clues[puzzle.word.toLowerCase()] || "I literally have no clue",
       isToday: !randomMode && puzzle.date === new Date().toISOString().split('T')[0]
     };
   } catch (error) {

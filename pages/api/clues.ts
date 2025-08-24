@@ -10,8 +10,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Read the clues file from lib directory
-    const filePath = path.join(process.cwd(), 'lib', `clues${length}.json`);
+    // Read the clues file from lib/data directory
+    const filePath = path.join(process.cwd(), 'lib', 'data', `clues${length}.json`);
     const fileContent = fs.readFileSync(filePath, 'utf8');
     const clues = JSON.parse(fileContent);
     

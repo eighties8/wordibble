@@ -10,11 +10,30 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Read the puzzles file from lib/data directory
-    const filePath = path.join(process.cwd(), 'lib', 'data', `puzzles${length}-2025.json`);
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    const puzzles = JSON.parse(fileContent);
-    
+    // Get current year and try to load the appropriate puzzle file
+    const currentYear = new Date().getFullYear();
+    let puzzles: any[] = [];
+    let loadedYear = currentYear;
+
+    // Try to load puzzles for current year, fall back to 2025 if not found
+    for (let year = currentYear; year >= 2025; year--) {
+      try {
+        const filePath = path.join(process.cwd(), 'lib', 'data', `puzzles${length}-${year}.json`);
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        puzzles = JSON.parse(fileContent);
+        loadedYear = year;
+        break; // Successfully loaded, exit loop
+      } catch (yearError) {
+        // Continue to next year if this one fails
+        continue;
+      }
+    }
+
+    if (puzzles.length === 0) {
+      return res.status(500).json({ error: 'No puzzle data available for any year' });
+    }
+
+    console.log(`Loaded ${puzzles.length} puzzles for ${length}-letter words from year ${loadedYear}`);
     res.status(200).json(puzzles);
   } catch (error) {
     console.error('Error reading puzzles file:', error);

@@ -1,21 +1,522 @@
 [
-    { "date": "2025-01-01", "word": "DIALOG" },
-    { "date": "2025-01-02", "word": "NUMBER" },
-    { "date": "2025-01-03", "word": "PEOPLE" },
-    { "date": "2025-01-04", "word": "BEFORE" },
-    { "date": "2025-01-05", "word": "JINXED" },
-    { "date": "2025-01-06", "word": "HIJACK" },
-    { "date": "2025-01-07", "word": "SNAZZY" },
-    { "date": "2025-01-08", "word": "DAZZLE" },
-    { "date": "2025-01-09", "word": "SIZZLE" },
-    { "date": "2025-01-10", "word": "MUZZLE" },
-    { "date": "2025-08-23", "word": "PUZZLE" },
-    { "date": "2025-08-23", "word": "PIZZAZ" },
-    { "date": "2025-08-24", "word": "SNAZZY" },
-    { "date": "2025-08-24", "word": "QUARTZ" },
-    { "date": "2025-08-24", "word": "JAMMED" },
-    { "date": "2025-08-24", "word": "ABJECT" },
-    { "date": "2025-08-24", "word": "COZILY" }
-
-  ]
-  
+  {
+    "date": "2025-08-24",
+    "word": "TAKING"
+  },
+  {
+    "date": "2025-08-25",
+    "word": "VOCALS"
+  },
+  {
+    "date": "2025-08-26",
+    "word": "HUNGER"
+  },
+  {
+    "date": "2025-08-27",
+    "word": "PAYING"
+  },
+  {
+    "date": "2025-08-28",
+    "word": "DESIRE"
+  },
+  {
+    "date": "2025-08-29",
+    "word": "FORCED"
+  },
+  {
+    "date": "2025-08-30",
+    "word": "CABLES"
+  },
+  {
+    "date": "2025-08-31",
+    "word": "VISION"
+  },
+  {
+    "date": "2025-09-01",
+    "word": "SEALED"
+  },
+  {
+    "date": "2025-09-02",
+    "word": "PASTOR"
+  },
+  {
+    "date": "2025-09-03",
+    "word": "SERVED"
+  },
+  {
+    "date": "2025-09-04",
+    "word": "ACTING"
+  },
+  {
+    "date": "2025-09-05",
+    "word": "MONACO"
+  },
+  {
+    "date": "2025-09-06",
+    "word": "BLACKS"
+  },
+  {
+    "date": "2025-09-07",
+    "word": "FORCES"
+  },
+  {
+    "date": "2025-09-08",
+    "word": "PHOTOS"
+  },
+  {
+    "date": "2025-09-09",
+    "word": "DEPEND"
+  },
+  {
+    "date": "2025-09-10",
+    "word": "RAVENS"
+  },
+  {
+    "date": "2025-09-11",
+    "word": "VIKTOR"
+  },
+  {
+    "date": "2025-09-12",
+    "word": "CONNIE"
+  },
+  {
+    "date": "2025-09-13",
+    "word": "TANDEM"
+  },
+  {
+    "date": "2025-09-14",
+    "word": "REGARD"
+  },
+  {
+    "date": "2025-09-15",
+    "word": "RIBBON"
+  },
+  {
+    "date": "2025-09-16",
+    "word": "RHYMES"
+  },
+  {
+    "date": "2025-09-17",
+    "word": "MARROW"
+  },
+  {
+    "date": "2025-09-18",
+    "word": "SAILOR"
+  },
+  {
+    "date": "2025-09-19",
+    "word": "NATURE"
+  },
+  {
+    "date": "2025-09-20",
+    "word": "VACANT"
+  },
+  {
+    "date": "2025-09-21",
+    "word": "PIRACY"
+  },
+  {
+    "date": "2025-09-22",
+    "word": "GOSPEL"
+  },
+  {
+    "date": "2025-09-23",
+    "word": "NICELY"
+  },
+  {
+    "date": "2025-09-24",
+    "word": "RANSOM"
+  },
+  {
+    "date": "2025-09-25",
+    "word": "ARCTIC"
+  },
+  {
+    "date": "2025-09-26",
+    "word": "STICKS"
+  },
+  {
+    "date": "2025-09-27",
+    "word": "MARBLE"
+  },
+  {
+    "date": "2025-09-28",
+    "word": "NISSAN"
+  },
+  {
+    "date": "2025-09-29",
+    "word": "RAPIDS"
+  },
+  {
+    "date": "2025-09-30",
+    "word": "PRAGUE"
+  },
+  {
+    "date": "2025-10-01",
+    "word": "ARGUED"
+  },
+  {
+    "date": "2025-10-02",
+    "word": "MICHEL"
+  },
+  {
+    "date": "2025-10-03",
+    "word": "DEPUTY"
+  },
+  {
+    "date": "2025-10-04",
+    "word": "RUGGED"
+  },
+  {
+    "date": "2025-10-05",
+    "word": "HASSLE"
+  },
+  {
+    "date": "2025-10-06",
+    "word": "RUINED"
+  },
+  {
+    "date": "2025-10-07",
+    "word": "WINTER"
+  },
+  {
+    "date": "2025-10-08",
+    "word": "SKILLS"
+  },
+  {
+    "date": "2025-10-09",
+    "word": "TOKENS"
+  },
+  {
+    "date": "2025-10-10",
+    "word": "KILLER"
+  },
+  {
+    "date": "2025-10-11",
+    "word": "GUARDS"
+  },
+  {
+    "date": "2025-10-12",
+    "word": "METHOD"
+  },
+  {
+    "date": "2025-10-13",
+    "word": "BATMAN"
+  },
+  {
+    "date": "2025-10-14",
+    "word": "FROZEN"
+  },
+  {
+    "date": "2025-10-15",
+    "word": "HAVENT"
+  },
+  {
+    "date": "2025-10-16",
+    "word": "NEURAL"
+  },
+  {
+    "date": "2025-10-17",
+    "word": "WALLET"
+  },
+  {
+    "date": "2025-10-18",
+    "word": "BRUTAL"
+  },
+  {
+    "date": "2025-10-19",
+    "word": "LETTER"
+  },
+  {
+    "date": "2025-10-20",
+    "word": "SCHOOL"
+  },
+  {
+    "date": "2025-10-21",
+    "word": "PURSUE"
+  },
+  {
+    "date": "2025-10-22",
+    "word": "MARTYR"
+  },
+  {
+    "date": "2025-10-23",
+    "word": "SAVAGE"
+  },
+  {
+    "date": "2025-10-24",
+    "word": "MISSED"
+  },
+  {
+    "date": "2025-10-25",
+    "word": "MAGGIE"
+  },
+  {
+    "date": "2025-10-26",
+    "word": "WICKET"
+  },
+  {
+    "date": "2025-10-27",
+    "word": "HOPPER"
+  },
+  {
+    "date": "2025-10-28",
+    "word": "RAIDED"
+  },
+  {
+    "date": "2025-10-29",
+    "word": "DIFFER"
+  },
+  {
+    "date": "2025-10-30",
+    "word": "MIGUEL"
+  },
+  {
+    "date": "2025-10-31",
+    "word": "METRIC"
+  },
+  {
+    "date": "2025-11-01",
+    "word": "RENTED"
+  },
+  {
+    "date": "2025-11-02",
+    "word": "CALLED"
+  },
+  {
+    "date": "2025-11-03",
+    "word": "BUENOS"
+  },
+  {
+    "date": "2025-11-04",
+    "word": "APOLLO"
+  },
+  {
+    "date": "2025-11-05",
+    "word": "WEBCAM"
+  },
+  {
+    "date": "2025-11-06",
+    "word": "ASSETS"
+  },
+  {
+    "date": "2025-11-07",
+    "word": "FILTHY"
+  },
+  {
+    "date": "2025-11-08",
+    "word": "RUMORS"
+  },
+  {
+    "date": "2025-11-09",
+    "word": "MUTUAL"
+  },
+  {
+    "date": "2025-11-10",
+    "word": "TERMED"
+  },
+  {
+    "date": "2025-11-11",
+    "word": "WASTED"
+  },
+  {
+    "date": "2025-11-12",
+    "word": "CAUSES"
+  },
+  {
+    "date": "2025-11-13",
+    "word": "IDEALS"
+  },
+  {
+    "date": "2025-11-14",
+    "word": "FUCKER"
+  },
+  {
+    "date": "2025-11-15",
+    "word": "ERRORS"
+  },
+  {
+    "date": "2025-11-16",
+    "word": "CURVED"
+  },
+  {
+    "date": "2025-11-17",
+    "word": "SEEING"
+  },
+  {
+    "date": "2025-11-18",
+    "word": "CRISES"
+  },
+  {
+    "date": "2025-11-19",
+    "word": "DOUBTS"
+  },
+  {
+    "date": "2025-11-20",
+    "word": "DARKER"
+  },
+  {
+    "date": "2025-11-21",
+    "word": "VARIES"
+  },
+  {
+    "date": "2025-11-22",
+    "word": "OFFSET"
+  },
+  {
+    "date": "2025-11-23",
+    "word": "REMARK"
+  },
+  {
+    "date": "2025-11-24",
+    "word": "JUSTIN"
+  },
+  {
+    "date": "2025-11-25",
+    "word": "BODIED"
+  },
+  {
+    "date": "2025-11-26",
+    "word": "HOMAGE"
+  },
+  {
+    "date": "2025-11-27",
+    "word": "SCOUTS"
+  },
+  {
+    "date": "2025-11-28",
+    "word": "COSMIC"
+  },
+  {
+    "date": "2025-11-29",
+    "word": "YANKEE"
+  },
+  {
+    "date": "2025-11-30",
+    "word": "SLEEVE"
+  },
+  {
+    "date": "2025-12-01",
+    "word": "REPORT"
+  },
+  {
+    "date": "2025-12-02",
+    "word": "INVEST"
+  },
+  {
+    "date": "2025-12-03",
+    "word": "MOSTLY"
+  },
+  {
+    "date": "2025-12-04",
+    "word": "LADDER"
+  },
+  {
+    "date": "2025-12-05",
+    "word": "HEIGHT"
+  },
+  {
+    "date": "2025-12-06",
+    "word": "RETURN"
+  },
+  {
+    "date": "2025-12-07",
+    "word": "STABLE"
+  },
+  {
+    "date": "2025-12-08",
+    "word": "MANTRA"
+  },
+  {
+    "date": "2025-12-09",
+    "word": "COOKED"
+  },
+  {
+    "date": "2025-12-10",
+    "word": "DEEPER"
+  },
+  {
+    "date": "2025-12-11",
+    "word": "MCLEAN"
+  },
+  {
+    "date": "2025-12-12",
+    "word": "CONNOR"
+  },
+  {
+    "date": "2025-12-13",
+    "word": "NATION"
+  },
+  {
+    "date": "2025-12-14",
+    "word": "BREATH"
+  },
+  {
+    "date": "2025-12-15",
+    "word": "WISHES"
+  },
+  {
+    "date": "2025-12-16",
+    "word": "BARELY"
+  },
+  {
+    "date": "2025-12-17",
+    "word": "STAGES"
+  },
+  {
+    "date": "2025-12-18",
+    "word": "SEXIST"
+  },
+  {
+    "date": "2025-12-19",
+    "word": "BREAST"
+  },
+  {
+    "date": "2025-12-20",
+    "word": "IRVING"
+  },
+  {
+    "date": "2025-12-21",
+    "word": "ROVERS"
+  },
+  {
+    "date": "2025-12-22",
+    "word": "NICOLE"
+  },
+  {
+    "date": "2025-12-23",
+    "word": "JACKET"
+  },
+  {
+    "date": "2025-12-24",
+    "word": "FRENCH"
+  },
+  {
+    "date": "2025-12-25",
+    "word": "BRANDS"
+  },
+  {
+    "date": "2025-12-26",
+    "word": "CRYPTO"
+  },
+  {
+    "date": "2025-12-27",
+    "word": "CELTIC"
+  },
+  {
+    "date": "2025-12-28",
+    "word": "PLAGUE"
+  },
+  {
+    "date": "2025-12-29",
+    "word": "MANAGE"
+  },
+  {
+    "date": "2025-12-30",
+    "word": "BRAKES"
+  },
+  {
+    "date": "2025-12-31",
+    "word": "POETRY"
+  }
+]

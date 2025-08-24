@@ -1,0 +1,25 @@
+{
+  "name": "Wordibble",
+  "short_name": "Wordibble",
+  "description": "A refined Wordle-style game with better UX and switchable 5, 6, or 7 letter modes",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#22c55e",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

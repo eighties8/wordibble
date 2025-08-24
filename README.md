@@ -44,9 +44,24 @@ wordibble/
 │       ├── dictionary5.json      # 5-letter dictionary
 │       ├── dictionary6.json      # 6-letter dictionary
 │       ├── dictionary7.json      # 7-letter dictionary
-│       ├── puzzles5-2025.json   # 5-letter daily puzzles
-│       ├── puzzles6-2025.json   # 6-letter daily puzzles
-│       └── puzzles7-2025.json   # 7-letter daily puzzles
+│       ├── puzzles5-2025.json   # 5-letter daily puzzles (2025)
+│       ├── puzzles5-2026.json   # 5-letter daily puzzles (2026)
+│       ├── puzzles5-2027.json   # 5-letter daily puzzles (2027)
+│       ├── puzzles5-2028.json   # 5-letter daily puzzles (2028)
+│       ├── puzzles5-2029.json   # 5-letter daily puzzles (2029)
+│       ├── puzzles5-2030.json   # 5-letter daily puzzles (2030)
+│       ├── puzzles6-2025.json   # 6-letter daily puzzles (2025)
+│       ├── puzzles6-2026.json   # 6-letter daily puzzles (2026)
+│       ├── puzzles6-2027.json   # 6-letter daily puzzles (2027)
+│       ├── puzzles6-2028.json   # 6-letter daily puzzles (2028)
+│       ├── puzzles6-2029.json   # 6-letter daily puzzles (2029)
+│       ├── puzzles6-2030.json   # 6-letter daily puzzles (2030)
+│       ├── puzzles7-2025.json   # 7-letter daily puzzles (2025)
+│       ├── puzzles7-2026.json   # 7-letter daily puzzles (2026)
+│       ├── puzzles7-2027.json   # 7-letter daily puzzles (2027)
+│       ├── puzzles7-2028.json   # 7-letter daily puzzles (2028)
+│       ├── puzzles7-2029.json   # 7-letter daily puzzles (2029)
+│       └── puzzles7-2030.json   # 7-letter daily puzzles (2030)
 ├── scripts/            # Build scripts
 │   └── buildData.ts    # Data file generator
 ├── styles/             # Global styles

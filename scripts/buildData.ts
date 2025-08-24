@@ -109,28 +109,27 @@ async function main() {
     
     // Build 5-letter data
     const dict5 = buildDictionary(sampleWords5, 5);
-    const puzzles5 = buildPuzzles(dict5, 2025);
     const clues5 = buildClues(dict5);
     
     // Build 6-letter data
     const dict6 = buildDictionary(sampleWords6, 6);
-    const puzzles6 = buildPuzzles(dict6, 2025);
     const clues6 = buildClues(dict6);
     
-    // Write dictionary and puzzle files to lib/data
+    // Write dictionary files to lib/data
     fs.writeFileSync(path.join(dataDir, 'dictionary5.json'), JSON.stringify(dict5, null, 2));
-    fs.writeFileSync(path.join(dataDir, 'puzzles5-2025.json'), JSON.stringify(puzzles5, null, 2));
     fs.writeFileSync(path.join(dataDir, 'dictionary6.json'), JSON.stringify(dict6, null, 2));
-    fs.writeFileSync(path.join(dataDir, 'puzzles6-2025.json'), JSON.stringify(puzzles6, null, 2));
     
-    // Write clues files to lib directory
-    const libDir = path.join(__dirname, '../lib');
-    fs.writeFileSync(path.join(libDir, 'clues5.json'), JSON.stringify(clues5, null, 2));
-    fs.writeFileSync(path.join(libDir, 'clues6.json'), JSON.stringify(clues6, null, 2));
+    // Write clues files to lib/data directory
+    fs.writeFileSync(path.join(dataDir, 'clues5.json'), JSON.stringify(clues5, null, 2));
+    fs.writeFileSync(path.join(dataDir, 'clues6.json'), JSON.stringify(clues6, null, 2));
+    
+    // Note: Puzzle files for multiple years (2025-2030) should be created separately
+    // This script now focuses on dictionaries and clues only
     
     console.log('✅ Data files built successfully!');
-    console.log(`📁 5-letter: ${dict5.length} words, ${puzzles5.length} puzzles`);
-    console.log(`📁 6-letter: ${dict6.length} words, ${puzzles6.length} puzzles`);
+    console.log(`📁 5-letter: ${dict5.length} words, ${clues5.length} clues`);
+    console.log(`📁 6-letter: ${dict6.length} words, ${clues6.length} clues`);
+    console.log('📝 Note: Puzzle files for multiple years (2025-2030) should be created separately');
     
   } catch (error) {
     console.error('❌ Error building data files:', error);
