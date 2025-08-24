@@ -32,16 +32,18 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
 
   const getKeyClasses = (key: string) => {
     const baseClasses = [
-      'px-1.5 py-2 md:px-3 md:py-4 rounded font-semibold text-white transition-colors touch-manipulation',
+      'px-1.5 py-4 md:px-3 md:py-4 rounded font-semibold text-white transition-colors touch-manipulation',
       'text-center',
-      key === 'ENTER' || key === 'BACKSPACE' ? 'text-xs md:text-sm' : 'text-sm md:text-lg',
+      key === 'ENTER' || key === 'BACKSPACE' ? 'text-sm md:text-sm' : 'text-base md:text-lg',
       getKeyColor(key)
     ];
     
     if (key === 'ENTER') {
       baseClasses.push('flex-1 min-w-0'); // Make ENTER key fill remaining space
+    } else if (key === 'BACKSPACE') {
+      baseClasses.push('min-w-[64px] md:min-w-[96px]'); // Narrower but still wide for backspace
     } else {
-      baseClasses.push('min-w-[32px] md:min-w-[48px]'); // Fixed width for other keys
+      baseClasses.push('min-w-[32px] md:min-w-[48px]'); // Narrower mobile width for letter keys
     }
     
     return baseClasses.join(' ');
@@ -69,7 +71,7 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
   };
 
   return (
-    <div className="mt-4 md:mt-8 space-y-1 md:space-y-2 select-none">
+    <div className="mt-4 md:mt-8 space-y-2 md:space-y-2 select-none">
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="flex justify-center gap-0.5 md:gap-1">
           {row.map((key) => (
