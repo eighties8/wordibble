@@ -26,7 +26,7 @@ type InputRowHandle = {
 };
 
 interface GameSettings {
-  wordLength: 5 | 6;
+  wordLength: 5 | 6 | 7;
   maxGuesses: number;
   revealVowels: boolean;
   revealVowelCount: number;
@@ -83,10 +83,15 @@ export default function Game() {
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
-        setSettings(parsed);
+        // Ensure wordLength is properly typed
+        const typedSettings = {
+          ...parsed,
+          wordLength: Number(parsed.wordLength) as 5 | 6 | 7
+        };
+        setSettings(typedSettings);
         // Update game state if word length changed
-        if (parsed.wordLength !== gameState.wordLength) {
-          setGameState(prev => ({ ...prev, wordLength: parsed.wordLength }));
+        if (typedSettings.wordLength !== gameState.wordLength) {
+          setGameState(prev => ({ ...prev, wordLength: typedSettings.wordLength }));
         }
       } catch (e) {
         console.error('Failed to parse saved settings:', e);

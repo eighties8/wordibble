@@ -15,18 +15,18 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
   ];
 
   const getKeyColor = (key: string) => {
-    if (key === 'ENTER' || key === 'BACKSPACE') return 'bg-gray-600 hover:bg-gray-500 active:bg-gray-700';
+    if (key === 'ENTER' || key === 'BACKSPACE') return 'bg-gray-600 hover:bg-gray-500 active:bg-gray-700 !text-white';
     
     const state = letterStates[key];
     switch (state) {
       case 'correct':
-        return 'bg-green-500 hover:bg-green-600 active:bg-green-700';
+        return 'bg-green-500 hover:bg-green-600 active:bg-green-700 !text-white';
       case 'present':
-        return 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700';
+        return 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 !text-white';
       case 'absent':
-        return 'bg-gray-700 hover:bg-gray-600 active:bg-gray-800';
+        return 'bg-gray-300 hover:bg-gray-400 active:bg-gray-500 !text-gray-400';
       default:
-        return 'bg-gray-600 hover:bg-gray-500 active:bg-gray-700';
+        return 'bg-gray-600 hover:bg-gray-500 active:bg-gray-700 !text-white';
     }
   };
 
@@ -45,6 +45,17 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
     }
     
     return baseClasses.join(' ');
+  };
+
+  const getKeyContent = (key: string) => {
+    if (key === 'BACKSPACE') return '⌫';
+    if (key === 'ENTER') return 'ENTER';
+    
+    const state = letterStates[key];
+    if (state === 'absent') {
+      return <span className="line-through-custom">{key}</span>;
+    }
+    return key;
   };
 
   const handleKeyClick = (key: string) => {
@@ -68,7 +79,7 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
               onTouchStart={() => {}} // Ensure touch events work
               className={getKeyClasses(key)}
             >
-              {key === 'BACKSPACE' ? '⌫' : key}
+              {getKeyContent(key)}
             </button>
           ))}
         </div>

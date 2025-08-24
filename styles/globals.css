@@ -12,6 +12,13 @@
   animation: shake 0.5s ease-in-out;
 }
 
+.line-through-custom {
+  text-decoration: line-through;
+  text-decoration-thickness: 0.08em;
+  text-decoration-color: #6b7280; /* gray-500 - darker than the text */
+  padding: 0.1em 0; /* Add vertical padding to make the line appear wider */
+}
+
 .logo span {
   color: #f97316;
   color: #22c55e

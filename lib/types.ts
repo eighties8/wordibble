@@ -1,4 +1,4 @@
-export type WordLength = 5 | 6;
+export type WordLength = 5 | 6 | 7;
 
 export type LetterState = 'correct' | 'present' | 'absent';
 

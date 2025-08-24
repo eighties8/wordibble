@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  WORD_LENGTH: 6 as 5 | 6,              // switch between 5 or 6
+  WORD_LENGTH: 6 as 5 | 6 | 7,              // switch between 5, 6, or 7
   MAX_GUESSES: 5,
   REVEAL_VOWELS: true,                 // show vowel positions up-front
   REVEAL_VOWEL_COUNT: 3,                // number of vowels to reveal (0..N)

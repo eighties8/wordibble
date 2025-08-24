@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface SettingsConfig {
-  wordLength: 5 | 6;
+  wordLength: 5 | 6 | 7;
   maxGuesses: number;
   revealVowels: boolean;
   revealVowelCount: number;
@@ -61,14 +61,14 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
               Word Length
             </label>
             <div className="flex space-x-4">
-              {([5, 6] as const).map((length) => (
+              {([5, 6, 7] as const).map((length) => (
                 <label key={length} className="flex items-center">
                   <input
                     type="radio"
                     name="wordLength"
                     value={length}
                     checked={settings.wordLength === length}
-                    onChange={(e) => setSettings(prev => ({ ...prev, wordLength: Number(e.target.value) as 5 | 6 }))}
+                    onChange={(e) => setSettings(prev => ({ ...prev, wordLength: Number(e.target.value) as 5 | 6 | 7 }))}
                     className="mr-2 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">{length} letters</span>

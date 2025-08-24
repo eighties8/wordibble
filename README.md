@@ -1,10 +1,10 @@
 # Wordibble - Refined Word Search Game
 
-A refined Wordle-style game built with Next.js, TypeScript, and Tailwind CSS. Features better UX with switchable 5-or-6 letter modes, intelligent cursor management, and vowel reveals.
+A refined Wordle-style game built with Next.js, TypeScript, and Tailwind CSS. Features better UX with switchable 5, 6, or 7 letter modes, intelligent cursor management, and vowel reveals.
 
 ## Features
 
-- **Switchable Word Lengths**: Toggle between 5 and 6 letter modes
+- **Switchable Word Lengths**: Toggle between 5, 6, or 7 letter modes
 - **Smart Input Management**: Only type in the top active row
 - **Locked Letters**: Green (correct) letters remain locked and read-only
 - **Intelligent Focus**: Always focuses on the first available (unlocked) cell
@@ -40,10 +40,13 @@ wordup/
 ├── public/data/        # Game data files
 │   ├── dict5.json      # 5-letter dictionary
 │   ├── dict6.json      # 6-letter dictionary
+│   ├── dict7.json      # 7-letter dictionary
 │   ├── puzzles5-2025.json # 5-letter daily puzzles
 │   ├── puzzles6-2025.json # 6-letter daily puzzles
+│   ├── puzzles7-2025.json # 7-letter daily puzzles
 │   ├── clues5.json     # 5-letter clues
-│   └── clues6-2025.json # 6-letter clues
+│   ├── clues6.json     # 6-letter clues
+│   └── clues7.json     # 7-letter clues
 ├── scripts/            # Build scripts
 │   └── buildData.ts    # Data file generator
 ├── styles/             # Global styles
@@ -91,7 +94,7 @@ Edit `lib/config.ts` to customize the game:
 
 ```typescript
 export const GAME_CONFIG = {
-  WORD_LENGTH: 5 as 5 | 6,              // Switch between 5 or 6
+  WORD_LENGTH: 5 as 5 | 6 | 7,          // Switch between 5, 6, or 7
   MAX_GUESSES: 6,                        // Maximum attempts allowed
   REVEAL_VOWELS: false,                  // Show vowel positions up-front
   REVEAL_VOWEL_COUNT: 0,                 // Number of vowels to reveal

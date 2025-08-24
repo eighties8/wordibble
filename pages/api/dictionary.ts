@@ -5,8 +5,8 @@ import path from 'path';
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { length } = req.query;
   
-  if (!length || (length !== '5' && length !== '6')) {
-    return res.status(400).json({ error: 'Invalid word length. Must be 5 or 6.' });
+  if (!length || (length !== '5' && length !== '6' && length !== '7')) {
+    return res.status(400).json({ error: 'Invalid word length. Must be 5, 6, or 7.' });
   }
 
   try {

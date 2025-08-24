@@ -1,6 +1,6 @@
 import { DailyPuzzle, PuzzleData, CluesData } from './types';
 
-export async function loadDailyPuzzle(wordLength: 5 | 6): Promise<DailyPuzzle> {
+export async function loadDailyPuzzle(wordLength: 5 | 6 | 7): Promise<DailyPuzzle> {
   try {
     // Load puzzles and clues based on word length
     const [puzzlesResponse, cluesResponse] = await Promise.all([
