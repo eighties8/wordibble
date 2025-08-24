@@ -206,7 +206,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                 data-role="active-cell"
                 data-index={i}
                 data-locked={isLocked}
-                className={`w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 text-center border rounded-lg font-semibold tracking-wider text-base md:text-lg lg:text-xl
+                className={`w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 text-center border rounded-lg font-semibold tracking-wider text-lg md:text-lg lg:text-xl
                   ${isLocked ? 'bg-green-500 text-white cursor-default' : 'bg-white text-gray-900 border-gray-300'}
                 `}
                 value={cells[i] ?? ''}
