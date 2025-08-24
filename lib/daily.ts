@@ -15,7 +15,7 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false)
     const puzzles: PuzzleData[] = await puzzlesResponse.json();
     const clues: CluesData = await cluesResponse.json();
 
-    let puzzle: PuzzleData;
+    let puzzle: PuzzleData | undefined;
     
     if (randomMode) {
       // Random puzzle for testing
