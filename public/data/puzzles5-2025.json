@@ -6,7 +6,10 @@
   { "date": "2025-01-05", "word": "LIGHT" },
   { "date": "2025-01-06", "word": "WATER" },
   { "date": "2025-01-07", "word": "EARTH" },
-  { "date": "2025-01-08", "word": "FIRE" },
   { "date": "2025-01-09", "word": "MUSIC" },
-  { "date": "2025-01-10", "word": "HAPPY" }
+  { "date": "2025-01-10", "word": "SPACE" },
+  { "date": "2025-08-23", "word": "HAPPY" },
+  { "date": "2025-08-24", "word": "EARTH" },
+  { "date": "2025-08-25", "word": "CODING" }
+
 ]

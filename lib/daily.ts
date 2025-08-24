@@ -1,10 +1,7 @@
-import { GAME_CONFIG } from './config';
 import { DailyPuzzle, PuzzleData, CluesData } from './types';
 
-export async function loadDailyPuzzle(): Promise<DailyPuzzle> {
+export async function loadDailyPuzzle(wordLength: 5 | 6): Promise<DailyPuzzle> {
   try {
-    const wordLength = GAME_CONFIG.WORD_LENGTH;
-    
     // Load puzzles and clues based on word length
     const [puzzlesResponse, cluesResponse] = await Promise.all([
       fetch(`/data/puzzles${wordLength}-2025.json`),
@@ -40,7 +37,7 @@ export async function loadDailyPuzzle(): Promise<DailyPuzzle> {
     console.error('Error loading daily puzzle:', error);
     // Fallback to a default puzzle
     return {
-      word: 'HELLO'.slice(0, GAME_CONFIG.WORD_LENGTH),
+      word: 'HELLO'.slice(0, wordLength),
       isToday: false
     };
   }

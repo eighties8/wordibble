@@ -17,14 +17,12 @@ export default function Toast({ toast, onDismiss }: Props) {
 
   const getToastStyles = (type: ToastType['type']) => {
     switch (type) {
-      case 'error':
-        return 'bg-red-600 text-white border-red-500';
       case 'success':
-        return 'bg-green-600 text-white border-green-500';
-      case 'info':
-        return 'bg-blue-600 text-white border-blue-500';
+        return 'bg-green-500 text-white border-green-600';
+      case 'error':
+        return 'bg-red-500 text-white border-red-600';
       default:
-        return 'bg-gray-600 text-white border-gray-500';
+        return 'bg-gray-500 text-white border-gray-600';
     }
   };
 

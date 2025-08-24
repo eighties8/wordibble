@@ -1,15 +1,47 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { GAME_CONFIG } from '../lib/config';
-import { GameState, LetterState, Toast } from '../lib/types';
+import { GameState, Toast } from '../lib/types';
 import { loadDailyPuzzle } from '../lib/daily';
-import { loadDictionary, evaluateGuess, computeRevealsForWord, validateGuess } from '../lib/gameLogic';
+import {
+  loadDictionary,
+  evaluateGuess,
+  computeRevealsForWord,
+  validateGuess,
+} from '../lib/gameLogic';
+import Header from './Header';
+import Footer from './Footer';
+import Settings from './Settings';
 import GuessInputRow from './GuessInputRow';
 import RowHistory from './RowHistory';
 import ClueRibbon from './ClueRibbon';
 import ToastComponent from './Toast';
 import Keyboard from './Keyboard';
+import type { GuessInputRowHandle } from './GuessInputRow';
+
+type InputRowHandle = {
+  /** Move focus to the first editable (non-locked, empty) cell */
+  focusFirstEmptyEditable: () => void;
+  /** Move focus to the first editable (non-locked) cell even if filled */
+  focusFirstEditable: () => void;
+};
+
+interface GameSettings {
+  wordLength: 5 | 6;
+  maxGuesses: number;
+  revealVowels: boolean;
+  revealVowelCount: number;
+  revealClue: boolean;
+}
 
 export default function Game() {
+  const [settings, setSettings] = useState<GameSettings>({
+    wordLength: GAME_CONFIG.WORD_LENGTH,
+    maxGuesses: GAME_CONFIG.MAX_GUESSES,
+    revealVowels: GAME_CONFIG.REVEAL_VOWELS,
+    revealVowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT,
+    revealClue: GAME_CONFIG.REVEAL_CLUE,
+  });
+
   const [gameState, setGameState] = useState<GameState>({
     wordLength: GAME_CONFIG.WORD_LENGTH,
     secretWord: '',
@@ -17,350 +49,504 @@ export default function Game() {
     attempts: [],
     lockedLetters: {},
     gameStatus: 'playing',
-    attemptIndex: 0
+    attemptIndex: 0,
   });
 
   const [currentGuess, setCurrentGuess] = useState<string[]>([]);
   const [dictionary, setDictionary] = useState<Set<string>>(new Set());
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+  const [forceClear, setForceClear] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Initialize current guess with the correct length
+  // Imperative handle to control focus inside GuessInputRow
+  // const inputRowRef = useRef<InputRowHandle | null>(null);
+  const inputRowRef = useRef<GuessInputRowHandle | null>(null);
+
+  // ===== Debug flag (persisted) =====
+  useEffect(() => {
+    const savedDebugMode = localStorage.getItem('wordup-debug-mode');
+    if (savedDebugMode) setDebugMode(JSON.parse(savedDebugMode));
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('wordup-debug-mode', JSON.stringify(debugMode));
+  }, [debugMode]);
+
+  // ===== Settings (persisted) =====
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('wordup-settings');
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setSettings(parsed);
+        // Update game state if word length changed
+        if (parsed.wordLength !== gameState.wordLength) {
+          setGameState(prev => ({ ...prev, wordLength: parsed.wordLength }));
+        }
+      } catch (e) {
+        console.error('Failed to parse saved settings:', e);
+      }
+    }
+  }, []);
+
+  // Update game state when settings change
+  useEffect(() => {
+    if (settings.wordLength !== gameState.wordLength) {
+      setGameState(prev => ({ ...prev, wordLength: settings.wordLength }));
+    }
+  }, [settings.wordLength, gameState.wordLength]);
+
+  const handleSettingsChange = useCallback((newSettings: GameSettings) => {
+    setSettings(newSettings);
+    // Update game state if word length changed
+    if (newSettings.wordLength !== gameState.wordLength) {
+      setGameState(prev => ({ ...prev, wordLength: newSettings.wordLength }));
+    }
+    // Reload game with new settings
+    window.location.reload();
+  }, [gameState.wordLength]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === '0') {
+        e.preventDefault();
+        setDebugMode((p) => !p);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  // ===== Initialize guess row length =====
   useEffect(() => {
     if (gameState.wordLength > 0) {
-      setCurrentGuess(new Array(gameState.wordLength).fill(''));
+      setCurrentGuess((prev) => {
+        if (prev.length === gameState.wordLength) return prev;
+        return new Array(gameState.wordLength).fill('');
+      });
     }
   }, [gameState.wordLength]);
 
-  // Update current guess when locked letters change
-  useEffect(() => {
-    if (gameState.secretWord && Object.keys(gameState.lockedLetters).length > 0) {
-      setCurrentGuess(prev => {
-        const newGuess = [...prev];
-        Object.entries(gameState.lockedLetters).forEach(([index, letter]) => {
-          if (letter) {
-            newGuess[parseInt(index)] = letter;
-          }
-        });
-        return newGuess;
-      });
+  // ===== Calculate adjusted max guesses based on revealed letters =====
+  const adjustedMaxGuesses = useMemo(() => {
+    const revealedLetterCount = Object.keys(gameState.lockedLetters).length;
+    
+    // If REVEAL_CLUE is false and only 1 letter is revealed, add 1 to max guesses
+    if (!settings.revealClue && revealedLetterCount === 1) {
+      return settings.maxGuesses + 1;
     }
-  }, [gameState.lockedLetters, gameState.secretWord]);
+    
+    // If there's a clue AND 2 or more vowels revealed, reduce max guesses by 2
+    if (settings.revealClue && revealedLetterCount >= 2) {
+      return Math.max(3, settings.maxGuesses - 2); // Ensure minimum of 3 guesses
+    }
+    
+    return settings.maxGuesses;
+  }, [gameState.lockedLetters, settings.revealClue, settings.maxGuesses]);
 
-  // Load daily puzzle and dictionary
+  // ===== Load daily puzzle + dictionary =====
   useEffect(() => {
-    async function initializeGame() {
+    let alive = true;
+    (async () => {
       try {
         const [puzzle, dict] = await Promise.all([
-          loadDailyPuzzle(),
-          loadDictionary(GAME_CONFIG.WORD_LENGTH)
+          loadDailyPuzzle(settings.wordLength),
+          loadDictionary(settings.wordLength),
         ]);
 
-        // Compute vowel reveals if enabled
         const revealedMask = computeRevealsForWord(puzzle.word, {
-          revealVowels: GAME_CONFIG.REVEAL_VOWELS,
-          vowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT
+          revealVowels: settings.revealVowels,
+          vowelCount: settings.revealVowelCount,
         });
 
-        // Build locked letters object
         const lockedLetters: Record<number, string | null> = {};
-        revealedMask.forEach((isLocked, index) => {
-          if (isLocked) {
-            lockedLetters[index] = puzzle.word[index];
-          }
+        revealedMask.forEach((isLocked, i) => {
+          if (isLocked) lockedLetters[i] = puzzle.word[i];
         });
 
-        setGameState(prev => ({
+        if (!alive) return;
+
+        setGameState((prev) => ({
           ...prev,
           secretWord: puzzle.word,
           clue: puzzle.clue,
-          lockedLetters
+          lockedLetters,
         }));
-
         setDictionary(dict);
-      } catch (error) {
-        console.error('Failed to initialize game:', error);
+      } catch {
         addToast('Failed to load game data', 'error');
       } finally {
-        setIsLoading(false);
+        if (alive) setIsLoading(false);
+        // Focus after mount
+        queueFocusFirstEmpty();
       }
-    }
+    })();
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.wordLength, settings.revealVowels, settings.revealVowelCount]);
 
-    initializeGame();
-  }, []);
+  // ===== Keep currentGuess aligned when locked letters change =====
+  useEffect(() => {
+    if (!gameState.secretWord) return;
+    if (Object.keys(gameState.lockedLetters).length === 0) return;
 
+    setCurrentGuess((prev) => {
+      const next = prev.length === gameState.wordLength ? [...prev] : new Array(gameState.wordLength).fill('');
+      for (const [idxStr, letter] of Object.entries(gameState.lockedLetters)) {
+        const i = Number(idxStr);
+        if (letter) next[i] = letter;
+      }
+      return next;
+    });
+    // Don’t focus here; we’ll do it in targeted places
+  }, [gameState.lockedLetters, gameState.secretWord, gameState.wordLength]);
+
+  // ===== Toast helpers =====
   const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
-    const id = Date.now().toString();
-    setToasts(prev => [...prev, { id, message, type }]);
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
   }, []);
-
   const dismissToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // ===== Input row onChange -> source of truth for the active guess =====
   const handleGuessChange = useCallback((letters: string[]) => {
-    // letters array contains the complete current state (locked + editable)
-    console.log('Received letters from input row:', letters);
     setCurrentGuess(letters);
   }, []);
 
-  const handleSubmit = useCallback(async () => {
+  // ===== Submit guess =====
+  const handleSubmit = useCallback(() => {
     if (gameState.gameStatus !== 'playing') return;
 
-    // currentGuess now contains the complete word including locked letters
-    const completeGuess = currentGuess.join('');
+    // Build the complete guess mixing locked + current
+    const completeGuess = Array.from({ length: gameState.wordLength }, (_, i) =>
+      gameState.lockedLetters[i] ?? currentGuess[i] ?? ''
+    ).join('');
 
-    console.log('Current guess array:', currentGuess);
-    console.log('Complete guess:', completeGuess);
-    console.log('Secret word:', gameState.secretWord);
-
-    // Validate the guess
     if (!validateGuess(completeGuess, gameState.wordLength)) {
       addToast('Please enter a complete word', 'error');
       return;
     }
-
     if (!dictionary.has(completeGuess)) {
-      addToast('Word not in dictionary', 'error');
+      // Shake animation and reset input
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      
+      // Clear current guess (keep locked letters)
+      setCurrentGuess(() => {
+        const next = new Array(gameState.wordLength).fill('');
+        for (const [idxStr, letter] of Object.entries(gameState.lockedLetters)) {
+          const i = Number(idxStr);
+          if (letter) next[i] = letter;
+        }
+        return next;
+      });
+      
+      // Trigger force clear of input row
+      setForceClear(true);
+      setTimeout(() => {
+        setForceClear(false);
+        queueFocusFirstEmpty();
+      }, 100);
+      
       return;
     }
 
-    // Evaluate the guess
     const evaluation = evaluateGuess(completeGuess, gameState.secretWord);
-    
-    // Check for win
-    const isWin = evaluation.every(state => state === 'correct');
-    
-    // Update locked letters for correct positions ONLY (exact matches)
-    const newLockedLetters = { ...gameState.lockedLetters };
-    evaluation.forEach((state, index) => {
-      if (state === 'correct') {
-        newLockedLetters[index] = completeGuess[index];
-      }
-    });
+    const isWin = evaluation.every((s) => s === 'correct');
 
-    // Update game state
-    setGameState(prev => {
-      const newAttempts = [...prev.attempts, completeGuess];
-      const newAttemptIndex = prev.attemptIndex + 1;
-      
-      let newGameStatus: 'playing' | 'won' | 'lost' = 'playing';
+    // Update locked letters for exact matches
+    const newLocked = { ...gameState.lockedLetters };
+    for (let i = 0; i < evaluation.length; i++) {
+      if (evaluation[i] === 'correct') newLocked[i] = completeGuess[i];
+    }
+
+    // Update state
+    setGameState((prev) => {
+      const newAttempts = prev.attempts.length
+        ? [...prev.attempts, completeGuess]
+        : [completeGuess];
+      const nextAttemptIndex = prev.attemptIndex + 1;
+
+      let newStatus: GameState['gameStatus'] = 'playing';
       if (isWin) {
-        newGameStatus = 'won';
+        newStatus = 'won';
         addToast('Congratulations! You won!', 'success');
-      } else if (newAttemptIndex >= GAME_CONFIG.MAX_GUESSES) {
-        newGameStatus = 'lost';
+      } else if (nextAttemptIndex >= adjustedMaxGuesses) {
+        newStatus = 'lost';
         addToast(`Game over! The word was ${prev.secretWord}`, 'error');
       }
 
       return {
         ...prev,
         attempts: newAttempts,
-        attemptIndex: newAttemptIndex,
-        lockedLetters: newLockedLetters,
-        gameStatus: newGameStatus
+        attemptIndex: nextAttemptIndex,
+        lockedLetters: newLocked,
+        gameStatus: newStatus,
       };
     });
 
-    // Reset current guess to just the locked letters (green ones)
-    setCurrentGuess(prev => {
-      const newGuess = new Array(gameState.wordLength).fill('');
-      Object.entries(newLockedLetters).forEach(([index, letter]) => {
-        if (letter) {
-          newGuess[parseInt(index)] = letter;
-        }
-      });
-      console.log('Reset current guess to:', newGuess);
-      return newGuess;
+    // Reset current guess to only the locked positions (greens)
+    setCurrentGuess(() => {
+      const next = new Array(gameState.wordLength).fill('');
+      for (const [idxStr, letter] of Object.entries(newLocked)) {
+        const i = Number(idxStr);
+        if (letter) next[i] = letter;
+      }
+      return next;
     });
-  }, [gameState, currentGuess, dictionary, addToast, gameState.wordLength]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Enter' && gameState.gameStatus === 'playing') {
-      handleSubmit();
-    }
-  }, [handleSubmit, gameState.gameStatus]);
+    // Focus first empty editable after render commit
+    queueFocusFirstEmpty();
+  }, [
+    gameState.gameStatus,
+    gameState.wordLength,
+    gameState.lockedLetters,
+    gameState.secretWord,
+    currentGuess,
+    dictionary,
+    addToast,
+    adjustedMaxGuesses,
+  ]);
 
+  // ===== Global Enter handler =====
+  const handleEnterKey = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && gameState.gameStatus === 'playing') handleSubmit();
+    },
+    [handleSubmit, gameState.gameStatus]
+  );
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+    document.addEventListener('keydown', handleEnterKey);
+    return () => document.removeEventListener('keydown', handleEnterKey);
+  }, [handleEnterKey]);
 
-  // Keyboard input handlers
-  const handleKeyboardKeyPress = useCallback((key: string) => {
-    if (gameState.gameStatus !== 'playing') return;
-    
-    // Find the first empty editable cell
-    const firstEmptyIndex = currentGuess.findIndex((letter, index) => {
-      return !gameState.lockedLetters[index] && !letter;
-    });
-    
-    if (firstEmptyIndex >= 0) {
-      setCurrentGuess(prev => {
-        const next = [...prev];
-        next[firstEmptyIndex] = key;
-        return next;
-      });
+  // ===== Virtual keyboard handlers =====
+  const firstEmptyEditableIndex = useCallback(() => {
+    for (let i = 0; i < currentGuess.length; i++) {
+      if (!gameState.lockedLetters[i] && !currentGuess[i]) return i;
     }
-  }, [gameState.gameStatus, currentGuess, gameState.lockedLetters]);
+    return -1;
+  }, [currentGuess, gameState.lockedLetters]);
+
+  const lastFilledEditableIndex = useCallback(() => {
+    for (let i = currentGuess.length - 1; i >= 0; i--) {
+      if (!gameState.lockedLetters[i] && currentGuess[i]) return i;
+    }
+    return -1;
+  }, [currentGuess, gameState.lockedLetters]);
+
+  const handleKeyboardKeyPress = useCallback(
+    (key: string) => {
+      if (gameState.gameStatus !== 'playing') return;
+      const i = firstEmptyEditableIndex();
+      if (i >= 0) {
+        setCurrentGuess((prev) => {
+          if (prev[i] === key) return prev; // no-op if same
+          const next = [...prev];
+          next[i] = key;
+          return next;
+        });
+        // Focus the next empty editable cell after typing
+        setTimeout(() => {
+          const nextIndex = i + 1;
+          if (nextIndex < gameState.wordLength) {
+            queueFocusSpecificIndex(nextIndex);
+          }
+        }, 50);
+      }
+    },
+    [gameState.gameStatus, firstEmptyEditableIndex, gameState.wordLength]
+  );
 
   const handleKeyboardBackspace = useCallback(() => {
     if (gameState.gameStatus !== 'playing') return;
-    
-    // Find the last filled editable cell using reverse loop
-    let lastFilledIndex = -1;
-    for (let i = currentGuess.length - 1; i >= 0; i--) {
-      if (!gameState.lockedLetters[i] && currentGuess[i]) {
-        lastFilledIndex = i;
-        break;
-      }
-    }
-    
-    if (lastFilledIndex >= 0) {
-      setCurrentGuess(prev => {
+    const i = lastFilledEditableIndex();
+    if (i >= 0) {
+      setCurrentGuess((prev) => {
         const next = [...prev];
-        next[lastFilledIndex] = '';
+        next[i] = '';
         return next;
       });
+      // After backspace, keep focus where the deletion occurred
+      setTimeout(() => {
+        queueFocusSpecificIndex(i);
+      }, 50);
     }
-  }, [gameState.gameStatus, currentGuess, gameState.lockedLetters]);
+  }, [gameState.gameStatus, lastFilledEditableIndex]);
 
-  // Build letter states for keyboard coloring
-  const letterStates = useCallback(() => {
+  // ===== Memoized keyboard letter states =====
+  const keyboardLetterStates = useMemo(() => {
     const states: Record<string, 'correct' | 'present' | 'absent'> = {};
-    
-    // Process all attempts to build letter states
-    gameState.attempts.forEach(attempt => {
-      const evaluation = evaluateGuess(attempt, gameState.secretWord);
-      attempt.split('').forEach((letter, index) => {
-        const state = evaluation[index];
-        if (state === 'correct') {
-          states[letter] = 'correct';
-        } else if (state === 'present' && states[letter] !== 'correct') {
-          states[letter] = 'present';
-        } else if (state === 'absent' && !states[letter]) {
-          states[letter] = 'absent';
-        }
-      });
-    });
-    
+    for (const attempt of gameState.attempts) {
+      const evaln = evaluateGuess(attempt, gameState.secretWord);
+      for (let i = 0; i < attempt.length; i++) {
+        const L = attempt[i];
+        const s = evaln[i];
+        if (s === 'correct') states[L] = 'correct';
+        else if (s === 'present' && states[L] !== 'correct') states[L] = 'present';
+        else if (s === 'absent' && !states[L]) states[L] = 'absent';
+      }
+    }
     return states;
   }, [gameState.attempts, gameState.secretWord]);
 
+  // ===== Memoize row evaluations so we don't recompute every render =====
+  const historyEvaluations = useMemo(() => {
+    return gameState.attempts.map((attempt) => evaluateGuess(attempt, gameState.secretWord));
+  }, [gameState.attempts, gameState.secretWord]);
+
+  // ===== Focus helpers =====
+  function queueFocusFirstEmpty() {
+    // Wait a tick for the input row to mount/update
+    requestAnimationFrame(() => {
+      if (inputRowRef.current?.focusFirstEmptyEditable) {
+        inputRowRef.current.focusFirstEmptyEditable();
+      } else {
+        // DOM fallback: focus first input with data-role="active-cell" that is not [data-locked="true"] and empty
+        const el = document.querySelector<HTMLInputElement>(
+          'input[data-role="active-cell"][data-locked="false"][value=""]'
+        ) || document.querySelector<HTMLInputElement>('input[data-role="active-cell"][data-locked="false"]');
+        el?.focus();
+        el?.select?.();
+      }
+    });
+  }
+  function queueFocusSpecificIndex(i: number) {
+    requestAnimationFrame(() => {
+      // Only focus if the cell is not locked
+      if (gameState.lockedLetters[i]) return;
+      
+      // Try a convention: inputs annotated with data-index
+      const el = document.querySelector<HTMLInputElement>(
+        `input[data-role="active-cell"][data-index="${i}"]`
+      );
+      if (el && el.getAttribute('data-locked') !== 'true') {
+        el.focus();
+        el.select?.();
+      }
+    });
+  }
+
+  // Focus at game start (when loading finishes)
+  useEffect(() => {
+    if (!isLoading && gameState.secretWord) queueFocusFirstEmpty();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, gameState.secretWord, gameState.lockedLetters]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-xl text-white">Loading game...</div>
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="text-xl text-gray-900">Loading game...</div>
       </div>
     );
   }
 
-  const attemptsLeft = GAME_CONFIG.MAX_GUESSES - gameState.attemptIndex;
+  const attemptsLeft = adjustedMaxGuesses - gameState.attemptIndex;
 
   return (
-    <div className="min-h-screen bg-gray-900 py-8 px-4">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-6 h-6 bg-blue-400 rounded-full mr-2"></div>
-            <span className="text-white text-lg">{attemptsLeft} guesses left</span>
+    <div className="min-h-screen bg-white flex flex-col">
+      <Header onSettingsClick={() => setIsSettingsOpen(true)} />
+      
+      <main className="flex-1 py-8 px-4">
+        <div className="max-w-md mx-auto">
+          {/* Clue Ribbon */}
+          {gameState.clue && settings.revealClue && (
+            <div className="text-center mb-8">
+              <ClueRibbon clue={gameState.clue} targetWord={debugMode ? gameState.secretWord : undefined} />
+            </div>
+          )}
+
+          {/* Game Grid */}
+          <div className="space-y-4 mb-8">
+            {/* Active Input Row */}
+            <GuessInputRow
+              ref={inputRowRef as any}
+              key={`input-${Object.keys(gameState.lockedLetters).length}-${gameState.attemptIndex}`}
+              wordLength={gameState.wordLength}
+              locked={Array.from({ length: gameState.wordLength }, (_, i) => !!gameState.lockedLetters[i])}
+              initialCells={Array.from({ length: gameState.wordLength }, (_, i) => gameState.lockedLetters[i] || '')}
+              onChange={handleGuessChange}
+              isShaking={isShaking}
+              forceClear={forceClear}
+            />
+
+            {/* History Rows */}
+            {gameState.attempts.slice(0, gameState.gameStatus === 'won' ? -1 : undefined).map((attempt, index) => (
+              <RowHistory
+                key={index}
+                guess={attempt}
+                evaluation={historyEvaluations[index]}
+                wordLength={gameState.wordLength}
+              />
+            ))}
           </div>
-          
-          {/* DEBUG: Show target word until we get this working */}
-          <div className="text-center mb-4 p-2 bg-gray-800 rounded">
-            <span className="text-yellow-400 text-sm">DEBUG: Target word is </span>
-            <span className="text-white font-mono text-lg">{gameState.secretWord}</span>
-          </div>
-          
-          {gameState.clue && GAME_CONFIG.REVEAL_CLUE && (
-            <ClueRibbon clue={gameState.clue} />
+
+          {/* Guesses Left */}
+          {gameState.gameStatus === 'playing' && (
+            <div className="text-center mb-4">
+              <span className="text-gray-900 text-lg">{attemptsLeft} guesses left</span>
+              {debugMode && (
+                <span className="ml-3 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">DEBUG</span>
+              )}
+            </div>
+          )}
+
+          {/* Game Status */}
+          {gameState.gameStatus === 'won' && (
+            <div className="text-center text-green-600 font-semibold text-lg mb-4">
+              🎉 You won in {gameState.attemptIndex} tries!
+            </div>
+          )}
+          {gameState.gameStatus === 'lost' && (
+            <div className="text-center text-red-600 font-semibold text-lg mb-4">
+              Game over! The word was {gameState.secretWord}
+            </div>
+          )}
+
+          {/* New Game Button */}
+          {(gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
+            <div className="text-center">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
+              >
+                New Game
+              </button>
+            </div>
+          )}
+
+          {/* Virtual Keyboard */}
+          {gameState.gameStatus === 'playing' && (
+            <div className="mt-8">
+              <Keyboard
+                onKeyPress={handleKeyboardKeyPress}
+                onEnter={handleSubmit}
+                onBackspace={handleKeyboardBackspace}
+                letterStates={keyboardLetterStates}
+              />
+            </div>
           )}
         </div>
+      </main>
 
-        {/* Game Grid */}
-        <div className="space-y-4 mb-8">
-          {/* Active Input Row - ALWAYS the top row */}
-          <GuessInputRow
-            key={`input-${Object.keys(gameState.lockedLetters).length}-${gameState.attemptIndex}`}
-            wordLength={gameState.wordLength}
-            locked={Array.from({ length: gameState.wordLength }, (_, i) => !!gameState.lockedLetters[i])}
-            initialCells={gameState.secretWord
-              .split('')
-              .map((letter, i) => gameState.lockedLetters[i] || '')}
-            onChange={handleGuessChange}
-          />
+      <Footer />
 
-          {/* Debug info */}
-          <div className="text-xs text-gray-400 mt-2">
-            DEBUG: Locked letters: {JSON.stringify(gameState.lockedLetters)}
-          </div>
-
-          {/* History Rows - BELOW the input row, never get focus */}
-          {gameState.attempts.map((attempt, index) => (
-            <RowHistory
-              key={index}
-              guess={attempt}
-              evaluation={evaluateGuess(attempt, gameState.secretWord)}
-              wordLength={gameState.wordLength}
-            />
-          ))}
-        </div>
-
-        {/* Game Status */}
-        {gameState.gameStatus === 'won' && (
-          <div className="text-center text-green-400 font-semibold text-lg mb-4">
-            🎉 You won in {gameState.attemptIndex} tries!
-          </div>
-        )}
-
-        {gameState.gameStatus === 'lost' && (
-          <div className="text-center text-red-400 font-semibold text-lg mb-4">
-            Game over! The word was {gameState.secretWord}
-          </div>
-        )}
-
-        {/* Submit Button */}
-        {gameState.gameStatus === 'playing' && (
-          <div className="text-center">
-            <div className="mb-2 text-xs text-gray-400">
-              DEBUG: Current guess: [{currentGuess.join(', ')}]
-            </div>
-            <button
-              onClick={handleSubmit}
-              disabled={currentGuess.filter(Boolean).length < gameState.wordLength}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium disabled:bg-gray-600 disabled:cursor-not-allowed hover:bg-blue-700"
-            >
-              Submit Guess
-            </button>
-          </div>
-        )}
-
-        {/* New Game Button */}
-        {(gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
-          <div className="text-center">
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
-            >
-              New Game
-            </button>
-          </div>
-        )}
-
-        {/* Virtual Keyboard */}
-        {gameState.gameStatus === 'playing' && (
-          <Keyboard
-            onKeyPress={handleKeyboardKeyPress}
-            onEnter={handleSubmit}
-            onBackspace={handleKeyboardBackspace}
-            letterStates={letterStates()}
-          />
-        )}
-      </div>
+      {/* Settings Overlay */}
+      <Settings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSettingsChange={handleSettingsChange}
+        currentSettings={settings}
+      />
 
       {/* Toasts */}
-      {toasts.map(toast => (
+      {toasts.map((toast) => (
         <ToastComponent key={toast.id} toast={toast} onDismiss={dismissToast} />
       ))}
     </div>
