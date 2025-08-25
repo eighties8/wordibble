@@ -596,13 +596,13 @@ export default function Game() {
     ).join('');
 
     if (!validateGuess(completeGuess, gameState.wordLength)) {
-      setClueError('Please enter a complete word');
-      setTimeout(() => setClueError(null), 1000); // Clear after 3 seconds
+      setClueError('Please enter a complete word!');
+      setTimeout(() => setClueError(null), 1500); // Clear after 1.5 seconds
       return;
     }
     if (!dictionary.has(completeGuess)) {
-      setClueError('Not in dictionary');
-      setTimeout(() => setClueError(null), 1000); // Clear after 3 seconds
+      setClueError('Not in the valid word list!');
+      setTimeout(() => setClueError(null), 1500); // Clear after 1.5 seconds
       
       // Shake animation and reset input
       setIsShaking(true);
@@ -952,48 +952,38 @@ export default function Game() {
       
       <main className="flex-1 py-4 md:py-8 px-4">
         <div className="max-w-md mx-auto">
-          {/* Clue Ribbon or Game Result Banner */}
-          <div className="text-center mb-4 md:mb-8">
-            {gameState.gameStatus === 'lost' ? (
-              /* Solution Banner - Show in place of clue when lost */
-              <div className="bg-black text-white px-6 py-3 rounded-lg w-full max-w-md mx-auto">
-                <div className="text-2xl font-bold tracking-wider">
-                  {gameState.secretWord}
-                </div>
-              </div>
-            ) : gameState.gameStatus === 'won' ? (
-              /* Wordibble Result Banner - Show in place of clue when won */
-              <div className="bg-green-500 text-white px-6 py-3 rounded-lg w-full max-w-md mx-auto">
-                <div className="text-xl font-bold tracking-wider">
-                  {(() => {
-                    // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
-                    const startDate = new Date('2025-08-23');
-                    const today = new Date();
-                    const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-                    const puzzleNumber = daysDiff + 1;
-                    return `Wordibble #${puzzleNumber} ${gameState.attempts.length}/5`;
-                  })()}
-                </div>
-              </div>
-            ) : clueError ? (
-              /* Error Banner - Show when there's an error */
-              <div className="w-fit mx-auto mb-6 md:mb-6 bg-gray-300 text-gray-700 px-6 py-1.5 rounded-lg shadow-lg transition-all duration-300 ease-out transform text-sm font-medium whitespace-nowrap">
-                {clueError}
-              </div>
-            ) : (
-              /* Clue Ribbon - Show when playing normally */
-              <ClueRibbon 
-                clue={gameState.clue || ''} 
-                targetWord={debugMode ? gameState.secretWord : undefined}
-                onRevealLetter={handleRevealLetter}
-                letterRevealsRemaining={gameState.letterRevealsRemaining}
-                onSettingsClick={() => {
-                  setSettingsOpenedFromClue(true);
-                  setIsSettingsOpen(true);
-                }}
-              />
-            )}
-          </div>
+        {/* Clue Ribbon - Handles all message types */}
+        <ClueRibbon 
+          clue={(() => {
+            if (gameState.gameStatus === 'lost') {
+              return gameState.secretWord;
+            } else if (gameState.gameStatus === 'won') {
+              // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
+              const startDate = new Date('2025-08-23');
+              const today = new Date();
+              const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+              const puzzleNumber = daysDiff + 1;
+              return `Wordibble #${puzzleNumber} ${gameState.attempts.length}/5`;
+            } else if (clueError) {
+              return clueError;
+            } else {
+              return gameState.clue || '';
+            }
+          })()}
+          targetWord={debugMode ? gameState.secretWord : undefined}
+          onRevealLetter={handleRevealLetter}
+          letterRevealsRemaining={gameState.letterRevealsRemaining}
+          onSettingsClick={() => {
+            setSettingsOpenedFromClue(true);
+            setIsSettingsOpen(true);
+          }}
+          variant={(() => {
+            if (gameState.gameStatus === 'lost') return 'solution';
+            if (gameState.gameStatus === 'won') return 'success';
+            if (clueError) return 'error'; // Return 'error' variant for different styling
+            return 'clue';
+          })()}
+        />
           {/* Debug: Show clue info */}
           {debugMode && (
             <div className="text-center mb-4 text-xs text-gray-500">

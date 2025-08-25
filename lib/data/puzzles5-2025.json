@@ -1,522 +1,518 @@
 [
   {
-    "date": "2025-08-24",
-    "word": "CROWN"
-  },
-  {
     "date": "2025-08-25",
-    "word": "TOFFY"
+    "word": "REPAY"
   },
   {
     "date": "2025-08-26",
-    "word": "SHEAR"
+    "word": "WINCH"
   },
   {
     "date": "2025-08-27",
-    "word": "PIGGY"
+    "word": "SONIC"
   },
   {
     "date": "2025-08-28",
-    "word": "WAGER"
+    "word": "CURVE"
   },
   {
     "date": "2025-08-29",
-    "word": "SWASH"
+    "word": "CLEAN"
   },
   {
     "date": "2025-08-30",
-    "word": "TIRES"
+    "word": "SIGHT"
   },
   {
     "date": "2025-08-31",
-    "word": "SHOVE"
+    "word": "LANKY"
   },
   {
     "date": "2025-09-01",
-    "word": "SPINE"
+    "word": "AMEND"
   },
   {
     "date": "2025-09-02",
-    "word": "CHEAP"
+    "word": "SALAD"
   },
   {
     "date": "2025-09-03",
-    "word": "BUILD"
+    "word": "WOOFS"
   },
   {
     "date": "2025-09-04",
-    "word": "PANTY"
+    "word": "GLARE"
   },
   {
     "date": "2025-09-05",
-    "word": "BLANK"
+    "word": "JELLY"
   },
   {
     "date": "2025-09-06",
-    "word": "TRUER"
+    "word": "SPEND"
   },
   {
     "date": "2025-09-07",
-    "word": "WHELP"
+    "word": "STEMS"
   },
   {
     "date": "2025-09-08",
-    "word": "ALONE"
+    "word": "TORTS"
   },
   {
     "date": "2025-09-09",
-    "word": "ADAGE"
+    "word": "THETA"
   },
   {
     "date": "2025-09-10",
-    "word": "GAYER"
+    "word": "THUMP"
   },
   {
     "date": "2025-09-11",
-    "word": "SLUSH"
+    "word": "GOLLY"
   },
   {
     "date": "2025-09-12",
-    "word": "ADMIN"
+    "word": "MOLDS"
   },
   {
     "date": "2025-09-13",
-    "word": "DEPTH"
+    "word": "LOYAL"
   },
   {
     "date": "2025-09-14",
-    "word": "SNAFU"
-  },
-  {
-    "date": "2025-09-15",
-    "word": "UNCUT"
-  },
-  {
-    "date": "2025-09-16",
-    "word": "WASTE"
-  },
-  {
-    "date": "2025-09-17",
-    "word": "PARKS"
-  },
-  {
-    "date": "2025-09-18",
-    "word": "SPITE"
-  },
-  {
-    "date": "2025-09-19",
-    "word": "RATIO"
-  },
-  {
-    "date": "2025-09-20",
-    "word": "DRAWN"
-  },
-  {
-    "date": "2025-09-21",
-    "word": "WAGED"
-  },
-  {
-    "date": "2025-09-22",
-    "word": "NAVEL"
-  },
-  {
-    "date": "2025-09-23",
-    "word": "FARCE"
-  },
-  {
-    "date": "2025-09-24",
-    "word": "SLOWS"
-  },
-  {
-    "date": "2025-09-25",
-    "word": "STREP"
-  },
-  {
-    "date": "2025-09-26",
-    "word": "TRYST"
-  },
-  {
-    "date": "2025-09-27",
-    "word": "PEACE"
-  },
-  {
-    "date": "2025-09-28",
-    "word": "GUMMY"
-  },
-  {
-    "date": "2025-09-29",
-    "word": "LINED"
-  },
-  {
-    "date": "2025-09-30",
-    "word": "YAPPY"
-  },
-  {
-    "date": "2025-10-01",
-    "word": "SIGHS"
-  },
-  {
-    "date": "2025-10-02",
-    "word": "BASIS"
-  },
-  {
-    "date": "2025-10-03",
-    "word": "STINK"
-  },
-  {
-    "date": "2025-10-04",
-    "word": "SLUNG"
-  },
-  {
-    "date": "2025-10-05",
-    "word": "AISLE"
-  },
-  {
-    "date": "2025-10-06",
-    "word": "VOCAL"
-  },
-  {
-    "date": "2025-10-07",
-    "word": "TIPSY"
-  },
-  {
-    "date": "2025-10-08",
-    "word": "APPLY"
-  },
-  {
-    "date": "2025-10-09",
-    "word": "WIRES"
-  },
-  {
-    "date": "2025-10-10",
-    "word": "INBOX"
-  },
-  {
-    "date": "2025-10-11",
-    "word": "OVALS"
-  },
-  {
-    "date": "2025-10-12",
-    "word": "ALERT"
-  },
-  {
-    "date": "2025-10-13",
-    "word": "HEFTY"
-  },
-  {
-    "date": "2025-10-14",
-    "word": "IDOLS"
-  },
-  {
-    "date": "2025-10-15",
-    "word": "CARRY"
-  },
-  {
-    "date": "2025-10-16",
-    "word": "SPOOL"
-  },
-  {
-    "date": "2025-10-17",
-    "word": "REVEL"
-  },
-  {
-    "date": "2025-10-18",
-    "word": "FINCH"
-  },
-  {
-    "date": "2025-10-19",
-    "word": "WINDS"
-  },
-  {
-    "date": "2025-10-20",
-    "word": "ABASE"
-  },
-  {
-    "date": "2025-10-21",
-    "word": "FORTY"
-  },
-  {
-    "date": "2025-10-22",
-    "word": "SNITS"
-  },
-  {
-    "date": "2025-10-23",
-    "word": "PRUDE"
-  },
-  {
-    "date": "2025-10-24",
-    "word": "OWNER"
-  },
-  {
-    "date": "2025-10-25",
-    "word": "WAXES"
-  },
-  {
-    "date": "2025-10-26",
-    "word": "LEAKY"
-  },
-  {
-    "date": "2025-10-27",
-    "word": "DEMON"
-  },
-  {
-    "date": "2025-10-28",
-    "word": "BROKE"
-  },
-  {
-    "date": "2025-10-29",
-    "word": "GAUGE"
-  },
-  {
-    "date": "2025-10-30",
-    "word": "FLASK"
-  },
-  {
-    "date": "2025-10-31",
-    "word": "DRIFT"
-  },
-  {
-    "date": "2025-11-01",
-    "word": "TAROT"
-  },
-  {
-    "date": "2025-11-02",
-    "word": "WIVES"
-  },
-  {
-    "date": "2025-11-03",
-    "word": "OPTIC"
-  },
-  {
-    "date": "2025-11-04",
-    "word": "FORTE"
-  },
-  {
-    "date": "2025-11-05",
-    "word": "GIVER"
-  },
-  {
-    "date": "2025-11-06",
-    "word": "EXCEL"
-  },
-  {
-    "date": "2025-11-07",
-    "word": "EVENT"
-  },
-  {
-    "date": "2025-11-08",
-    "word": "SUEDE"
-  },
-  {
-    "date": "2025-11-09",
-    "word": "WORMY"
-  },
-  {
-    "date": "2025-11-10",
-    "word": "TRIAD"
-  },
-  {
-    "date": "2025-11-11",
-    "word": "OBESE"
-  },
-  {
-    "date": "2025-11-12",
-    "word": "IDEAL"
-  },
-  {
-    "date": "2025-11-13",
-    "word": "MADLY"
-  },
-  {
-    "date": "2025-11-14",
-    "word": "LASTS"
-  },
-  {
-    "date": "2025-11-15",
-    "word": "SHOTS"
-  },
-  {
-    "date": "2025-11-16",
-    "word": "QUELL"
-  },
-  {
-    "date": "2025-11-17",
-    "word": "DERBY"
-  },
-  {
-    "date": "2025-11-18",
-    "word": "WIGHT"
-  },
-  {
-    "date": "2025-11-19",
-    "word": "BENCH"
-  },
-  {
-    "date": "2025-11-20",
-    "word": "VIRAL"
-  },
-  {
-    "date": "2025-11-21",
-    "word": "ROWER"
-  },
-  {
-    "date": "2025-11-22",
-    "word": "GLOWY"
-  },
-  {
-    "date": "2025-11-23",
-    "word": "GRAZE"
-  },
-  {
-    "date": "2025-11-24",
-    "word": "SLEDS"
-  },
-  {
-    "date": "2025-11-25",
-    "word": "MEALS"
-  },
-  {
-    "date": "2025-11-26",
-    "word": "RIVER"
-  },
-  {
-    "date": "2025-11-27",
-    "word": "PUPIL"
-  },
-  {
-    "date": "2025-11-28",
-    "word": "MAILS"
-  },
-  {
-    "date": "2025-11-29",
-    "word": "MANOR"
-  },
-  {
-    "date": "2025-11-30",
-    "word": "PACER"
-  },
-  {
-    "date": "2025-12-01",
-    "word": "HAVEN"
-  },
-  {
-    "date": "2025-12-02",
-    "word": "TRUCE"
-  },
-  {
-    "date": "2025-12-03",
-    "word": "SMACK"
-  },
-  {
-    "date": "2025-12-04",
-    "word": "MOTTO"
-  },
-  {
-    "date": "2025-12-05",
-    "word": "TUNIC"
-  },
-  {
-    "date": "2025-12-06",
-    "word": "HATER"
-  },
-  {
-    "date": "2025-12-07",
-    "word": "SLANG"
-  },
-  {
-    "date": "2025-12-08",
-    "word": "SHIRE"
-  },
-  {
-    "date": "2025-12-09",
-    "word": "STEAD"
-  },
-  {
-    "date": "2025-12-10",
-    "word": "PAINS"
-  },
-  {
-    "date": "2025-12-11",
-    "word": "YUMMY"
-  },
-  {
-    "date": "2025-12-12",
-    "word": "SLUGS"
-  },
-  {
-    "date": "2025-12-13",
-    "word": "SNEAK"
-  },
-  {
-    "date": "2025-12-14",
-    "word": "ADULT"
-  },
-  {
-    "date": "2025-12-15",
-    "word": "WAILS"
-  },
-  {
-    "date": "2025-12-16",
-    "word": "FIERY"
-  },
-  {
-    "date": "2025-12-17",
-    "word": "NICER"
-  },
-  {
-    "date": "2025-12-18",
     "word": "TEACH"
   },
   {
+    "date": "2025-09-15",
+    "word": "FLOUT"
+  },
+  {
+    "date": "2025-09-16",
+    "word": "GORGE"
+  },
+  {
+    "date": "2025-09-17",
+    "word": "PORES"
+  },
+  {
+    "date": "2025-09-18",
+    "word": "KAZOO"
+  },
+  {
+    "date": "2025-09-19",
+    "word": "CURRY"
+  },
+  {
+    "date": "2025-09-20",
+    "word": "PURGE"
+  },
+  {
+    "date": "2025-09-21",
+    "word": "SPOOF"
+  },
+  {
+    "date": "2025-09-22",
+    "word": "GUPPY"
+  },
+  {
+    "date": "2025-09-23",
+    "word": "WRACK"
+  },
+  {
+    "date": "2025-09-24",
+    "word": "LEDGE"
+  },
+  {
+    "date": "2025-09-25",
+    "word": "ALLOT"
+  },
+  {
+    "date": "2025-09-26",
+    "word": "ERODE"
+  },
+  {
+    "date": "2025-09-27",
+    "word": "GEESE"
+  },
+  {
+    "date": "2025-09-28",
+    "word": "PACED"
+  },
+  {
+    "date": "2025-09-29",
+    "word": "COURT"
+  },
+  {
+    "date": "2025-09-30",
+    "word": "SPOON"
+  },
+  {
+    "date": "2025-10-01",
+    "word": "SHARP"
+  },
+  {
+    "date": "2025-10-02",
+    "word": "SQUIB"
+  },
+  {
+    "date": "2025-10-03",
+    "word": "MANGO"
+  },
+  {
+    "date": "2025-10-04",
+    "word": "FLARE"
+  },
+  {
+    "date": "2025-10-05",
+    "word": "NOMAD"
+  },
+  {
+    "date": "2025-10-06",
+    "word": "LEPER"
+  },
+  {
+    "date": "2025-10-07",
+    "word": "SONNY"
+  },
+  {
+    "date": "2025-10-08",
+    "word": "VERVE"
+  },
+  {
+    "date": "2025-10-09",
+    "word": "JADED"
+  },
+  {
+    "date": "2025-10-10",
+    "word": "PITHY"
+  },
+  {
+    "date": "2025-10-11",
+    "word": "CHEAP"
+  },
+  {
+    "date": "2025-10-12",
+    "word": "PLUSH"
+  },
+  {
+    "date": "2025-10-13",
+    "word": "POKER"
+  },
+  {
+    "date": "2025-10-14",
+    "word": "JEERS"
+  },
+  {
+    "date": "2025-10-15",
+    "word": "WHEAT"
+  },
+  {
+    "date": "2025-10-16",
+    "word": "FLUKE"
+  },
+  {
+    "date": "2025-10-17",
+    "word": "ALLOY"
+  },
+  {
+    "date": "2025-10-18",
+    "word": "TRUNK"
+  },
+  {
+    "date": "2025-10-19",
+    "word": "NAIVE"
+  },
+  {
+    "date": "2025-10-20",
+    "word": "SLAIN"
+  },
+  {
+    "date": "2025-10-21",
+    "word": "GROAN"
+  },
+  {
+    "date": "2025-10-22",
+    "word": "SINEW"
+  },
+  {
+    "date": "2025-10-23",
+    "word": "GRUEL"
+  },
+  {
+    "date": "2025-10-24",
+    "word": "WIDER"
+  },
+  {
+    "date": "2025-10-25",
+    "word": "ZIPPY"
+  },
+  {
+    "date": "2025-10-26",
+    "word": "ORDER"
+  },
+  {
+    "date": "2025-10-27",
+    "word": "LAGER"
+  },
+  {
+    "date": "2025-10-28",
+    "word": "FUNGI"
+  },
+  {
+    "date": "2025-10-29",
+    "word": "SIGHS"
+  },
+  {
+    "date": "2025-10-30",
+    "word": "TEENS"
+  },
+  {
+    "date": "2025-10-31",
+    "word": "FLOAT"
+  },
+  {
+    "date": "2025-11-01",
+    "word": "ALIVE"
+  },
+  {
+    "date": "2025-11-02",
+    "word": "FEVER"
+  },
+  {
+    "date": "2025-11-03",
+    "word": "TUNES"
+  },
+  {
+    "date": "2025-11-04",
+    "word": "SPELT"
+  },
+  {
+    "date": "2025-11-05",
+    "word": "ADMIN"
+  },
+  {
+    "date": "2025-11-06",
+    "word": "BRAIN"
+  },
+  {
+    "date": "2025-11-07",
+    "word": "EQUAL"
+  },
+  {
+    "date": "2025-11-08",
+    "word": "CHIEF"
+  },
+  {
+    "date": "2025-11-09",
+    "word": "SEGUE"
+  },
+  {
+    "date": "2025-11-10",
+    "word": "SPIEL"
+  },
+  {
+    "date": "2025-11-11",
+    "word": "STUNG"
+  },
+  {
+    "date": "2025-11-12",
+    "word": "WAKES"
+  },
+  {
+    "date": "2025-11-13",
+    "word": "LONER"
+  },
+  {
+    "date": "2025-11-14",
+    "word": "TICKS"
+  },
+  {
+    "date": "2025-11-15",
+    "word": "MISSY"
+  },
+  {
+    "date": "2025-11-16",
+    "word": "VENOM"
+  },
+  {
+    "date": "2025-11-17",
+    "word": "IDEAL"
+  },
+  {
+    "date": "2025-11-18",
+    "word": "SERUM"
+  },
+  {
+    "date": "2025-11-19",
+    "word": "AIDER"
+  },
+  {
+    "date": "2025-11-20",
+    "word": "SNACK"
+  },
+  {
+    "date": "2025-11-21",
+    "word": "YEARN"
+  },
+  {
+    "date": "2025-11-22",
+    "word": "TRIPS"
+  },
+  {
+    "date": "2025-11-23",
+    "word": "LEVER"
+  },
+  {
+    "date": "2025-11-24",
+    "word": "OVERT"
+  },
+  {
+    "date": "2025-11-25",
+    "word": "SHELL"
+  },
+  {
+    "date": "2025-11-26",
+    "word": "SLANT"
+  },
+  {
+    "date": "2025-11-27",
+    "word": "ROMAN"
+  },
+  {
+    "date": "2025-11-28",
+    "word": "OVENS"
+  },
+  {
+    "date": "2025-11-29",
+    "word": "NOOKS"
+  },
+  {
+    "date": "2025-11-30",
+    "word": "SHIRE"
+  },
+  {
+    "date": "2025-12-01",
+    "word": "FAIRY"
+  },
+  {
+    "date": "2025-12-02",
+    "word": "AFTER"
+  },
+  {
+    "date": "2025-12-03",
+    "word": "VIXEN"
+  },
+  {
+    "date": "2025-12-04",
+    "word": "HALLS"
+  },
+  {
+    "date": "2025-12-05",
+    "word": "HOWDY"
+  },
+  {
+    "date": "2025-12-06",
+    "word": "PLUMP"
+  },
+  {
+    "date": "2025-12-07",
+    "word": "ULCER"
+  },
+  {
+    "date": "2025-12-08",
+    "word": "FILTH"
+  },
+  {
+    "date": "2025-12-09",
+    "word": "MOUSE"
+  },
+  {
+    "date": "2025-12-10",
+    "word": "MANOR"
+  },
+  {
+    "date": "2025-12-11",
+    "word": "EMAIL"
+  },
+  {
+    "date": "2025-12-12",
+    "word": "SMITH"
+  },
+  {
+    "date": "2025-12-13",
+    "word": "TALON"
+  },
+  {
+    "date": "2025-12-14",
+    "word": "WIDEN"
+  },
+  {
+    "date": "2025-12-15",
+    "word": "HANDS"
+  },
+  {
+    "date": "2025-12-16",
+    "word": "SPEAK"
+  },
+  {
+    "date": "2025-12-17",
+    "word": "SOPPY"
+  },
+  {
+    "date": "2025-12-18",
+    "word": "DWELT"
+  },
+  {
     "date": "2025-12-19",
-    "word": "BEGUN"
+    "word": "MUNCH"
   },
   {
     "date": "2025-12-20",
-    "word": "SHEER"
+    "word": "LOOSE"
   },
   {
     "date": "2025-12-21",
-    "word": "GRATE"
+    "word": "DIODE"
   },
   {
     "date": "2025-12-22",
-    "word": "TILES"
+    "word": "FLASH"
   },
   {
     "date": "2025-12-23",
-    "word": "GENRE"
+    "word": "GAUGE"
   },
   {
     "date": "2025-12-24",
-    "word": "LEMON"
+    "word": "STEAK"
   },
   {
     "date": "2025-12-25",
-    "word": "FEMUR"
+    "word": "SKIDS"
   },
   {
     "date": "2025-12-26",
-    "word": "SULKY"
+    "word": "GLUEY"
   },
   {
     "date": "2025-12-27",
-    "word": "SWARM"
+    "word": "SHRUG"
   },
   {
     "date": "2025-12-28",
-    "word": "SHINE"
+    "word": "SPUDS"
   },
   {
     "date": "2025-12-29",
-    "word": "QUILL"
+    "word": "GONER"
   },
   {
     "date": "2025-12-30",
-    "word": "VOMIT"
+    "word": "PAGER"
   },
   {
     "date": "2025-12-31",
-    "word": "FRONT"
+    "word": "PANES"
   }
 ]

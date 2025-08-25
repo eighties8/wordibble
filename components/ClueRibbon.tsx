@@ -1,5 +1,4 @@
-import React from 'react';
-import { AArrowDown, Bot, BotOff, Settings } from 'lucide-react';
+import { AArrowDown, Settings } from "lucide-react";
 
 interface Props {
   clue: string;
@@ -7,9 +6,11 @@ interface Props {
   onRevealLetter?: () => void;
   letterRevealsRemaining?: number;
   onSettingsClick?: () => void;
+  variant?: 'clue' | 'error' | 'success' | 'solution'; // Add this line
 }
 
-export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick }: Props) {
+export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick, variant = 'clue' }: Props) {
+  console.log('ClueRibbon variant:', variant, 'clue:', clue);
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
@@ -19,10 +20,13 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
         </svg>
       </div>
       
-      {/* Speech Bubble */}
-      <div className="clue-ribbon bg-green-500 text-white pl-4 rounded-lg relative shadow-md">
+      {/* Speech Bubble - Maintain consistent green background for all variants */}
+      {/* <div className={`clue-ribbon relative shadow-md rounded-lg pl-4 bg-green-500 text-white`}> */}
+      <div className={`clue-ribbon relative shadow-md rounded-lg pl-4 transition-all duration-300 ease-in-out ${
+          variant === 'error' ? 'bg-amber-500' : 'bg-green-500'
+        } text-white`}>
         <div className="text-sm font-medium flex items-center justify-between gap-2">
-          <span>
+          <span className="transition-all duration-300 ease-in-out">
             {clue ? (
               clue
             ) : (
@@ -41,30 +45,37 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
             )}
           </span>
           
-                {/* Bot reveal button */}
-                 {onRevealLetter && (
-                   <button
-                     onClick={onRevealLetter}
-                     className="clue-bot bg-gray-300 shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 hover:bg-green-600 transition-colors duration-200 group relative"
-                     title={letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
-                     disabled={!letterRevealsRemaining || letterRevealsRemaining <= 0}
-                   >
-                     {letterRevealsRemaining && letterRevealsRemaining > 0 ? (
-                       <AArrowDown className="w-6 h-6 !text-gray-800" />
-                     ) : (
-                       <AArrowDown className="w-6 h-6 !text-gray-800 opacity-50" />
-                     )}
+          {/* Bot reveal button - Show for all variants to maintain consistent structure */}
+          {onRevealLetter && (
+            <button
+              onClick={onRevealLetter}
+              className="clue-letter bg-gray-300 shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 hover:bg-green-600 transition-colors duration-200 group relative"
+              title={letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
+              disabled={!letterRevealsRemaining || letterRevealsRemaining <= 0}
+            >
+              {letterRevealsRemaining && letterRevealsRemaining > 0 ? (
+                <AArrowDown className="w-5 h-5 !text-gray-800" />
+              ) : (
+                <AArrowDown className="w-5 h-5 !text-gray-800 opacity-50" />
+              )}
 
-                     {/* Tooltip */}
-                     <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
-                       {letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
-                       <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
-                     </div>
-                   </button>
-                 )}
+              {/* Tooltip */}
+              <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-50">
+                {letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
+                <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+              </div>
+            </button>
+          )}
         </div>
-        {/* Speech bubble tail pointing from icon to bubble */}
-        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-r-green-500 border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
+        
+        {/* Speech bubble tail - Change color based on variant */}
+        <div className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-t-4 border-t-transparent border-b-4 border-b-transparent transition-all duration-300 ease-in-out ${
+          variant === 'error' ? '!border-r-amber-500' : '!border-r-green-500'
+        }`} 
+        style={{
+          borderRightColor: variant === 'error' ? '#ef4444' : '#22c55e'
+        }}
+        ></div>
       </div>
     </div>
   );

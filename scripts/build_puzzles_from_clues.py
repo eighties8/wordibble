@@ -31,159 +31,176 @@ Notes:
 - If there are more words than days, extra words are ignored for that year.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import random
-import re
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, Iterable, List, Tuple
 
-ROOT = Path(__file__).resolve().parents[1]  # repo root
-DATA_DIR = ROOT / "lib" / "data"
+# Paths
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = REPO_ROOT / "lib" / "data"
 
 DEFAULT_YEARS = [2025, 2026, 2027, 2029, 2030]
-CLUE_FILES = ["clues5.json", "clues6.json", "clues7.json"]
+CLUE_FILES = {5: "clues5.json", 6: "clues6.json", 7: "clues7.json"}
 
 
-def load_clues(fp: Path) -> Dict[str, str]:
-    with fp.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-    if not isinstance(data, dict):
-        raise ValueError(f"{fp} must contain a JSON object of word->clue")
-    # normalize keys to plain alpha and uppercase for output later
-    # (keep original map in case you want to use clues elsewhere)
-    return data
+# ---------- date helpers ----------
 
+def jan1(y: int) -> date:
+    return date(y, 1, 1)
 
-def days_in_year(year: int) -> int:
-    d1 = date(year, 1, 1)
-    d2 = date(year + 1, 1, 1)
-    return (d2 - d1).days
+def jan1_next(y: int) -> date:
+    return date(y + 1, 1, 1)
 
+def days_between(d0: date, d1: date) -> int:
+    return (d1 - d0).days
 
-def daterange(start: date, end_inclusive: date):
+def dates_for_year(y: int, today: date) -> Iterable[date]:
+    """
+    Current year: start at 'today' → Dec 31.
+    Other years:  Jan 1 → Dec 31.
+    """
+    start = today if y == today.year else jan1(y)
+    end_exclusive = jan1_next(y)
     d = start
-    one = timedelta(days=1)
-    while d <= end_inclusive:
+    while d < end_exclusive:
         yield d
-        d += one
+        d += timedelta(days=1)
 
 
-def first_day_for_year(year: int, today: date) -> date:
-    if year == today.year:
-        return today
-    return date(year, 1, 1)
+# ---------- data helpers ----------
+
+def load_clue_words(path: Path) -> List[str]:
+    with path.open("r", encoding="utf-8") as f:
+        data: Dict[str, str] = json.load(f)
+    # keys are the words; normalize to UPPER and de-dupe (stable)
+    seen = set()
+    words: List[str] = []
+    for k in data.keys():
+        if not isinstance(k, str):
+            continue
+        w = k.strip().upper()
+        if w and w not in seen:
+            seen.add(w)
+            words.append(w)
+    return words
 
 
-def last_day_for_year(year: int) -> date:
-    return date(year, 12, 31)
+def ensure_pool_has(pool: List[str], needed: int, base_words: List[str]) -> List[str]:
+    """
+    Ensure 'pool' has at least 'needed' items; if not, extend by cycling/shuffling
+    more copies of base_words until the pool is long enough.
+    """
+    if len(pool) >= needed:
+        return pool
+    # How many more words do we need?
+    missing = needed - len(pool)
+    # Keep adding randomized chunks of base_words until we have enough
+    while missing > 0:
+        extra = base_words[:]  # copy
+        random.shuffle(extra)
+        pool.extend(extra)
+        missing = needed - len(pool)
+    return pool
 
 
-def generate_year_schedule(words: List[str], year: int, today: date) -> List[Dict[str, str]]:
-    start = first_day_for_year(year, today)
-    end = last_day_for_year(year)
-    all_days = list(daterange(start, end))
+# ---------- main logic ----------
+
+def build_for_length(n: int, years: List[int], today: date) -> None:
+    clues_file = DATA_DIR / CLUE_FILES[n]
+    words = load_clue_words(clues_file)
     if not words:
-        raise ValueError("No words available to schedule.")
+        print(f"[WARN] No words found in {clues_file}")
+        return
 
-    out: List[Dict[str, str]] = []
-    wlen = len(words)
-    for i, d in enumerate(all_days):
-        w = words[i % wlen]
-        out.append({"date": d.isoformat(), "word": w.upper()})
-    return out
+    # One global randomized sequence for this length.
+    # We'll walk it with a moving cursor so we don't repeat yearly order.
+    sequence = words[:]
+    random.shuffle(sequence)
+    cursor = 0
+
+    # Pre-calc total days needed in ascending year order (the sequence rolls forward)
+    years_sorted = sorted(years)
+    for y in years_sorted:
+        # Count how many days we need this year (today→Dec31 if current, else full year)
+        num_days = sum(1 for _ in dates_for_year(y, today))
+
+        # Make sure sequence has enough remaining items; extend by cycling if needed
+        remaining = len(sequence) - cursor
+        if remaining < num_days:
+            # Extend the sequence by shuffling more copies of the base words
+            extension = sequence[cursor:]  # keep any remainder to preserve order
+            base_words = words[:]         # use the original vocabulary for cycling
+            random.shuffle(base_words)
+            extension += base_words
+            sequence = sequence[:cursor] + ensure_pool_has(extension, num_days, words)
+
+        # Slice for this year and advance the cursor
+        slot = sequence[cursor: cursor + num_days]
+        cursor += num_days
+
+        # Pair with dates and write
+        dated: List[Tuple[date, str]] = list(zip(dates_for_year(y, today), slot))
+        out_path = DATA_DIR / f"puzzles{n}-{y}.json"
+        with out_path.open("w", encoding="utf-8") as f:
+            json.dump(
+                [{"date": d.isoformat(), "word": w} for d, w in dated],
+                f,
+                indent=2,
+            )
+        print(f"Wrote {out_path} ({len(dated)} days) from index start={cursor - num_days}")
 
 
-def write_json(fp: Path, data):
-    fp.parent.mkdir(parents=True, exist_ok=True)
-    with fp.open("w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-        f.write("\n")
-
-
-def infer_length_from_filename(name: str) -> int:
-    m = re.search(r"(\d+)", name)
-    if not m:
-        raise ValueError(f"Cannot infer word length from filename: {name}")
-    return int(m.group(1))
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Build daily puzzles from clues json files.")
-    parser.add_argument(
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description="Build daily puzzles from clues (starts today for current year, then rolls forward)."
+    )
+    p.add_argument(
         "--years",
         nargs="+",
         type=int,
         default=DEFAULT_YEARS,
-        help=f"Years to generate (default: {DEFAULT_YEARS})",
+        help=f"List of years to generate (default: {' '.join(map(str, DEFAULT_YEARS))})",
     )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Optional RNG seed for reproducible shuffles.",
-    )
-    parser.add_argument(
+    p.add_argument(
         "--only-lengths",
         nargs="+",
         type=int,
         choices=[5, 6, 7],
-        help="If provided, only process these word lengths (e.g. --only-lengths 6 7).",
+        default=[5, 6, 7],
+        help="Restrict to specific word lengths (choices: 5 6 7). Default: all.",
     )
-    args = parser.parse_args()
+    p.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible ordering (optional).",
+    )
+    return p.parse_args()
 
+
+def main():
+    args = parse_args()
     if args.seed is not None:
         random.seed(args.seed)
+    else:
+        random.seed()
 
     today = date.today()
 
-    # discover which clue files to process
-    clue_files = []
-    for name in CLUE_FILES:
-        if args.only_lengths:
-            ln = infer_length_from_filename(name)
-            if ln not in args.only_lengths:
-                continue
-        p = DATA_DIR / name
-        if p.exists():
-            clue_files.append(p)
+    # validate years exist
+    years = [int(y) for y in args.years]
 
-    if not clue_files:
-        raise SystemExit(f"No clue files found in {DATA_DIR} matching {args.only_lengths or '[5,6,7]'}.")
-
-    for clues_fp in clue_files:
-        length = infer_length_from_filename(clues_fp.name)
-        clues_map = load_clues(clues_fp)
-
-        # Filter to words with exact length, just in case
-        words = [w.strip() for w in clues_map.keys() if isinstance(w, str) and len(w.strip()) == length]
-
-        # Deduplicate & sanitize (letters only)
-        # Keep original order for stability before shuffle (Python 3.7+ dict preserves insertion order)
-        seen = set()
-        clean_words = []
-        for w in words:
-            lw = w.lower()
-            if lw in seen:
-                continue
-            seen.add(lw)
-            clean_words.append(lw)
-
-        if not clean_words:
-            print(f"⚠️  No valid {length}-letter words in {clues_fp.name}; skipping.")
+    # Run per length
+    for n in args.only_lengths:
+        if n not in CLUE_FILES:
+            print(f"[WARN] Unsupported length '{n}', skipping.")
             continue
-
-        random.shuffle(clean_words)
-
-        for yr in args.years:
-            schedule = generate_year_schedule(clean_words, yr, today)
-            out_name = f"puzzles{length}-{yr}.json"
-            out_fp = DATA_DIR / out_name
-            write_json(out_fp, schedule)
-            print(f"✅ Wrote {out_fp.relative_to(ROOT)} ({len(schedule)} entries)")
-
-    print("Done.")
+        build_for_length(n, years, today)
 
 
 if __name__ == "__main__":
