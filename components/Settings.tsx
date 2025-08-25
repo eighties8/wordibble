@@ -15,12 +15,15 @@ interface Props {
   onSettingsChange: (settings: SettingsConfig) => void;
   currentSettings: SettingsConfig;
   debugMode: boolean;
+  openedFromClue?: boolean;
 }
 
-export default function Settings({ isOpen, onClose, onSettingsChange, currentSettings, debugMode }: Props) {
+export default function Settings({ isOpen, onClose, onSettingsChange, currentSettings, debugMode, openedFromClue = false }: Props) {
   const [settings, setSettings] = useState<SettingsConfig>({
     ...currentSettings,
-    randomPuzzle: currentSettings.randomPuzzle ?? false
+    randomPuzzle: currentSettings.randomPuzzle ?? false,
+    // Auto-enable Show Clue if opened from clue link
+    revealClue: openedFromClue ? true : currentSettings.revealClue
   });
 
   useEffect(() => {
@@ -31,12 +34,14 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
         maxGuesses: currentSettings.maxGuesses,
         revealVowels: currentSettings.revealVowels,
         revealVowelCount: currentSettings.revealVowelCount,
-        revealClue: currentSettings.revealClue,
+        revealClue: openedFromClue ? true : currentSettings.revealClue,
         randomPuzzle: currentSettings.randomPuzzle ?? false
       };
+      console.log('Settings opened from clue:', openedFromClue);
+      console.log('Initial revealClue value:', settingsWithDefaults.revealClue);
       setSettings(settingsWithDefaults);
     }
-  }, [isOpen, currentSettings]);
+  }, [isOpen, currentSettings, openedFromClue]);
 
   const handleSave = () => {
     // Save to localStorage
@@ -150,12 +155,12 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
           )}
 
           {/* Reveal Clue Toggle */}
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${openedFromClue ? 'rounded bg-green-500 p-4 text-white' : ''}`}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Show Clue
+              <label className="block text-sm font-medium mb-1">
+                Show Clue (Current: {settings.revealClue ? 'ON' : 'OFF'})
               </label>
-              <p className="text-xs text-gray-500">Display a hint for each puzzle</p>
+              <p className="text-xs opacity-90">Display a hint for each puzzle</p>
             </div>
             <button
               onClick={() => setSettings(prev => ({ ...prev, revealClue: !prev.revealClue }))}

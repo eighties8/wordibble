@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Delete } from 'lucide-react';
+import { AArrowDown, Bot, Delete } from 'lucide-react';
 
 interface Props {
   onKeyPress: (key: string) => void;
@@ -88,7 +88,7 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
               {/* Bot icon badge for revealed letters */}
               {revealedLetters?.has(key) && (
                 <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-green-500 rounded-full p-0.5">
-                  <Bot className="w-2.5 h-2.5 text-white" />
+                  <AArrowDown className="w-4 h-4 text-white" />
                 </div>
               )}
             </div>

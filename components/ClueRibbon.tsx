@@ -6,9 +6,10 @@ interface Props {
   targetWord?: string;
   onRevealLetter?: () => void;
   letterRevealsRemaining?: number;
+  onSettingsClick?: () => void;
 }
 
-export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining }: Props) {
+export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick }: Props) {
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
@@ -22,7 +23,17 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       <div className="clue-ribbon bg-amber-500 text-white pl-4 rounded-lg relative shadow-md">
         <div className="text-sm font-medium flex items-center justify-between gap-2">
           <span>
-            {clue}
+            {clue ? (
+              clue
+            ) : (
+              <button 
+                onClick={onSettingsClick}
+                className="hover:underline cursor-pointer"
+                type="button"
+              >
+                Need a clue? Click here
+              </button>
+            )}
             {targetWord && (
               <span className="ml-2 opacity-90">
                 • {targetWord}
@@ -45,7 +56,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
                      )}
 
                      {/* Tooltip */}
-                     <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+                     <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
                        {letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
                        <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
                      </div>

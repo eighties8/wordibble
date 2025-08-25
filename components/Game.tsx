@@ -70,6 +70,7 @@ export default function Game() {
   const [isShaking, setIsShaking] = useState(false);
   const [forceClear, setForceClear] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsOpenedFromClue, setSettingsOpenedFromClue] = useState(false);
 
   // Imperative handle to control focus inside GuessInputRow
   // const inputRowRef = useRef<InputRowHandle | null>(null);
@@ -153,7 +154,7 @@ export default function Game() {
       setGameState(prev => ({
         ...prev,
         secretWord: puzzle.word,
-        clue: puzzle.clue,
+        clue: settings.revealClue ? puzzle.clue : undefined,
         lockedLetters,
         revealedLetters: new Set<number>(),
         letterRevealsRemaining: 1,
@@ -172,7 +173,7 @@ export default function Game() {
       addToast('Failed to start new game', 'error');
       setIsLoading(false);
     }
-  }, [settings.wordLength, settings.randomPuzzle, settings.revealVowels, settings.revealVowelCount]);
+  }, [settings.wordLength, settings.randomPuzzle, settings.revealVowels, settings.revealVowelCount, settings.revealClue]);
 
   // ===== Debug flag (persisted) =====
   useEffect(() => {
@@ -293,7 +294,7 @@ export default function Game() {
         setGameState((prev) => ({
           ...prev,
           secretWord: puzzle.word,
-          clue: puzzle.clue,
+          clue: settings.revealClue ? puzzle.clue : undefined,
           lockedLetters,
           revealedLetters: new Set<number>(),
           letterRevealsRemaining: 1,
@@ -316,7 +317,7 @@ export default function Game() {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.wordLength, settings.revealVowels, settings.revealVowelCount, settings.randomPuzzle]);
+  }, [settings.wordLength, settings.revealVowels, settings.revealVowelCount, settings.randomPuzzle, settings.revealClue]);
 
   // ===== Keep currentGuess aligned when locked letters change =====
   useEffect(() => {
@@ -706,17 +707,19 @@ export default function Game() {
       
       <main className="flex-1 py-4 md:py-8 px-4">
         <div className="max-w-md mx-auto">
-          {/* Clue Ribbon */}
-          {gameState.clue && settings.revealClue && (
-            <div className="text-center mb-4 md:mb-8">
-              <ClueRibbon 
-          clue={gameState.clue} 
-          targetWord={debugMode ? gameState.secretWord : undefined}
-          onRevealLetter={settings.revealClue ? handleRevealLetter : undefined}
-          letterRevealsRemaining={settings.revealClue ? gameState.letterRevealsRemaining : 0}
-        />
-            </div>
-          )}
+          {/* Clue Ribbon - always show for all users */}
+          <div className="text-center mb-4 md:mb-8">
+            <ClueRibbon 
+              clue={gameState.clue || ''} 
+              targetWord={debugMode ? gameState.secretWord : undefined}
+              onRevealLetter={handleRevealLetter}
+              letterRevealsRemaining={gameState.letterRevealsRemaining}
+              onSettingsClick={() => {
+                setSettingsOpenedFromClue(true);
+                setIsSettingsOpen(true);
+              }}
+            />
+          </div>
           {/* Debug: Show clue info */}
           {debugMode && (
             <div className="text-center mb-4 text-xs text-gray-500">
@@ -769,7 +772,7 @@ export default function Game() {
           {/* Game Status */}
           {gameState.gameStatus === 'won' && (
             <div className="text-center text-green-600 font-semibold text-lg mb-4">
-              <Brain className="inline-block w-5 h-5 mr-2" /> Crushed it in {gameState.attemptIndex} tries!
+              <Brain className="inline-block w-5 h-5 mr-2" /> Crushed it in {gameState.attemptIndex} {gameState.attemptIndex === 1 ? 'try' : 'tries'}!
             </div>
           )}
           {gameState.gameStatus === 'lost' && (
@@ -807,14 +810,19 @@ export default function Game() {
 
       <Footer />
 
-      {/* Settings Overlay */}
-              <Settings
+      {isSettingsOpen && (
+        <Settings
           isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
+          onClose={() => {
+            setIsSettingsOpen(false);
+            setSettingsOpenedFromClue(false);
+          }}
           onSettingsChange={handleSettingsChange}
           currentSettings={settings}
           debugMode={debugMode}
+          openedFromClue={settingsOpenedFromClue}
         />
+      )}
 
       {/* Toasts */}
       {toasts.map((toast) => (

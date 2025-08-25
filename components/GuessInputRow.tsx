@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Bot } from 'lucide-react';
+import { AArrowDown, Bot } from 'lucide-react';
 
 export type GuessInputRowHandle = {
   /** Focus first editable cell (even if it already has a value) */
@@ -203,10 +203,17 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     return (
       <div className={`flex justify-center ${isShaking ? 'animate-shake' : ''}`}>
-        <div className={`grid gap-2 md:gap-1 ${wordLength === 5 ? 'grid-cols-5' : wordLength === 6 ? 'grid-cols-6' : 'grid-cols-7'}`}>
+        <div className={`grid gap-2 md:gap-1 grid-cols-${wordLength}`}>
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
             const isRevealed = revealedLetters?.has(i);
+            const baseClasses = 'w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 text-center border rounded-lg font-semibold tracking-wider text-lg md:text-lg lg:text-xl';
+            const stateClasses = isLocked 
+              ? 'bg-green-500 text-white cursor-default' 
+              : isRevealed 
+                ? 'bg-green-500 text-white border-green-300 cursor-default' 
+                : 'bg-white text-gray-900 border-gray-300';
+            
             return (
               <div key={i} className="relative">
                 <input
@@ -215,11 +222,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                   data-index={i}
                   data-locked={isLocked}
                   data-revealed={isRevealed}
-                  className={`w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 text-center border rounded-lg font-semibold tracking-wider text-lg md:text-lg lg:text-xl
-                    ${isLocked ? 'bg-green-500 text-white cursor-default' : 
-                      isRevealed ? 'bg-green-100 text-green-800 border-green-300 cursor-default' : 
-                      'bg-white text-gray-900 border-gray-300'}
-                  `}
+                  className={`${baseClasses} ${stateClasses}`}
                   value={cells[i] ?? ''}
                   readOnly={isLocked || isRevealed}
                   tabIndex={isLocked || isRevealed ? -1 : 0}
@@ -230,10 +233,9 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                   autoCorrect="off"
                   spellCheck={false}
                 />
-                {/* Bot icon for revealed letters */}
                 {isRevealed && (
                   <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-green-500 rounded-full p-0.5">
-                    <Bot className="w-3 h-3 text-white" />
+                    <AArrowDown className="w-4 h-4 text-white" />
                   </div>
                 )}
               </div>
