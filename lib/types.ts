@@ -25,6 +25,8 @@ export interface GameState {
   lockedLetters: Record<number, string | null>;
   gameStatus: 'playing' | 'won' | 'lost';
   attemptIndex: number;
+  revealedLetters: Set<number>;
+  letterRevealsRemaining: number;
 }
 
 export interface Toast {

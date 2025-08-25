@@ -1,11 +1,14 @@
 import React from 'react';
+import { Bot, BotOff } from 'lucide-react';
 
 interface Props {
   clue: string;
   targetWord?: string;
+  onRevealLetter?: () => void;
+  letterRevealsRemaining?: number;
 }
 
-export default function ClueRibbon({ clue, targetWord }: Props) {
+export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining }: Props) {
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
@@ -17,13 +20,37 @@ export default function ClueRibbon({ clue, targetWord }: Props) {
       
       {/* Speech Bubble */}
       <div className="bg-amber-500 text-white px-4 py-2 rounded-lg relative shadow-md">
-        <div className="text-sm font-medium">
-          {clue}
-          {targetWord && (
-            <span className="ml-2 opacity-90">
-              • {targetWord}
-            </span>
-          )}
+        <div className="text-sm font-medium flex items-center justify-between gap-2">
+          <span>
+            {clue}
+            {targetWord && (
+              <span className="ml-2 opacity-90">
+                • {targetWord}
+              </span>
+            )}
+          </span>
+          
+                           {/* Bot reveal button */}
+                 {onRevealLetter && (
+                   <button
+                     onClick={onRevealLetter}
+                     className="flex-shrink-0 p-1 hover:bg-amber-600 rounded transition-colors duration-200 group relative"
+                     title={letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
+                     disabled={!letterRevealsRemaining || letterRevealsRemaining <= 0}
+                   >
+                     {letterRevealsRemaining && letterRevealsRemaining > 0 ? (
+                       <Bot className="w-6 h-6 text-white" />
+                     ) : (
+                       <BotOff className="w-6 h-6 text-white opacity-50" />
+                     )}
+
+                     {/* Tooltip */}
+                     <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+                       {letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
+                       <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+                     </div>
+                   </button>
+                 )}
         </div>
         {/* Speech bubble tail pointing from icon to bubble */}
         <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-r-amber-500 border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>

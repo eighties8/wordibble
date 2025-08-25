@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { length } = req.query;
+  const { length, random } = req.query;
   
   if (!length || (length !== '5' && length !== '6' && length !== '7')) {
     return res.status(400).json({ error: 'Invalid word length. Must be 5, 6, or 7.' });
@@ -31,6 +31,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (puzzles.length === 0) {
       return res.status(500).json({ error: 'No puzzle data available for any year' });
+    }
+
+    // If random mode is requested, return a single random puzzle
+    if (random === 'true') {
+      const randomIndex = Math.floor(Math.random() * puzzles.length);
+      const randomPuzzle = puzzles[randomIndex];
+      console.log(`Random puzzle selected: ${randomPuzzle.word} from ${puzzles.length} available puzzles`);
+      return res.status(200).json([randomPuzzle]); // Return as array to maintain compatibility
     }
 
     console.log(`Loaded ${puzzles.length} puzzles for ${length}-letter words from year ${loadedYear}`);

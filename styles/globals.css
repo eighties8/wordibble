@@ -13,21 +13,18 @@
 }
 
 .line-through-custom {
-  text-decoration: line-through;
+  /* text-decoration: line-through;
   text-decoration-thickness: 0.08em;
-  text-decoration-color: #6b7280; /* gray-500 - darker than the text */
-  padding: 0.1em 0; /* Add vertical padding to make the line appear wider */
+  text-decoration-color: #6b7280; 
+  padding: 0.1em 0; */
 }
 
 .logo span {
-  /* color: #f97316; */
-  /* color: #22c55e */
-}
-.logo span i {
   color:#fff;
   background-color:#f59e0b; /* amber-500 */
   background-color:#22c55e;
   padding:0 4px;
+  font-style:italic;
 }
 
 /* Custom radio button styling */

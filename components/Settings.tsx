@@ -171,29 +171,27 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             </button>
           </div>
 
-          {/* Random Puzzle Toggle (Debug Only) */}
-          {debugMode && (
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Random Puzzle (Debug)
-                </label>
-                <p className="text-xs text-gray-500">New puzzle on each page load</p>
-              </div>
-              <button
-                onClick={() => setSettings(prev => ({ ...prev, randomPuzzle: !prev.randomPuzzle }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.randomPuzzle ? 'bg-green-600' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    settings.randomPuzzle ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+          {/* Random Puzzle Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Random Puzzle
+              </label>
+              <p className="text-xs text-gray-500">New puzzle on each page load</p>
             </div>
-          )}
+            <button
+              onClick={() => setSettings(prev => ({ ...prev, randomPuzzle: !prev.randomPuzzle }))}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                settings.randomPuzzle ? 'bg-green-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  settings.randomPuzzle ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Footer Actions */}

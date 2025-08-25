@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { Bot } from 'lucide-react';
 
 export type GuessInputRowHandle = {
   /** Focus first editable cell (even if it already has a value) */
@@ -24,11 +25,12 @@ type Props = {
   onChange: (letters: string[]) => void;
   isShaking?: boolean;        // trigger shake animation
   forceClear?: boolean;       // force clear all non-locked cells
+  revealedLetters?: Set<number>; // positions of letters revealed by lifeline
 };
 
 
 const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
-  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear }, ref) => {
+  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, revealedLetters }, ref) => {
     // keep a local controlled buffer to emit via onChange
     const [cells, setCells] = useState<string[]>(
       () => initialCells.slice(0, wordLength)
@@ -81,22 +83,24 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     // helpers to locate indices
     const firstEditableIndex = useMemo(() => {
-      for (let i = 0; i < wordLength; i++) if (!locked[i]) return i;
+      for (let i = 0; i < wordLength; i++) {
+        if (!locked[i] && !revealedLetters?.has(i)) return i;
+      }
       return -1;
-    }, [locked, wordLength]);
+    }, [locked, wordLength, revealedLetters]);
 
     const firstEmptyEditableIndex = useMemo(() => {
       for (let i = 0; i < wordLength; i++) {
-        if (!locked[i] && !cells[i]) return i;
+        if (!locked[i] && !revealedLetters?.has(i) && !cells[i]) return i;
       }
       return -1;
-    }, [cells, locked, wordLength]);
+    }, [cells, locked, wordLength, revealedLetters]);
 
     // expose focus API to parent
     useImperativeHandle(ref, () => ({
       focusFirstEditable() {
         const i = firstEditableIndex >= 0 ? firstEditableIndex : 0;
-        if (i >= 0 && !locked[i]) {
+        if (i >= 0 && !locked[i] && !revealedLetters?.has(i)) {
           inputsRef.current[i]?.focus();
           inputsRef.current[i]?.select?.();
         }
@@ -108,22 +112,24 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             : firstEditableIndex >= 0
             ? firstEditableIndex
             : 0;
-        if (i >= 0 && !locked[i]) {
+        if (i >= 0 && !locked[i] && !revealedLetters?.has(i)) {
           inputsRef.current[i]?.focus();
           inputsRef.current[i]?.select?.();
         }
       },
       clearInputs() {
         setCells(prev => {
-          const next = prev.map(cell => (locked[prev.indexOf(cell)] ? cell : ''));
+          const next = prev.map((cell, index) => 
+            (locked[index] || revealedLetters?.has(index)) ? cell : ''
+          );
           return next;
         });
       },
-    }), [firstEditableIndex, firstEmptyEditableIndex, locked]);
+    }), [firstEditableIndex, firstEmptyEditableIndex, locked, revealedLetters]);
 
     // handle typing *only* in editable cells; jump over locked ones
     function handleChangeAt(i: number, val: string) {
-      if (locked[i]) return; // ignore edits to locked
+      if (locked[i] || revealedLetters?.has(i)) return; // ignore edits to locked or revealed
       const ch = val.slice(-1).toUpperCase().replace(/[^A-Z]/g, '');
       setCells(prev => {
         if (!ch) return prev; // nothing typed
@@ -133,7 +139,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       });
       // advance focus to next editable
       for (let j = i + 1; j < wordLength; j++) {
-        if (!locked[j]) {
+        if (!locked[j] && !revealedLetters?.has(j)) {
           inputsRef.current[j]?.focus();
           inputsRef.current[j]?.select?.();
           break;
@@ -142,8 +148,9 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     }
 
     function handleKeyDownAt(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+      const isRevealed = revealedLetters?.has(i);
       if (e.key === 'Backspace') {
-        if (!locked[i] && cells[i]) {
+        if (!locked[i] && !isRevealed && cells[i]) {
           // delete current cell
           setCells(prev => {
             const next = prev.slice();
@@ -158,7 +165,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
         } else {
           // jump backward to previous editable with a value
           for (let j = i - 1; j >= 0; j--) {
-            if (!locked[j]) {
+            if (!locked[j] && !revealedLetters?.has(j)) {
               setCells(prev => {
                 if (!prev[j]) return prev;
                 const next = prev.slice();
@@ -176,7 +183,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       }
       if (e.key === 'ArrowLeft') {
         for (let j = i - 1; j >= 0; j--) {
-          if (!locked[j]) {
+          if (!locked[j] && !revealedLetters?.has(j)) {
             inputsRef.current[j]?.focus();
             inputsRef.current[j]?.select?.();
             break;
@@ -185,7 +192,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       }
       if (e.key === 'ArrowRight') {
         for (let j = i + 1; j < wordLength; j++) {
-          if (!locked[j]) {
+          if (!locked[j] && !revealedLetters?.has(j)) {
             inputsRef.current[j]?.focus();
             inputsRef.current[j]?.select?.();
             break;
@@ -199,26 +206,37 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
         <div className={`grid gap-2 md:gap-1 ${wordLength === 5 ? 'grid-cols-5' : wordLength === 6 ? 'grid-cols-6' : 'grid-cols-7'}`}>
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
+            const isRevealed = revealedLetters?.has(i);
             return (
-              <input
-                key={i}
-                ref={(el: HTMLInputElement | null) => { inputsRef.current[i] = el; }}
-                data-role="active-cell"
-                data-index={i}
-                data-locked={isLocked}
-                className={`w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 text-center border rounded-lg font-semibold tracking-wider text-lg md:text-lg lg:text-xl
-                  ${isLocked ? 'bg-green-500 text-white cursor-default' : 'bg-white text-gray-900 border-gray-300'}
-                `}
-                value={cells[i] ?? ''}
-                readOnly={isLocked}
-                tabIndex={isLocked ? -1 : 0}
-                onChange={e => handleChangeAt(i, e.target.value)}
-                onKeyDown={e => handleKeyDownAt(i, e)}
-                inputMode="text"
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-              />
+              <div key={i} className="relative">
+                <input
+                  ref={(el: HTMLInputElement | null) => { inputsRef.current[i] = el; }}
+                  data-role="active-cell"
+                  data-index={i}
+                  data-locked={isLocked}
+                  data-revealed={isRevealed}
+                  className={`w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 text-center border rounded-lg font-semibold tracking-wider text-lg md:text-lg lg:text-xl
+                    ${isLocked ? 'bg-green-500 text-white cursor-default' : 
+                      isRevealed ? 'bg-green-100 text-green-800 border-green-300 cursor-default' : 
+                      'bg-white text-gray-900 border-gray-300'}
+                  `}
+                  value={cells[i] ?? ''}
+                  readOnly={isLocked || isRevealed}
+                  tabIndex={isLocked || isRevealed ? -1 : 0}
+                  onChange={e => handleChangeAt(i, e.target.value)}
+                  onKeyDown={e => handleKeyDownAt(i, e)}
+                  inputMode="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                {/* Bot icon for revealed letters */}
+                {isRevealed && (
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-green-500 rounded-full p-0.5">
+                    <Bot className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
