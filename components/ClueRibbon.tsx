@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, BotOff } from 'lucide-react';
+import { AArrowDown, Bot, BotOff } from 'lucide-react';
 
 interface Props {
   clue: string;
@@ -19,7 +19,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       </div>
       
       {/* Speech Bubble */}
-      <div className="bg-amber-500 text-white px-4 py-2 rounded-lg relative shadow-md">
+      <div className="clue-ribbon bg-amber-500 text-white pl-4 rounded-lg relative shadow-md">
         <div className="text-sm font-medium flex items-center justify-between gap-2">
           <span>
             {clue}
@@ -30,18 +30,18 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
             )}
           </span>
           
-                           {/* Bot reveal button */}
+                {/* Bot reveal button */}
                  {onRevealLetter && (
                    <button
                      onClick={onRevealLetter}
-                     className="flex-shrink-0 p-1 hover:bg-amber-600 rounded transition-colors duration-200 group relative"
+                     className="clue-bot bg-gray-300 shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 hover:bg-amber-600 transition-colors duration-200 group relative"
                      title={letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
                      disabled={!letterRevealsRemaining || letterRevealsRemaining <= 0}
                    >
                      {letterRevealsRemaining && letterRevealsRemaining > 0 ? (
-                       <Bot className="w-6 h-6 text-white" />
+                       <AArrowDown className="w-6 h-6 !text-gray-800" />
                      ) : (
-                       <BotOff className="w-6 h-6 text-white opacity-50" />
+                       <AArrowDown className="w-6 h-6 !text-gray-800 opacity-50" />
                      )}
 
                      {/* Tooltip */}

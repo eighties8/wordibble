@@ -8,6 +8,7 @@ import {
   computeRevealsForWord,
   validateGuess,
 } from '../lib/gameLogic';
+import { recordResult } from '../lib/stats';
 import { Brain } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
@@ -194,6 +195,7 @@ export default function Game() {
           wordLength: Number(parsed.wordLength) as 5 | 6 | 7,
           randomPuzzle: parsed.randomPuzzle ?? false
         };
+        console.log('Loaded settings from localStorage:', typedSettings);
         setSettings(typedSettings);
         // Update game state if word length changed
         if (typedSettings.wordLength !== gameState.wordLength) {
@@ -202,15 +204,18 @@ export default function Game() {
       } catch (e) {
         console.error('Failed to parse saved settings:', e);
       }
+    } else {
+      console.log('No saved settings found, using defaults:', settings);
     }
   }, []);
 
   // Update game state when settings change
   useEffect(() => {
+    console.log('Settings changed:', settings);
     if (settings.wordLength !== gameState.wordLength) {
       setGameState(prev => ({ ...prev, wordLength: settings.wordLength }));
     }
-  }, [settings.wordLength, gameState.wordLength]);
+  }, [settings.wordLength, gameState.wordLength, settings]);
 
   const handleSettingsChange = useCallback((newSettings: GameSettings) => {
     setSettings(newSettings);
@@ -428,6 +433,24 @@ export default function Game() {
       }
       return next;
     });
+
+    // Record stats for completed game
+    const todayISO = new Date().toISOString().slice(0, 10);
+    recordResult(
+      {
+        dateISO: todayISO,
+        wordLength: GAME_CONFIG.WORD_LENGTH as 5 | 6 | 7,
+        won: isWin,
+        guesses: isWin ? (gameState.attemptIndex + 1) : adjustedMaxGuesses,
+        solution: gameState.secretWord,
+        mode: {
+          revealVowels: GAME_CONFIG.REVEAL_VOWELS,
+          vowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT,
+          revealClue: GAME_CONFIG.REVEAL_CLUE,
+        },
+      },
+      adjustedMaxGuesses
+    );
 
     // Focus first empty editable after render commit
     queueFocusFirstEmpty();
@@ -692,6 +715,14 @@ export default function Game() {
           onRevealLetter={settings.revealClue ? handleRevealLetter : undefined}
           letterRevealsRemaining={settings.revealClue ? gameState.letterRevealsRemaining : 0}
         />
+            </div>
+          )}
+          {/* Debug: Show clue info */}
+          {debugMode && (
+            <div className="text-center mb-4 text-xs text-gray-500">
+              <div>Clue: {gameState.clue || 'undefined'}</div>
+              <div>Reveal Clue: {settings.revealClue ? 'true' : 'false'}</div>
+              <div>Secret Word: {gameState.secretWord}</div>
             </div>
           )}
 

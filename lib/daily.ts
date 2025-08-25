@@ -26,31 +26,48 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false)
         console.log(`Random mode: selected puzzle "${puzzle.word}" from ${puzzles.length} available puzzles`);
       }
     } else {
-      // Normal date-based puzzle
-      const today = new Date().toISOString().split('T')[0];
-      puzzle = puzzles.find(p => p.date === today);
-      if (!puzzle && puzzles.length > 0) {
-        puzzle = puzzles[0];
-      }
-      if (puzzle) {
-        console.log(`Date mode: selected puzzle "${puzzle.word}" for date ${today}`);
-      }
+          // Normal date-based puzzle
+    // Use local date to avoid timezone issues
+    const now = new Date();
+    const today = now.getFullYear() + '-' + 
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                  String(now.getDate()).padStart(2, '0');
+    console.log(`Looking for puzzle on date: ${today}`);
+    console.log(`Available puzzle dates:`, puzzles.map(p => p.date).slice(0, 5));
+    puzzle = puzzles.find(p => p.date === today);
+    if (!puzzle && puzzles.length > 0) {
+      console.log(`No puzzle found for ${today}, using first available: ${puzzles[0].date}`);
+      puzzle = puzzles[0];
+    }
+    if (puzzle) {
+      console.log(`Date mode: selected puzzle "${puzzle.word}" for date ${today}`);
+    }
     }
 
     if (!puzzle) {
       throw new Error('No puzzle data available');
     }
 
+    const clue = clues[puzzle.word.toLowerCase()] || "I literally have no clue";
+    console.log(`Returning puzzle: word="${puzzle.word.toUpperCase()}", clue="${clue}"`);
+    
+    // Use local date for isToday calculation too
+    const now = new Date();
+    const today = now.getFullYear() + '-' + 
+                  String(now.getMonth() + 1).padStart(2, '0') + 
+                  String(now.getDate()).padStart(2, '0');
+    
     return {
       word: puzzle.word.toUpperCase(),
-      clue: clues[puzzle.word.toLowerCase()] || "I literally have no clue",
-      isToday: !randomMode && puzzle.date === new Date().toISOString().split('T')[0]
+      clue: clue,
+      isToday: !randomMode && puzzle.date === today
     };
   } catch (error) {
     console.error('Error loading daily puzzle:', error);
     // Fallback to a default puzzle
     return {
       word: 'HELLO'.slice(0, wordLength),
+      clue: 'A friendly greeting',
       isToday: false
     };
   }
