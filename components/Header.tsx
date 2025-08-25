@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Settings } from 'lucide-react';
+import { BarChart3, Settings, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
@@ -23,6 +23,13 @@ export default function Header({ onSettingsClick }: Props) {
             aria-label="Stats"
           >
             <BarChart3 className="w-5 h-5" />
+          </Link>
+          <Link
+            href="/archive"
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Archive"
+          >
+            <Calendar className="w-5 h-5" />
           </Link>
           <button
             onClick={onSettingsClick}

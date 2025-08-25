@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { GAME_CONFIG } from '../lib/config';
 import { GameState, Toast } from '../lib/types';
-import { loadDailyPuzzle } from '../lib/daily';
+import { loadDailyPuzzle, loadPuzzle } from '../lib/daily';
+import { getESTDateString } from '../lib/timezone';
 import {
   loadDictionary,
   evaluateGuess,
@@ -37,6 +39,8 @@ interface GameSettings {
 }
 
 export default function Game() {
+  const router = useRouter();
+  
   // Add error boundary state
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -71,6 +75,9 @@ export default function Game() {
   const [forceClear, setForceClear] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsOpenedFromClue, setSettingsOpenedFromClue] = useState(false);
+  const [showWinAnimation, setShowWinAnimation] = useState(false);
+  const [winAnimationComplete, setWinAnimationComplete] = useState(false);
+  const [clueError, setClueError] = useState<string | null>(null);
 
   // Imperative handle to control focus inside GuessInputRow
   // const inputRowRef = useRef<InputRowHandle | null>(null);
@@ -87,14 +94,18 @@ export default function Game() {
 
     // Find a random unrevealed position (not locked and not already revealed by lifeline)
     const unrevealedPositions = Array.from({ length: gameState.wordLength }, (_, i) => i)
-      .filter(i => !gameState.lockedLetters[i] && !gameState.revealedLetters.has(i));
+      .filter(i => !gameState.lockedLetters[i] && !isPositionRevealed(i));
 
     if (unrevealedPositions.length > 0) {
       const randomPosition = unrevealedPositions[Math.floor(Math.random() * unrevealedPositions.length)];
       
       setGameState(prev => ({
         ...prev,
-        revealedLetters: new Set(Array.from(prev.revealedLetters).concat(randomPosition)),
+        revealedLetters: new Set(
+          prev.revealedLetters && typeof prev.revealedLetters.has === 'function'
+            ? Array.from(prev.revealedLetters).concat(randomPosition)
+            : [randomPosition]
+        ),
         letterRevealsRemaining: prev.letterRevealsRemaining - 1
       }));
 
@@ -110,6 +121,10 @@ export default function Game() {
   // Handle new game
   const handleNewGame = useCallback(async () => {
     try {
+      // Clear saved puzzle state
+      localStorage.removeItem('wordibble-puzzle-state');
+      localStorage.removeItem('wordibble-puzzle-completed');
+      
       // Reset game state
       setGameState({
         wordLength: settings.wordLength,
@@ -175,6 +190,91 @@ export default function Game() {
     }
   }, [settings.wordLength, settings.randomPuzzle, settings.revealVowels, settings.revealVowelCount, settings.revealClue]);
 
+  // Handle win animation and letter flip
+  useEffect(() => {
+    // Don't redirect for archive puzzles or random puzzles
+    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    if (gameState.gameStatus === 'won' && !showWinAnimation && !localStorage.getItem('wordibble-puzzle-completed') && !settings.randomPuzzle && !isArchivePuzzle) {
+      setShowWinAnimation(true);
+      
+      // Mark puzzle as completed to prevent future redirects
+      localStorage.setItem('wordibble-puzzle-completed', 'true');
+      
+      // Start letter flip animation sequence
+      // Each letter will flip with a 100ms delay between them
+      const totalAnimationTime = gameState.wordLength * 100 + 600; // 600ms for flip animation duration
+      
+      setTimeout(() => {
+        setWinAnimationComplete(true);
+        console.log('Letter flip animation sequence completed');
+      }, totalAnimationTime);
+    }
+  }, [gameState.gameStatus, showWinAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
+
+  // Generate and share emoji grid
+  const generateAndShareEmojiGrid = () => {
+    // Only allow sharing for daily puzzles (not random or archive)
+    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    if (settings.randomPuzzle || isArchivePuzzle) {
+      setToasts(prev => [...prev, {
+        id: Date.now().toString(),
+        message: 'Sharing is only available for daily puzzles',
+        type: 'info'
+      }]);
+      return;
+    }
+
+    // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
+    const startDate = new Date('2025-08-23');
+    const today = new Date();
+    const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const puzzleNumber = daysDiff + 1;
+
+    // Generate emoji grid from game state
+    let emojiGrid = `Wordibble #${puzzleNumber} ${gameState.attemptIndex + 1}/5\n\n`;
+    
+    // Add each attempt as emoji rows
+    gameState.attempts.forEach((attempt, attemptIndex) => {
+      let row = '';
+      for (let i = 0; i < gameState.wordLength; i++) {
+        const letter = attempt[i];
+        const evaluation = historyEvaluations[attemptIndex]?.[i];
+        
+        if (evaluation === 'correct') {
+          row += '🟩';
+        } else if (evaluation === 'present') {
+          row += '🟨';
+        } else {
+          row += '⬛';
+        }
+      }
+      emojiGrid += row + '\n';
+    });
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(emojiGrid).then(() => {
+      // Show success toast instead of alert
+      setToasts(prev => [...prev, {
+        id: Date.now().toString(),
+        message: 'Result copied to clipboard!',
+        type: 'success'
+      }]);
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = emojiGrid;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setToasts(prev => [...prev, {
+        id: Date.now().toString(),
+        message: 'Result copied to clipboard!',
+        type: 'success'
+      }]);
+    });
+  };
+
   // ===== Debug flag (persisted) =====
   useEffect(() => {
     const savedDebugMode = localStorage.getItem('wordibble-debug-mode');
@@ -210,23 +310,33 @@ export default function Game() {
     }
   }, []);
 
-  // Update game state when settings change
+  // Update game state when settings change (but not during archive puzzle loading)
   useEffect(() => {
-    console.log('Settings changed:', settings);
-    if (settings.wordLength !== gameState.wordLength) {
+    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    if (!isArchivePuzzle && settings.wordLength !== gameState.wordLength) {
+      console.log('Settings changed (non-archive):', settings);
       setGameState(prev => ({ ...prev, wordLength: settings.wordLength }));
     }
-  }, [settings.wordLength, gameState.wordLength, settings]);
+  }, [settings.wordLength, gameState.wordLength, router.query.date, router.query.archive]);
 
   const handleSettingsChange = useCallback((newSettings: GameSettings) => {
     setSettings(newSettings);
+    
     // Update game state if word length changed
     if (newSettings.wordLength !== gameState.wordLength) {
       setGameState(prev => ({ ...prev, wordLength: newSettings.wordLength }));
+      // Reset current guess to match new word length
+      setCurrentGuess(new Array(newSettings.wordLength).fill(''));
     }
-    // Reload game with new settings
-    window.location.reload();
-  }, [gameState.wordLength]);
+    
+    // If random puzzle setting changed, clear saved state
+    if (newSettings.randomPuzzle !== settings.randomPuzzle) {
+      localStorage.removeItem('wordibble-puzzle-state');
+    }
+    
+    // Close settings modal
+    setIsSettingsOpen(false);
+  }, [gameState.wordLength, settings.randomPuzzle]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -269,16 +379,55 @@ export default function Game() {
   // ===== Load daily puzzle + dictionary =====
   useEffect(() => {
     let alive = true;
+    
     (async () => {
       try {
         console.log('Starting to load game data...');
-        const [puzzle, dict] = await Promise.all([
-          loadDailyPuzzle(settings.wordLength, settings.randomPuzzle),
-          loadDictionary(settings.wordLength),
-        ]);
-
-        console.log('Game data loaded successfully:', { puzzle: puzzle.word, dictSize: dict.size });
-
+        
+        // Clear any stale puzzle state before loading new puzzle
+        if (!router.query.date || router.query.archive !== 'true') {
+          const savedPuzzleState = localStorage.getItem('wordibble-puzzle-state');
+          if (savedPuzzleState) {
+            try {
+              const puzzleState = JSON.parse(savedPuzzleState);
+              const today = getESTDateString();
+              
+              if (puzzleState.date !== today) {
+                console.log('Clearing stale puzzle state from:', puzzleState.date, 'today (EST):', today);
+                localStorage.removeItem('wordibble-puzzle-state');
+                localStorage.removeItem('wordibble-puzzle-completed');
+              }
+            } catch (e) {
+              console.error('Failed to parse saved puzzle state for cleanup:', e);
+            }
+          }
+        }
+        
+        let puzzle;
+                let dict;
+        
+        // Check if this is an archive puzzle
+        if (router.query.date && router.query.archive === 'true') {
+          const archiveDate = new Date(router.query.date as string);
+          const archiveLength = router.query.length ? parseInt(router.query.length as string) as 5 | 6 | 7 : settings.wordLength;
+          console.log('Loading archive puzzle for date:', archiveDate, 'length:', archiveLength);
+          puzzle = await loadPuzzle(archiveDate, archiveLength);
+          
+          // Update word length setting for archive puzzles (only if different)
+          if (archiveLength !== settings.wordLength) {
+            console.log('Updating word length for archive puzzle:', archiveLength);
+            setSettings(prev => ({ ...prev, wordLength: archiveLength }));
+          }
+          
+          // Load dictionary for the archive puzzle length, not the settings length
+          dict = await loadDictionary(archiveLength);
+        } else {
+          puzzle = await loadDailyPuzzle(settings.wordLength, settings.randomPuzzle);
+          
+          // Load dictionary for the daily puzzle length
+          dict = await loadDictionary(settings.wordLength);
+        }
+        
         const revealedMask = computeRevealsForWord(puzzle.word, {
           revealVowels: settings.revealVowels,
           vowelCount: settings.revealVowelCount,
@@ -291,16 +440,26 @@ export default function Game() {
 
         if (!alive) return;
 
+        // For archive puzzles, ensure we use the correct word length
+        const puzzleWordLength = router.query.date && router.query.archive === 'true' 
+          ? (router.query.length ? parseInt(router.query.length as string) as 5 | 6 | 7 : settings.wordLength)
+          : settings.wordLength;
+
         setGameState((prev) => ({
           ...prev,
+          wordLength: puzzleWordLength,
           secretWord: puzzle.word,
           clue: settings.revealClue ? puzzle.clue : undefined,
           lockedLetters,
           revealedLetters: new Set<number>(),
           letterRevealsRemaining: 1,
         }));
+        
         setDictionary(dict);
+        console.log('Game data loaded successfully:', { puzzle: puzzle.word, dictSize: dict.size });
         console.log('Game state updated successfully');
+        console.log('Debug - Secret word set to:', puzzle.word);
+        console.log('Debug - Word length set to:', puzzleWordLength);
       } catch (error) {
         console.error('Error loading game data:', error);
         addToast('Failed to load game data', 'error');
@@ -317,7 +476,7 @@ export default function Game() {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.wordLength, settings.revealVowels, settings.revealVowelCount, settings.randomPuzzle, settings.revealClue]);
+  }, [settings.wordLength, settings.revealVowels, settings.revealVowelCount, settings.randomPuzzle, settings.revealClue, router.query.date, router.query.archive]);
 
   // ===== Keep currentGuess aligned when locked letters change =====
   useEffect(() => {
@@ -337,10 +496,76 @@ export default function Game() {
     // Don't focus here; we'll do it in targeted places
   }, [gameState.lockedLetters, gameState.secretWord, gameState.wordLength]);
 
+  // ===== Puzzle State Persistence =====
+  useEffect(() => {
+    // Load saved puzzle state from localStorage
+    const savedPuzzleState = localStorage.getItem('wordibble-puzzle-state');
+    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    if (savedPuzzleState && !settings.randomPuzzle && !isArchivePuzzle) {
+              try {
+          const puzzleState = JSON.parse(savedPuzzleState);
+          // Only restore if it's from today (using EST timezone)
+          const today = getESTDateString();
+          
+          if (puzzleState.date === today) {
+            // Fix revealedLetters to be a proper Set - handle both array and object cases
+            let revealedLettersArray = [];
+            if (puzzleState.revealedLetters) {
+              if (Array.isArray(puzzleState.revealedLetters)) {
+                revealedLettersArray = puzzleState.revealedLetters;
+              } else if (typeof puzzleState.revealedLetters === 'object') {
+                // If it's an object (from old localStorage), extract the values
+                revealedLettersArray = Object.values(puzzleState.revealedLetters);
+              }
+            }
+            
+            const fixedPuzzleState = {
+              ...puzzleState,
+              revealedLetters: new Set(revealedLettersArray)
+            };
+            setGameState(fixedPuzzleState);
+            setCurrentGuess(puzzleState.currentGuess || new Array(puzzleState.wordLength).fill(''));
+            console.log('Restored puzzle state from localStorage for date:', today);
+          } else {
+            console.log('Puzzle state date mismatch - saved:', puzzleState.date, 'today (EST):', today);
+            // Clear old puzzle state
+            localStorage.removeItem('wordibble-puzzle-state');
+            // Also clear the completed flag to allow new games
+            localStorage.removeItem('wordibble-puzzle-completed');
+          }
+        } catch (e) {
+          console.error('Failed to parse saved puzzle state:', e);
+        }
+    }
+  }, [settings.randomPuzzle, router.query.date, router.query.archive]);
+
+  // Save puzzle state to localStorage
+  useEffect(() => {
+    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    if (gameState.secretWord && !settings.randomPuzzle && !isArchivePuzzle) {
+      // Use EST timezone for date consistency
+      const today = getESTDateString();
+      
+      const puzzleState = {
+        ...gameState,
+        date: today,
+        currentGuess
+      };
+      localStorage.setItem('wordibble-puzzle-state', JSON.stringify(puzzleState));
+    }
+  }, [gameState, currentGuess, settings.randomPuzzle, router.query.date, router.query.archive]);
+
   // ===== Toast helpers =====
   const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
     const id = `${Date.now()}-${Math.random()}`;
     setToasts((prev) => [...prev, { id, message, type }]);
+  }, []);
+
+  // Manual cleanup function for stuck puzzle state
+  const clearPuzzleState = useCallback(() => {
+    localStorage.removeItem('wordibble-puzzle-state');
+    localStorage.removeItem('wordibble-puzzle-completed');
+    window.location.reload();
   }, []);
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -353,6 +578,14 @@ export default function Game() {
     setCurrentGuess(letters);
   }, []);
 
+  // Helper function to safely check if a position is revealed
+  const isPositionRevealed = useCallback((position: number) => {
+    if (!gameState.revealedLetters || typeof gameState.revealedLetters.has !== 'function') {
+      return false;
+    }
+    return gameState.revealedLetters.has(position);
+  }, [gameState.revealedLetters]);
+
   // ===== Submit guess =====
   const handleSubmit = useCallback(() => {
     if (gameState.gameStatus !== 'playing') return;
@@ -363,10 +596,14 @@ export default function Game() {
     ).join('');
 
     if (!validateGuess(completeGuess, gameState.wordLength)) {
-      addToast('Please enter a complete word', 'error');
+      setClueError('Please enter a complete word');
+      setTimeout(() => setClueError(null), 1000); // Clear after 3 seconds
       return;
     }
     if (!dictionary.has(completeGuess)) {
+      setClueError('Not in dictionary');
+      setTimeout(() => setClueError(null), 1000); // Clear after 3 seconds
+      
       // Shake animation and reset input
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
@@ -391,6 +628,9 @@ export default function Game() {
       return;
     }
 
+    // Clear any previous error
+    setClueError(null);
+    
     const evaluation = evaluateGuess(completeGuess, gameState.secretWord);
     const isWin = evaluation.every((s) => s === 'correct');
 
@@ -410,10 +650,8 @@ export default function Game() {
       let newStatus: GameState['gameStatus'] = 'playing';
       if (isWin) {
         newStatus = 'won';
-        addToast('Congratulations! You won!', 'success');
       } else if (nextAttemptIndex >= adjustedMaxGuesses) {
         newStatus = 'lost';
-        addToast(`Game over! The word was ${prev.secretWord}`, 'error');
       }
 
       return {
@@ -435,23 +673,27 @@ export default function Game() {
       return next;
     });
 
-    // Record stats for completed game
-    const todayISO = new Date().toISOString().slice(0, 10);
-    recordResult(
-      {
-        dateISO: todayISO,
-        wordLength: GAME_CONFIG.WORD_LENGTH as 5 | 6 | 7,
-        won: isWin,
-        guesses: isWin ? (gameState.attemptIndex + 1) : adjustedMaxGuesses,
-        solution: gameState.secretWord,
-        mode: {
-          revealVowels: GAME_CONFIG.REVEAL_VOWELS,
-          vowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT,
-          revealClue: GAME_CONFIG.REVEAL_CLUE,
+    // Record stats for completed game (only for daily puzzles, not archive or random)
+    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    if (!isArchivePuzzle) {
+      const todayISO = getESTDateString();
+      recordResult(
+        {
+          dateISO: todayISO,
+          wordLength: GAME_CONFIG.WORD_LENGTH as 5 | 6 | 7,
+          won: isWin,
+          guesses: isWin ? (gameState.attemptIndex + 1) : adjustedMaxGuesses,
+          solution: gameState.secretWord,
+          mode: {
+            revealVowels: GAME_CONFIG.REVEAL_VOWELS,
+            vowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT,
+            revealClue: GAME_CONFIG.REVEAL_CLUE,
+            randomPuzzle: settings.randomPuzzle,
+          },
         },
-      },
-      adjustedMaxGuesses
-    );
+        adjustedMaxGuesses
+      );
+    }
 
     // Focus first empty editable after render commit
     queueFocusFirstEmpty();
@@ -464,6 +706,9 @@ export default function Game() {
     dictionary,
     addToast,
     adjustedMaxGuesses,
+    settings.randomPuzzle,
+    router.query.date,
+    router.query.archive,
   ]);
 
   // ===== Global Enter handler =====
@@ -642,7 +887,7 @@ export default function Game() {
   function queueFocusSpecificIndex(i: number) {
     requestAnimationFrame(() => {
       // Only focus if the cell is not locked or revealed
-      if (gameState.lockedLetters[i] || gameState.revealedLetters.has(i)) return;
+      if (gameState.lockedLetters[i] || isPositionRevealed(i)) return;
       
       // Try a convention: inputs annotated with data-index
       const el = document.querySelector<HTMLInputElement>(
@@ -676,7 +921,7 @@ export default function Game() {
   // Show error state if there's an error
   if (hasError) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-2">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
           <p className="text-gray-700 mb-4">{errorMessage}</p>
@@ -707,18 +952,47 @@ export default function Game() {
       
       <main className="flex-1 py-4 md:py-8 px-4">
         <div className="max-w-md mx-auto">
-          {/* Clue Ribbon - always show for all users */}
+          {/* Clue Ribbon or Game Result Banner */}
           <div className="text-center mb-4 md:mb-8">
-            <ClueRibbon 
-              clue={gameState.clue || ''} 
-              targetWord={debugMode ? gameState.secretWord : undefined}
-              onRevealLetter={handleRevealLetter}
-              letterRevealsRemaining={gameState.letterRevealsRemaining}
-              onSettingsClick={() => {
-                setSettingsOpenedFromClue(true);
-                setIsSettingsOpen(true);
-              }}
-            />
+            {gameState.gameStatus === 'lost' ? (
+              /* Solution Banner - Show in place of clue when lost */
+              <div className="bg-black text-white px-6 py-3 rounded-lg w-full max-w-md mx-auto">
+                <div className="text-2xl font-bold tracking-wider">
+                  {gameState.secretWord}
+                </div>
+              </div>
+            ) : gameState.gameStatus === 'won' ? (
+              /* Wordibble Result Banner - Show in place of clue when won */
+              <div className="bg-green-500 text-white px-6 py-3 rounded-lg w-full max-w-md mx-auto">
+                <div className="text-xl font-bold tracking-wider">
+                  {(() => {
+                    // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
+                    const startDate = new Date('2025-08-23');
+                    const today = new Date();
+                    const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                    const puzzleNumber = daysDiff + 1;
+                    return `Wordibble #${puzzleNumber} ${gameState.attempts.length}/5`;
+                  })()}
+                </div>
+              </div>
+            ) : clueError ? (
+              /* Error Banner - Show when there's an error */
+              <div className="w-fit mx-auto mb-6 md:mb-6 bg-gray-300 text-gray-700 px-6 py-1.5 rounded-lg shadow-lg transition-all duration-300 ease-out transform text-sm font-medium whitespace-nowrap">
+                {clueError}
+              </div>
+            ) : (
+              /* Clue Ribbon - Show when playing normally */
+              <ClueRibbon 
+                clue={gameState.clue || ''} 
+                targetWord={debugMode ? gameState.secretWord : undefined}
+                onRevealLetter={handleRevealLetter}
+                letterRevealsRemaining={gameState.letterRevealsRemaining}
+                onSettingsClick={() => {
+                  setSettingsOpenedFromClue(true);
+                  setIsSettingsOpen(true);
+                }}
+              />
+            )}
           </div>
           {/* Debug: Show clue info */}
           {debugMode && (
@@ -730,33 +1004,59 @@ export default function Game() {
           )}
 
           {/* Game Grid */}
-          <div className="space-y-3 md:space-y-4 mb-4 md:mb-8">
-            {/* Active Input Row */}
-            <GuessInputRow
-              ref={inputRowRef as any}
-              key={`input-${Object.keys(gameState.lockedLetters).length}-${gameState.attemptIndex}`}
-              wordLength={gameState.wordLength}
-              locked={Array.from({ length: gameState.wordLength }, (_, i) => !!gameState.lockedLetters[i])}
-              initialCells={Array.from({ length: gameState.wordLength }, (_, i) => 
-                gameState.lockedLetters[i] || 
-                (gameState.revealedLetters.has(i) ? gameState.secretWord[i] : '') ||
-                currentGuess[i] || ''
-              )}
-              onChange={handleGuessChange}
-              isShaking={isShaking}
-              forceClear={forceClear}
-              revealedLetters={gameState.revealedLetters}
-            />
-
-            {/* History Rows */}
-            {gameState.attempts.slice(0, gameState.gameStatus === 'won' ? -1 : undefined).map((attempt, index) => (
-              <RowHistory
-                key={index}
-                guess={attempt}
-                evaluation={historyEvaluations[index]}
+          <div className="space-y-3 md:space-y-1 mb-4 md:mb-8">
+            {/* Active Input Row - Only show when playing */}
+            {gameState.gameStatus === 'playing' && (
+              <GuessInputRow
+                ref={inputRowRef as any}
+                key={`input-${Object.keys(gameState.lockedLetters).length}-${gameState.attemptIndex}`}
                 wordLength={gameState.wordLength}
+                locked={Array.from({ length: gameState.wordLength }, (_, i) => !!gameState.lockedLetters[i])}
+                initialCells={Array.from({ length: gameState.wordLength }, (_, i) => 
+                  gameState.lockedLetters[i] || 
+                  (isPositionRevealed(i) ? gameState.secretWord[i] : '') ||
+                  currentGuess[i] || ''
+                )}
+                onChange={handleGuessChange}
+                isShaking={isShaking}
+                forceClear={forceClear}
+                revealedLetters={gameState.revealedLetters}
+                readOnly={gameState.gameStatus !== 'playing'}
               />
-            ))}
+            )}
+
+            {/* History Rows - Show all attempts when game is won */}
+            {gameState.attempts.map((attempt, index) => {
+              const isWinningRow = gameState.gameStatus === 'won' && index === gameState.attempts.length - 1;
+              let evaluation = historyEvaluations[index];
+              
+              // Force all letters to be 'correct' for the winning row
+              if (isWinningRow && gameState.gameStatus === 'won') {
+                evaluation = new Array(gameState.wordLength).fill('correct');
+              }
+              
+              // Debug logging for winning row
+              if (isWinningRow) {
+                console.log('Winning row:', {
+                  attempt,
+                  evaluation,
+                  secretWord: gameState.secretWord,
+                  gameStatus: gameState.gameStatus
+                });
+              }
+              
+              return (
+                <RowHistory
+                  key={index}
+                  guess={attempt}
+                  evaluation={evaluation}
+                  wordLength={gameState.wordLength}
+                  isWinningRow={isWinningRow}
+                  showAnimation={showWinAnimation}
+                  animationDelay={0}
+                />
+              );
+            })}
           </div>
 
           {/* Guesses Left */}
@@ -770,19 +1070,44 @@ export default function Game() {
           )}
 
           {/* Game Status */}
-          {gameState.gameStatus === 'won' && (
-            <div className="text-center text-green-600 font-semibold text-lg mb-4">
-              <Brain className="inline-block w-5 h-5 mr-2" /> Crushed it in {gameState.attemptIndex} {gameState.attemptIndex === 1 ? 'try' : 'tries'}!
+          {/* Temporarily disabled congratulations popup */}
+          {/* {gameState.gameStatus === 'won' && (
+            <div className="text-center mb-4">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-8 text-center shadow-xl max-w-md mx-4">
+                  <div className="text-4xl mb-4">🎉</div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">Congratulations!</h2>
+                  <p className="text-xl text-gray-600 mb-6">You won!</p>
+                  <button
+                    onClick={() => setGameState(prev => ({ ...prev, gameStatus: 'playing' }))}
+                    className="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
-          {gameState.gameStatus === 'lost' && (
-            <div className="text-center text-red-600 font-semibold text-lg mb-4">
-              Game over! The word was {gameState.secretWord}
+          )} */}
+          
+
+          
+
+
+          {/* Debug: Clear Puzzle State Button */}
+          {debugMode && (
+            <div className="text-center mb-4">
+              <button
+                onClick={clearPuzzleState}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors"
+                title="Clear saved puzzle state and reload (for debugging stuck puzzles)"
+              >
+                🧹 Clear Puzzle State
+              </button>
             </div>
           )}
 
-          {/* New Game Button */}
-          {(gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
+          {/* New Game Button - Commented out for now */}
+          {/* {(gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
             <div className="text-center">
               <button
                 onClick={handleNewGame}
@@ -791,17 +1116,21 @@ export default function Game() {
                 New Game
               </button>
             </div>
-          )}
+          )} */}
 
           {/* Virtual Keyboard */}
-          {gameState.gameStatus === 'playing' && (
+          {(gameState.gameStatus === 'playing' || gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
             <div className="mt-4 md:mt-8">
               <Keyboard
-                onKeyPress={handleKeyboardKeyPress}
-                onEnter={handleSubmit}
-                onBackspace={handleKeyboardBackspace}
+                onKeyPress={gameState.gameStatus === 'playing' ? handleKeyboardKeyPress : () => {}}
+                onEnter={gameState.gameStatus === 'playing' ? handleSubmit : () => {}}
+                onBackspace={gameState.gameStatus === 'playing' ? handleKeyboardBackspace : () => {}}
                 letterStates={keyboardLetterStates}
-                revealedLetters={new Set(Array.from(gameState.revealedLetters).map(i => gameState.secretWord[i]))}
+                revealedLetters={new Set(
+                  gameState.revealedLetters && typeof gameState.revealedLetters.has === 'function' 
+                    ? Array.from(gameState.revealedLetters).map(i => gameState.secretWord[i])
+                    : []
+                )}
               />
             </div>
           )}

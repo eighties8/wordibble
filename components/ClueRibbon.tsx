@@ -1,5 +1,5 @@
 import React from 'react';
-import { AArrowDown, Bot, BotOff } from 'lucide-react';
+import { AArrowDown, Bot, BotOff, Settings } from 'lucide-react';
 
 interface Props {
   clue: string;
@@ -20,7 +20,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       </div>
       
       {/* Speech Bubble */}
-      <div className="clue-ribbon bg-amber-500 text-white pl-4 rounded-lg relative shadow-md">
+      <div className="clue-ribbon bg-green-500 text-white pl-4 rounded-lg relative shadow-md">
         <div className="text-sm font-medium flex items-center justify-between gap-2">
           <span>
             {clue ? (
@@ -31,7 +31,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
                 className="hover:underline cursor-pointer"
                 type="button"
               >
-                Need a clue? Click here
+                Need a clue? Vowels? Click here <Settings className="w-4 h-4 inline-block align-middle"/>
               </button>
             )}
             {targetWord && (
@@ -45,7 +45,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
                  {onRevealLetter && (
                    <button
                      onClick={onRevealLetter}
-                     className="clue-bot bg-gray-300 shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 hover:bg-amber-600 transition-colors duration-200 group relative"
+                     className="clue-bot bg-gray-300 shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 hover:bg-green-600 transition-colors duration-200 group relative"
                      title={letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
                      disabled={!letterRevealsRemaining || letterRevealsRemaining <= 0}
                    >
@@ -64,7 +64,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
                  )}
         </div>
         {/* Speech bubble tail pointing from icon to bubble */}
-        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-r-amber-500 border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-r-green-500 border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
       </div>
     </div>
   );

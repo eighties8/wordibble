@@ -29,8 +29,11 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
   useEffect(() => {
     if (isOpen) {
       // Ensure all required properties exist with defaults
+      // Use current puzzle's word length, fallback to stored settings, then default to 6
+      const currentWordLength = currentSettings.wordLength || 6;
+      
       const settingsWithDefaults: SettingsConfig = {
-        wordLength: currentSettings.wordLength,
+        wordLength: currentWordLength,
         maxGuesses: currentSettings.maxGuesses,
         revealVowels: currentSettings.revealVowels,
         revealVowelCount: currentSettings.revealVowelCount,
@@ -38,6 +41,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
         randomPuzzle: currentSettings.randomPuzzle ?? false
       };
       console.log('Settings opened from clue:', openedFromClue);
+      console.log('Current word length:', currentWordLength);
       console.log('Initial revealClue value:', settingsWithDefaults.revealClue);
       setSettings(settingsWithDefaults);
     }

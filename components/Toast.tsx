@@ -18,18 +18,18 @@ export default function Toast({ toast, onDismiss }: Props) {
   const getToastStyles = (type: ToastType['type']) => {
     switch (type) {
       case 'success':
-        return 'bg-green-500 text-white border-green-600';
+        return 'bg-green-500 text-white';
       case 'error':
-        return 'bg-red-500 text-white border-red-600';
+        return 'bg-amber-500 text-white';
       default:
-        return 'bg-gray-500 text-white border-gray-600';
+        return 'bg-gray-500 text-white';
     }
   };
 
   return (
     <div
       className={[
-        'fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm border',
+        'fixed top-4 right-4 px-4 py-1 rounded-lg shadow-lg z-50 max-w-sm border',
         getToastStyles(toast.type)
       ].join(' ')}
     >

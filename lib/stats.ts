@@ -12,6 +12,7 @@ export type GameResult = {
     revealVowels: boolean;
     vowelCount: number;
     revealClue: boolean;
+    randomPuzzle: boolean;
   };
 };
 

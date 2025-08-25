@@ -26,11 +26,12 @@ type Props = {
   isShaking?: boolean;        // trigger shake animation
   forceClear?: boolean;       // force clear all non-locked cells
   revealedLetters?: Set<number>; // positions of letters revealed by lifeline
+  readOnly?: boolean;         // make entire row read-only (e.g., completed puzzle)
 };
 
 
 const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
-  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, revealedLetters }, ref) => {
+  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, revealedLetters, readOnly }, ref) => {
     // keep a local controlled buffer to emit via onChange
     const [cells, setCells] = useState<string[]>(
       () => initialCells.slice(0, wordLength)
@@ -224,8 +225,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                   data-revealed={isRevealed}
                   className={`${baseClasses} ${stateClasses}`}
                   value={cells[i] ?? ''}
-                  readOnly={isLocked || isRevealed}
-                  tabIndex={isLocked || isRevealed ? -1 : 0}
+                  readOnly={readOnly || isLocked || isRevealed}
+                  tabIndex={readOnly || isLocked || isRevealed ? -1 : 0}
                   onChange={e => handleChangeAt(i, e.target.value)}
                   onKeyDown={e => handleKeyDownAt(i, e)}
                   inputMode="text"
