@@ -15,8 +15,8 @@ Output files (also in lib/data/):
   - puzzles{N}-{YEAR}.json
     Format:
       [
-        { "date": "2025-08-23", "word": "HAPPY" },
-        { "date": "2025-08-24", "word": "DREAM" }
+        { "date": "2025-08-25", "word": "HAPPY" },
+        { "date": "2025-08-26", "word": "DREAM" }
       ]
 
 Usage:

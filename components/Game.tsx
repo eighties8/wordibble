@@ -11,7 +11,7 @@ import {
   validateGuess,
 } from '../lib/gameLogic';
 import { recordResult } from '../lib/stats';
-import { Brain } from 'lucide-react';
+import { Brain, Trophy } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 import Settings from './Settings';
@@ -224,14 +224,14 @@ export default function Game() {
       return;
     }
 
-    // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
-    const startDate = new Date('2025-08-23');
+    // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
+    const startDate = new Date('2025-08-25');
     const today = new Date();
     const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const puzzleNumber = daysDiff + 1;
 
     // Generate emoji grid from game state
-    let emojiGrid = `Wordibble #${puzzleNumber} ${gameState.attemptIndex + 1}/5\n\n`;
+    let emojiGrid = `Wordibble #${puzzleNumber} ${gameState.attemptIndex + 1}/${settings.maxGuesses}\n`;
     
     // Add each attempt as emoji rows
     gameState.attempts.forEach((attempt, attemptIndex) => {
@@ -359,22 +359,7 @@ export default function Game() {
     }
   }, [gameState.wordLength]);
 
-  // ===== Calculate adjusted max guesses based on revealed letters =====
-  const adjustedMaxGuesses = useMemo(() => {
-    const revealedLetterCount = Object.keys(gameState.lockedLetters).length;
-    
-    // If REVEAL_CLUE is false and only 1 letter is revealed, add 1 to max guesses
-    if (!settings.revealClue && revealedLetterCount === 1) {
-      return settings.maxGuesses + 1;
-    }
-    
-    // If there's a clue AND 2 or more vowels revealed, reduce max guesses by 2
-    if (settings.revealClue && revealedLetterCount >= 2) {
-      return Math.max(3, settings.maxGuesses - 2); // Ensure minimum of 3 guesses
-    }
-    
-    return settings.maxGuesses;
-  }, [gameState.lockedLetters, settings.revealClue, settings.maxGuesses]);
+
 
   // ===== Load daily puzzle + dictionary =====
   useEffect(() => {
@@ -650,7 +635,7 @@ export default function Game() {
       let newStatus: GameState['gameStatus'] = 'playing';
       if (isWin) {
         newStatus = 'won';
-      } else if (nextAttemptIndex >= adjustedMaxGuesses) {
+      } else if (nextAttemptIndex >= settings.maxGuesses) {
         newStatus = 'lost';
       }
 
@@ -682,7 +667,7 @@ export default function Game() {
           dateISO: todayISO,
           wordLength: GAME_CONFIG.WORD_LENGTH as 5 | 6 | 7,
           won: isWin,
-          guesses: isWin ? (gameState.attemptIndex + 1) : adjustedMaxGuesses,
+          guesses: isWin ? (gameState.attemptIndex + 1) : settings.maxGuesses,
           solution: gameState.secretWord,
           mode: {
             revealVowels: GAME_CONFIG.REVEAL_VOWELS,
@@ -691,7 +676,7 @@ export default function Game() {
             randomPuzzle: settings.randomPuzzle,
           },
         },
-        adjustedMaxGuesses
+        settings.maxGuesses
       );
     }
 
@@ -705,7 +690,7 @@ export default function Game() {
     currentGuess,
     dictionary,
     addToast,
-    adjustedMaxGuesses,
+            settings.maxGuesses,
     settings.randomPuzzle,
     router.query.date,
     router.query.archive,
@@ -921,7 +906,7 @@ export default function Game() {
   // Show error state if there's an error
   if (hasError) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-2">
+      <div className="min-h-screen flex flex-col items-center justify-center p-2">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
           <p className="text-gray-700 mb-4">{errorMessage}</p>
@@ -944,10 +929,10 @@ export default function Game() {
     );
   }
 
-  const attemptsLeft = adjustedMaxGuesses - gameState.attemptIndex;
+  const attemptsLeft = settings.maxGuesses - gameState.attemptIndex;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <Header onSettingsClick={() => setIsSettingsOpen(true)} />
       
       <main className="flex-1 py-4 md:py-8 px-4">
@@ -958,12 +943,12 @@ export default function Game() {
             if (gameState.gameStatus === 'lost') {
               return gameState.secretWord;
             } else if (gameState.gameStatus === 'won') {
-              // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
-              const startDate = new Date('2025-08-23');
+              // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
+              const startDate = new Date('2025-08-25');
               const today = new Date();
               const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
               const puzzleNumber = daysDiff + 1;
-              return `Wordibble #${puzzleNumber} ${gameState.attempts.length}/5`;
+              return `Wordibble #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
             } else if (clueError) {
               return clueError;
             } else {

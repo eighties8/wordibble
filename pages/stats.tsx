@@ -18,7 +18,7 @@ export default function StatsPage() {
 
   if (isLoading || !stats) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-lg text-gray-600">Loading stats...</p>
@@ -29,7 +29,7 @@ export default function StatsPage() {
 
   const generateAndShareEmojiGrid = (stats: StatsSnapshot) => {
     // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
-    const startDate = new Date('2025-08-23');
+    const startDate = new Date('2025-08-25');
     const today = new Date();
     const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const puzzleNumber = daysDiff + 1;
@@ -90,7 +90,7 @@ export default function StatsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <header className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Your Stats</h1>
         <Link href="/" className="text-blue-600 hover:underline">Back to game</Link>

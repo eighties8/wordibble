@@ -135,7 +135,7 @@ export default function ArchivePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <header className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="grid grid-cols-2 gap-1 w-6 h-6">

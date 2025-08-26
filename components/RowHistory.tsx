@@ -45,7 +45,7 @@ export default function RowHistory({ guess, evaluation, wordLength, isWinningRow
             <div
               key={i}
               className={[
-                'w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg text-center font-semibold uppercase flex items-center justify-center text-lg md:text-lg lg:text-xl',
+                'scott w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg text-center font-semibold uppercase flex items-center justify-center text-lg md:text-lg lg:text-xl',
                 getTileColor(state),
                 isWinningRow && isCorrect && showAnimation ? 'animate-flip' : '',
                 isWinningRow && isCorrect ? `animation-delay-${animationDelay + i * 100}` : ''

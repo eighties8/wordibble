@@ -1,4 +1,4 @@
-import { AArrowDown, Settings } from "lucide-react";
+import { AArrowDown, PartyPopper, Settings, Trophy } from "lucide-react";
 
 interface Props {
   clue: string;
@@ -22,13 +22,16 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       
       {/* Speech Bubble - Maintain consistent green background for all variants */}
       {/* <div className={`clue-ribbon relative shadow-md rounded-lg pl-4 bg-green-500 text-white`}> */}
-      <div className={`clue-ribbon relative shadow-md rounded-lg pl-4 transition-all duration-300 ease-in-out ${
+      <div className={`clue-ribbon relative shadow-md rounded-lg pl-3 transition-all duration-300 ease-in-out ${
           variant === 'error' ? 'bg-amber-500' : 'bg-green-500'
         } text-white`}>
         <div className="text-sm font-medium flex items-center justify-between gap-2">
-          <span className="transition-all duration-300 ease-in-out">
+          <span className="transition-all duration-300 ease-in-out flex items-center gap-2 pl-1 pr-2">
             {clue ? (
-              clue
+              <>
+                {clue.startsWith('Wordibble #') && <PartyPopper className="w-5 h-5 text-white" />}
+                {clue}
+              </>
             ) : (
               <button 
                 onClick={onSettingsClick}
