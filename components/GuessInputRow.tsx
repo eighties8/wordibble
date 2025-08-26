@@ -27,11 +27,12 @@ type Props = {
   forceClear?: boolean;       // force clear all non-locked cells
   revealedLetters?: Set<number>; // positions of letters revealed by lifeline
   readOnly?: boolean;         // make entire row read-only (e.g., completed puzzle)
+  showFadeIn?: boolean;      // trigger fade-in animation for locked cells
 };
 
 
 const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
-  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, revealedLetters, readOnly }, ref) => {
+  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, revealedLetters, readOnly, showFadeIn }, ref) => {
     // keep a local controlled buffer to emit via onChange
     const [cells, setCells] = useState<string[]>(
       () => initialCells.slice(0, wordLength)
@@ -208,32 +209,33 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
             const isRevealed = revealedLetters?.has(i);
-            const baseClasses = 'w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 text-center border rounded-lg font-semibold tracking-wider text-lg md:text-lg lg:text-xl';
             const stateClasses = isLocked 
-              ? 'bg-green-500 text-white cursor-default' 
+              ? `bg-green-500 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
               : isRevealed 
-                ? 'bg-green-500 text-white border-green-300 cursor-default' 
-                : 'bg-white text-gray-900 border-gray-300';
+                ? 'bg-green-500 text-white' 
+                : 'bg-white text-gray-900';
             
             return (
-              <div key={i} className="relative">
-                <input
-                  ref={(el: HTMLInputElement | null) => { inputsRef.current[i] = el; }}
-                  data-role="active-cell"
-                  data-index={i}
-                  data-locked={isLocked}
-                  data-revealed={isRevealed}
-                  className={`${baseClasses} ${stateClasses}`}
-                  value={cells[i] ?? ''}
-                  readOnly={readOnly || isLocked || isRevealed}
-                  tabIndex={readOnly || isLocked || isRevealed ? -1 : 0}
-                  onChange={e => handleChangeAt(i, e.target.value)}
-                  onKeyDown={e => handleKeyDownAt(i, e)}
-                  inputMode="text"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                />
+              <div key={i} className="tile-frame w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg transform-gpu">
+                <div className={`tile-panel flex items-center justify-center text-center font-semibold uppercase text-lg md:text-lg lg:text-xl transform-gpu origin-center preserve-3d ${stateClasses}`}>
+                  <input
+                    ref={(el: HTMLInputElement | null) => { inputsRef.current[i] = el; }}
+                    data-role="active-cell"
+                    data-index={i}
+                    data-locked={isLocked}
+                    data-revealed={isRevealed}
+                    className="w-full h-full text-center bg-transparent border-none outline-none font-semibold tracking-wider text-lg md:text-lg lg:text-xl"
+                    value={cells[i] ?? ''}
+                    readOnly={readOnly || isLocked || isRevealed}
+                    tabIndex={readOnly || isLocked || isRevealed ? -1 : 0}
+                    onChange={e => handleChangeAt(i, e.target.value)}
+                    onKeyDown={e => handleKeyDownAt(i, e)}
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                </div>
                 {isRevealed && (
                   <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-green-500 rounded-full p-0.5">
                     <AArrowDown className="w-4 h-4 text-white" />

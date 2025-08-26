@@ -119,9 +119,9 @@ body { background: #fff; }
 /* Flip: robust single animation using CSS vars for final colors */
 .tile-panel.animate-flip-simple {
   /* Start fully dark so glyphs are invisible */
-  background-color: #374151; /* gray-700-ish */
-  color: #374151;            /* match bg so text is hidden */
-  animation: flip-reveal-simple 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  background-color: var(--flip-backface-color, #374151); /* fallback to current color */
+  color: var(--flip-backface-color, #374151);            /* fallback to current color */
+  animation: flip-reveal-simple 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   will-change: transform, background-color, color;
   /* Disable transitions during animation to prevent color bleeding */
   transition: none;
@@ -135,13 +135,13 @@ body { background: #fff; }
 @keyframes flip-reveal-simple {
   0%   { 
     transform: rotateX(0deg); 
-    background-color: #374151; 
-    color: #374151; 
+    background-color: var(--flip-backface-color, #374151); 
+    color: var(--flip-backface-color, #374151); 
   }
   45%  { 
     transform: rotateX(-90deg); 
-    background-color: #374151; 
-    color: #374151; 
+    background-color: var(--flip-backface-color, #374151); 
+    color: var(--flip-backface-color, #374151); 
   }
   /* Switch colors while face is hidden */
   55%  { 
@@ -155,3 +155,53 @@ body { background: #fff; }
     color: var(--final-fg); 
   }
 }
+
+/* Win celebration animations */
+@keyframes win-bounce {
+  0%, 20%, 50%, 80%, 100% { 
+    transform: translateY(0) scale(1); 
+  }
+  40% { 
+    transform: translateY(-10px) scale(1.1); 
+  }
+  60% { 
+    transform: translateY(-5px) scale(1.05); 
+  }
+}
+
+.animate-win-bounce { 
+  animation: win-bounce 0.8s ease-in-out; 
+}
+
+/* Fade-in animation for green letters */
+@keyframes fade-in-green {
+  0% { 
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-green { 
+  animation: fade-in-green 0.5s ease-out forwards;
+}
+
+/* Win celebration animations */
+@keyframes win-pulse-glow {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+  }
+  50% { 
+    transform: scale(1.05); 
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+  }
+}
+
+.animate-win-pulse-glow { 
+  animation: win-pulse-glow 1.2s ease-in-out infinite;
+}
+

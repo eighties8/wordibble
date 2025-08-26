@@ -10,18 +10,32 @@ export async function loadDictionary(wordLength: WordLength): Promise<Set<string
   }
 
   try {
+    console.log(`Loading dictionary for word length: ${wordLength}`);
     // Use the dictionary file from lib/data via API
     const response = await fetch(`/api/dictionary?length=${wordLength}`);
     if (!response.ok) {
-      throw new Error('Failed to load dictionary');
+      throw new Error(`Failed to load dictionary: ${response.status} ${response.statusText}`);
     }
     const words: string[] = await response.json();
+    console.log(`Dictionary loaded successfully: ${words.length} words`);
     dictionaryCache = new Set(words.map(w => w.toUpperCase()));
     return dictionaryCache;
   } catch (error) {
-    console.error('Error loading dictionary:', error);
-    // Return empty set as fallback
-    return new Set();
+    console.error('Error loading dictionary via API, trying fallback:', error);
+    
+    // Fallback: try to load dictionary data directly
+    try {
+      // Import dictionary data directly as a fallback
+      const dictionaryData = await import(`./data/dictionary${wordLength}.json`);
+      const words = dictionaryData.default || dictionaryData;
+      console.log(`Dictionary loaded via fallback: ${words.length} words`);
+      dictionaryCache = new Set(words.map((w: string) => w.toUpperCase()));
+      return dictionaryCache;
+    } catch (fallbackError) {
+      console.error('Fallback dictionary loading also failed:', fallbackError);
+      // Return empty set as final fallback
+      return new Set();
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { GAME_CONFIG } from '../lib/config';
+import { GAME_CONFIG, ANIMATION_CONFIG } from '../lib/config';
 import { GameState, Toast } from '../lib/types';
 import { loadDailyPuzzle, loadPuzzle } from '../lib/daily';
 import { getESTDateString } from '../lib/timezone';
@@ -79,6 +79,9 @@ export default function Game() {
   const [winAnimationComplete, setWinAnimationComplete] = useState(false);
   const [clueError, setClueError] = useState<string | null>(null);
   const [flippingRows, setFlippingRows] = useState<Set<number>>(new Set());
+  const [showFadeInForInput, setShowFadeInForInput] = useState(false);
+  const [previouslyRevealedPositions, setPreviouslyRevealedPositions] = useState<Set<number>>(new Set());
+
 
   // Imperative handle to control focus inside GuessInputRow
   // const inputRowRef = useRef<InputRowHandle | null>(null);
@@ -216,8 +219,8 @@ export default function Game() {
       localStorage.setItem('wordibble-puzzle-completed', 'true');
       
       // Start letter flip animation sequence
-      // Each letter will flip with a 1200ms delay between them (sequential flipping)
-      const totalAnimationTime = gameState.wordLength * 1200; // 1200ms per tile, sequential
+      // Each letter will flip with a delay between them (sequential flipping)
+      const totalAnimationTime = gameState.wordLength * ANIMATION_CONFIG.TILE_FLIP_DURATION; // sequential timing from config
       
       setTimeout(() => {
         setWinAnimationComplete(true);
@@ -588,7 +591,7 @@ export default function Game() {
     ).join('');
 
     if (!validateGuess(completeGuess, gameState.wordLength)) {
-      setClueError('Please enter a complete word!');
+      setClueError('Not enough letters');
       setTimeout(() => setClueError(null), 1500); // Clear after 1.5 seconds
       return;
     }
@@ -650,7 +653,6 @@ export default function Game() {
         ...prev,
         attempts: newAttempts,
         attemptIndex: nextAttemptIndex,
-        lockedLetters: newLocked,
         gameStatus: newStatus,
       };
     });
@@ -660,25 +662,57 @@ export default function Game() {
     setFlippingRows(prev => new Set([...Array.from(prev), newRowIndex]));
     
     // Clear the flip animation after all letters have flipped
-    // Each tile takes 1200ms and tiles flip sequentially, so total time is (wordLength - 1) * 1200 + 1200
-    const flipDuration = gameState.wordLength * 1200;
-    setTimeout(() => {
-      setFlippingRows(prev => {
-        const next = new Set(Array.from(prev));
-        next.delete(newRowIndex);
+    // Each tile takes TILE_FLIP_DURATION and tiles flip sequentially, so total time is (wordLength - 1) * TILE_FLIP_DURATION + TILE_FLIP_DURATION
+    const flipDuration = gameState.wordLength * ANIMATION_CONFIG.TILE_FLIP_DURATION;
+        setTimeout(() => {
+      // Only remove non-winning rows from flippingRows
+      // Winning rows should stay visible with their final state
+      if (!isWin) {
+        setFlippingRows(prev => {
+          const next = new Set(Array.from(prev));
+          next.delete(newRowIndex);
+          return next;
+        });
+      }
+      
+      // Now that flip animation is complete, set the locked letters and trigger fade-in
+      setGameState(prev => ({
+        ...prev,
+        lockedLetters: newLocked,
+      }));
+      
+      // Only trigger fade-in for NEWLY revealed positions
+      const newlyRevealedPositions = new Set<number>();
+      for (const [posStr, letter] of Object.entries(newLocked)) {
+        const pos = Number(posStr);
+        if (letter && !previouslyRevealedPositions.has(pos)) {
+          newlyRevealedPositions.add(pos);
+        }
+      }
+      
+      // Update previously revealed positions
+      setPreviouslyRevealedPositions(prev => new Set([...Array.from(prev), ...Array.from(newlyRevealedPositions)]));
+      
+      // Only show fade-in if there are newly revealed letters
+      if (newlyRevealedPositions.size > 0) {
+        setShowFadeInForInput(true);
+        
+        // Reset fade-in trigger after animation completes
+        setTimeout(() => {
+          setShowFadeInForInput(false);
+        }, 500);
+      }
+      
+      // Reset current guess to only the locked positions (greens)
+      setCurrentGuess(() => {
+        const next = new Array(gameState.wordLength).fill('');
+        for (const [idxStr, letter] of Object.entries(newLocked)) {
+          const i = Number(idxStr);
+          if (letter) next[i] = letter;
+        }
         return next;
       });
     }, flipDuration);
-
-    // Reset current guess to only the locked positions (greens)
-    setCurrentGuess(() => {
-      const next = new Array(gameState.wordLength).fill('');
-      for (const [idxStr, letter] of Object.entries(newLocked)) {
-        const i = Number(idxStr);
-        if (letter) next[i] = letter;
-      }
-      return next;
-    });
 
     // Record stats for completed game (only for daily puzzles, not archive or random)
     const isArchivePuzzle = router.query.date && router.query.archive === 'true';
@@ -1002,8 +1036,8 @@ export default function Game() {
 
           {/* Game Grid */}
           <div className="space-y-3 md:space-y-1 mb-4 md:mb-8">
-            {/* Active Input Row - Only show when playing */}
-            {gameState.gameStatus === 'playing' && (
+            {/* Active Input Row - Show when playing or won */}
+            {(gameState.gameStatus === 'playing' || gameState.gameStatus === 'won') && (
               <GuessInputRow
                 ref={inputRowRef as any}
                 key={`input-${Object.keys(gameState.lockedLetters).length}-${gameState.attemptIndex}`}
@@ -1019,6 +1053,7 @@ export default function Game() {
                 forceClear={forceClear}
                 revealedLetters={gameState.revealedLetters}
                 readOnly={gameState.gameStatus !== 'playing'}
+                showFadeIn={showFadeInForInput}
               />
             )}
 

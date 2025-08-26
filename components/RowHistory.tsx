@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { LetterState } from '../lib/types';
+import { ANIMATION_CONFIG } from '../lib/config';
 
 interface Props {
   guess: string;
@@ -19,11 +20,6 @@ export default function RowHistory({
   showFlipAnimation = false
 }: Props) {
   const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Configurable timing for tile flip animations
-  const TILE_FLIP_DELAY = 800; // ms between each tile starting its flip
-  const TILE_FLIP_DURATION = 1200; // ms for each tile's flip animation to complete
-  const COLOR_CHANGE_PERCENT = 0.55; // when during the flip to change colors (55%)
 
   const getTileColor = (state: LetterState) => {
     switch (state) {
@@ -63,12 +59,14 @@ export default function RowHistory({
 
   // Set CSS custom properties with delay to match the 55% keyframe
   useEffect(() => {
+    // Set the flip backface color for all tiles
+    document.documentElement.style.setProperty('--flip-backface-color', ANIMATION_CONFIG.FLIP_BACKFACE_COLOR);
+    
     tileRefs.current.forEach((tileRef, i) => {
       if (tileRef && tileRef.classList.contains('animate-flip-simple')) {
         const { bg, fg } = finalColorsFor(evaluation[i] || 'absent');
-        const flipDelay = (isWinningRow && showAnimation) ? (i * TILE_FLIP_DELAY) : (showFlipAnimation ? i * TILE_FLIP_DELAY : 0);
-        // const colorChangeDelay = flipDelay + 440; // 55% of 1200ms = 660ms
-        const colorChangeDelay = flipDelay + (TILE_FLIP_DURATION * COLOR_CHANGE_PERCENT);
+        const flipDelay = (isWinningRow && showAnimation) ? (i * ANIMATION_CONFIG.TILE_FLIP_DELAY) : (showFlipAnimation ? i * ANIMATION_CONFIG.TILE_FLIP_DELAY : 0);
+        const colorChangeDelay = flipDelay + (ANIMATION_CONFIG.TILE_FLIP_DURATION * ANIMATION_CONFIG.COLOR_CHANGE_PERCENT);
         
         setTimeout(() => {
           if (tileRef) {
@@ -89,9 +87,8 @@ export default function RowHistory({
           const isCorrect = state === 'correct';
 
           // For flip animations, each tile should wait for the previous one to complete
-          // The flip animation takes 1200ms, so each tile waits 1200ms after the previous
           // Both winning row and regular flip animations should use sequential timing
-          const flipDelay = (isWinningRow && showAnimation) ? (i * TILE_FLIP_DELAY) : (showFlipAnimation ? i * TILE_FLIP_DELAY : 0);
+          const flipDelay = (isWinningRow && showAnimation) ? (i * ANIMATION_CONFIG.TILE_FLIP_DELAY) : (showFlipAnimation ? i * ANIMATION_CONFIG.TILE_FLIP_DELAY : 0);
           const isRevealing = (isWinningRow && isCorrect && showAnimation) || showFlipAnimation;
 
           return (
