@@ -78,6 +78,7 @@ export default function Game() {
   const [showWinAnimation, setShowWinAnimation] = useState(false);
   const [winAnimationComplete, setWinAnimationComplete] = useState(false);
   const [clueError, setClueError] = useState<string | null>(null);
+  const [flippingRows, setFlippingRows] = useState<Set<number>>(new Set());
 
   // Imperative handle to control focus inside GuessInputRow
   // const inputRowRef = useRef<InputRowHandle | null>(null);
@@ -86,15 +87,29 @@ export default function Game() {
   // Flag to prevent input row onChange during keyboard input
   const keyboardInputInProgress = useRef(false);
 
+  // Helper function to safely check if a position is revealed
+  const isPositionRevealed = useCallback((position: number) => {
+    // Check if position is locked (already visible from correct guesses)
+    if (gameState.lockedLetters[position]) {
+      return true;
+    }
+    
+    // Check if position was revealed by lifeline
+    if (!gameState.revealedLetters || typeof gameState.revealedLetters.has !== 'function') {
+      return false;
+    }
+    return gameState.revealedLetters.has(position);
+  }, [gameState.revealedLetters, gameState.lockedLetters]);
+
   // Handle letter reveal
   const handleRevealLetter = useCallback(() => {
     if (gameState.letterRevealsRemaining <= 0 || gameState.gameStatus !== 'playing') {
       return;
     }
 
-    // Find a random unrevealed position (not locked and not already revealed by lifeline)
+    // Find a random unrevealed position (not already revealed by lifeline or locked letters)
     const unrevealedPositions = Array.from({ length: gameState.wordLength }, (_, i) => i)
-      .filter(i => !gameState.lockedLetters[i] && !isPositionRevealed(i));
+      .filter(i => !isPositionRevealed(i));
 
     if (unrevealedPositions.length > 0) {
       const randomPosition = unrevealedPositions[Math.floor(Math.random() * unrevealedPositions.length)];
@@ -116,7 +131,7 @@ export default function Game() {
         type: 'success'
       }]);
     }
-  }, [gameState.letterRevealsRemaining, gameState.gameStatus, gameState.wordLength, gameState.revealedLetters, gameState.lockedLetters]);
+  }, [gameState.letterRevealsRemaining, gameState.gameStatus, gameState.wordLength, isPositionRevealed]);
 
   // Handle new game
   const handleNewGame = useCallback(async () => {
@@ -201,8 +216,8 @@ export default function Game() {
       localStorage.setItem('wordibble-puzzle-completed', 'true');
       
       // Start letter flip animation sequence
-      // Each letter will flip with a 100ms delay between them
-      const totalAnimationTime = gameState.wordLength * 100 + 600; // 600ms for flip animation duration
+      // Each letter will flip with a 1200ms delay between them (sequential flipping)
+      const totalAnimationTime = gameState.wordLength * 1200; // 1200ms per tile, sequential
       
       setTimeout(() => {
         setWinAnimationComplete(true);
@@ -563,14 +578,6 @@ export default function Game() {
     setCurrentGuess(letters);
   }, []);
 
-  // Helper function to safely check if a position is revealed
-  const isPositionRevealed = useCallback((position: number) => {
-    if (!gameState.revealedLetters || typeof gameState.revealedLetters.has !== 'function') {
-      return false;
-    }
-    return gameState.revealedLetters.has(position);
-  }, [gameState.revealedLetters]);
-
   // ===== Submit guess =====
   const handleSubmit = useCallback(() => {
     if (gameState.gameStatus !== 'playing') return;
@@ -647,6 +654,21 @@ export default function Game() {
         gameStatus: newStatus,
       };
     });
+
+    // Mark this row for flip animation
+    const newRowIndex = gameState.attempts.length;
+    setFlippingRows(prev => new Set([...Array.from(prev), newRowIndex]));
+    
+    // Clear the flip animation after all letters have flipped
+    // Each tile takes 1200ms and tiles flip sequentially, so total time is (wordLength - 1) * 1200 + 1200
+    const flipDuration = gameState.wordLength * 1200;
+    setTimeout(() => {
+      setFlippingRows(prev => {
+        const next = new Set(Array.from(prev));
+        next.delete(newRowIndex);
+        return next;
+      });
+    }, flipDuration);
 
     // Reset current guess to only the locked positions (greens)
     setCurrentGuess(() => {
@@ -1028,7 +1050,7 @@ export default function Game() {
                   wordLength={gameState.wordLength}
                   isWinningRow={isWinningRow}
                   showAnimation={showWinAnimation}
-                  animationDelay={0}
+                  showFlipAnimation={flippingRows.has(index)}
                 />
               );
             })}
@@ -1037,7 +1059,12 @@ export default function Game() {
           {/* Guesses Left */}
           {gameState.gameStatus === 'playing' && (
             <div className="text-center mb-4">
-              <span className="text-gray-900 text-lg">{attemptsLeft} guesses left</span>
+              <span className="text-gray-900 text-lg">
+                {gameState.attemptIndex === 0 
+                  ? `Guess the word in ${attemptsLeft} tries`
+                  : `${attemptsLeft} guesses left`
+                }
+              </span>
               {debugMode && (
                 <span className="ml-3 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">DEBUG</span>
               )}

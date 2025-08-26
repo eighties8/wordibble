@@ -2,91 +2,156 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------
+   Generic helpers you already use
+------------------------------------------------------------ */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
   20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
+.animate-shake { animation: shake 0.5s ease-in-out; }
 
-.animate-shake {
-  animation: shake 0.5s ease-in-out;
-}
-
-.line-through-custom {
+/* .line-through-custom {
   text-decoration: line-through;
   text-decoration-thickness: 0.08em;
-  text-decoration-color: #6b7280; 
+  text-decoration-color: #6b7280;
   padding: 0.1em 0;
-}
+} */
 
 .logo span {
-  color:#fff;
-  background-color:#f59e0b; /* amber-500 */
-  background-color:#22c55e;
-  padding:0 4px;
-  font-style:italic;
+  color: #fff;
+  background-color: #22c55e; /* green-500 */
+  padding: 0 4px;
+  font-style: italic;
 }
 
-/* Custom radio button styling */
+/* Radio look */
 input[type="radio"]:checked {
-  background-color: #22c55e !important; /* green-600 */
+  background-color: #22c55e !important;
   border-color: #22c55e !important;
 }
-
 input[type="radio"]:focus {
   border-color: #22c55e !important;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important; /* green-600 with opacity */
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
 }
 
-/* Custom animations */
-@keyframes flip {
-  0% {
-    transform: rotateX(0deg);
-  }
-  50% {
-    transform: rotateX(90deg);
-  }
-  100% {
-    transform: rotateX(0deg);
-  }
+body { background: #fff; }
+
+/* ------------------------------------------------------------
+   Flip system (frame + panel) — Wordle-like, no pre-flash
+------------------------------------------------------------ */
+
+/* 3D context (put this on the grid wrapper) */
+.perspective-1000 { 
+  perspective: 1200px; 
+  perspective-origin: center center;
 }
 
-.animate-flip {
-  animation: flip 0.6s ease-in-out;
+/* Outer static frame (does NOT animate) */
+.tile-frame {
+  position: relative;
+  border: 2px solid rgba(0,0,0,.12);   /* subtle frame */
+  border-radius: 0.5rem;               /* rounded-lg */
+  background: #fff;
+  overflow: hidden;                    /* mask inner panel corners */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* subtle shadow for depth */
 }
 
-/* Animation delays for sequential letter flips */
-.animation-delay-0 { animation-delay: 0ms; }
+/* Inner colored panel (DOES animate) */
+.tile-panel {
+  position: absolute;
+  inset: 2px;                          /* inside the frame */
+  border-radius: calc(0.5rem - 2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  
+  /* Smooth color transitions for better visual appeal */
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  /* key to prevent pre-flash: hidden until animation actually starts */
+    /* IMPORTANT: panels are visible by default so previous rows don't disappear */
+  opacity: 1;
+}
+
+
+
+
+/* Keep glyph from “stretching” at the hinge */
+.tile-panel > span {
+  backface-visibility: hidden;
+  transform: translateZ(1px); /* Slight depth to prevent z-fighting */
+}
+
+
+
+/* ------------------------------------------------------------
+   Stagger helpers (if you prefer class-based delays)
+   You can also inline style={{ animationDelay: `${ms}ms` }}
+------------------------------------------------------------ */
+.animation-delay-0   { animation-delay: 0ms; }
 .animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-140 { animation-delay: 140ms; }
 .animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-280 { animation-delay: 280ms; }
 .animation-delay-300 { animation-delay: 300ms; }
 .animation-delay-400 { animation-delay: 400ms; }
 .animation-delay-500 { animation-delay: 500ms; }
 .animation-delay-600 { animation-delay: 600ms; }
 
+/* ------------------------------------------------------------
+   DO NOT re-add any of these (they cause flashing):
+   .tile-panel.pre-reveal { opacity: 0; }
+   .tile-panel.is-revealing { opacity: 0; }
+   span opacity animations (flip-letter), etc.
+------------------------------------------------------------ */
 
-/* Submitted letter reveals */
-@keyframes flip {
-  0% {
-    transform: rotateX(0deg);
-  }
-  45% {
-    transform: rotateX(90deg);
-  }
-  55% {
-    transform: rotateX(90deg);
-  }
-  100% {
-    transform: rotateX(0deg);
-  }
+
+
+
+
+/* Flip: robust single animation using CSS vars for final colors */
+.tile-panel.animate-flip-simple {
+  /* Start fully dark so glyphs are invisible */
+  background-color: #374151; /* gray-700-ish */
+  color: #374151;            /* match bg so text is hidden */
+  animation: flip-reveal-simple 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, background-color, color;
+  /* Disable transitions during animation to prevent color bleeding */
+  transition: none;
 }
 
-.flip-animation {
-  animation: flip 0.6s ease forwards;
-  transform-style: preserve-3d;
+/* Ensure glyph tracks current color exactly */
+.tile-panel.animate-flip-simple > span {
+  color: inherit;
 }
 
-body {
-  background:#efefef;
-  background:#fff;
+@keyframes flip-reveal-simple {
+  0%   { 
+    transform: rotateX(0deg); 
+    background-color: #374151; 
+    color: #374151; 
+  }
+  45%  { 
+    transform: rotateX(-90deg); 
+    background-color: #374151; 
+    color: #374151; 
+  }
+  /* Switch colors while face is hidden */
+  55%  { 
+    transform: rotateX(-90deg); 
+    background-color: var(--final-bg); 
+    color: var(--final-fg); 
+  }
+  100% { 
+    transform: rotateX(0deg);   
+    background-color: var(--final-bg); 
+    color: var(--final-fg); 
+  }
 }
