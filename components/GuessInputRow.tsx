@@ -25,6 +25,8 @@ type Props = {
   onChange: (letters: string[]) => void;
   isShaking?: boolean;        // trigger shake animation
   forceClear?: boolean;       // force clear all non-locked cells
+  fadeOutClear?: boolean;     // trigger fade-out before clearing (for successful submissions)
+  onFadeOutComplete?: () => void; // callback when fade-out animation completes
   revealedLetters?: Set<number>; // positions of letters revealed by lifeline
   readOnly?: boolean;         // make entire row read-only (e.g., completed puzzle)
   showFadeIn?: boolean;      // trigger fade-in animation for locked cells
@@ -32,7 +34,7 @@ type Props = {
 
 
 const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
-  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, revealedLetters, readOnly, showFadeIn }, ref) => {
+  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, fadeOutClear, onFadeOutComplete, revealedLetters, readOnly, showFadeIn }, ref) => {
     // keep a local controlled buffer to emit via onChange
     const [cells, setCells] = useState<string[]>(
       () => initialCells.slice(0, wordLength)
@@ -58,23 +60,86 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     // Handle force clear (for shake animation)
     useEffect(() => {
       if (forceClear) {
-        isUpdatingFromParent.current = true;
-        setCells(prev => {
-          const next = prev.slice();
-          for (let i = 0; i < wordLength; i++) {
-            if (!locked[i]) {
-              next[i] = '';
-            }
+        // Add fade-out effect before clearing
+        const inputs = inputsRef.current;
+        inputs.forEach((input, index) => {
+          if (input && !locked[index] && !revealedLetters?.has(index)) {
+            input.style.transition = 'opacity 0.3s ease-out';
+            input.style.opacity = '0';
           }
-          return next;
         });
         
-        // Clear flag after state update
+        // Clear the cells after fade-out
         setTimeout(() => {
-          isUpdatingFromParent.current = false;
-        }, 0);
+          isUpdatingFromParent.current = true;
+          setCells(prev => {
+            const next = prev.slice();
+            for (let i = 0; i < wordLength; i++) {
+              if (!locked[i]) {
+                next[i] = '';
+              }
+            }
+            return next;
+          });
+          
+          // Reset opacity and clear flag after state update
+          setTimeout(() => {
+            inputs.forEach((input, index) => {
+              if (input && !locked[index] && !revealedLetters?.has(index)) {
+                input.style.opacity = '1';
+                input.style.transition = '';
+              }
+            });
+            isUpdatingFromParent.current = false;
+          }, 50);
+        }, 300); // Wait for fade-out to complete
       }
-    }, [forceClear, wordLength, locked]);
+    }, [forceClear, wordLength, locked, revealedLetters]);
+
+    // Handle fade-out clear (for successful submissions)
+    useEffect(() => {
+      if (fadeOutClear) {
+        // Add fade-out effect before clearing
+        const inputs = inputsRef.current;
+        inputs.forEach((input, index) => {
+          if (input && !locked[index] && !revealedLetters?.has(index)) {
+            input.style.transition = 'opacity 0.3s ease-out';
+            input.style.opacity = '0';
+          }
+        });
+        
+        // Clear the cells after fade-out
+        setTimeout(() => {
+          isUpdatingFromParent.current = true;
+          setCells(prev => {
+            const next = prev.slice();
+            for (let i = 0; i < wordLength; i++) {
+              if (!locked[i]) {
+                next[i] = '';
+              }
+            }
+            return next;
+          });
+          
+          // Reset opacity and clear flag after state update
+          setTimeout(() => {
+            inputs.forEach((input, index) => {
+              if (input && !locked[index] && !revealedLetters?.has(index)) {
+                input.style.opacity = '1';
+                input.style.transition = '';
+              }
+            });
+            isUpdatingFromParent.current = false;
+          }, 50);
+        }, 300); // Wait for fade-out to complete
+        
+        // Reset the fadeOutClear flag after the entire process completes
+        setTimeout(() => {
+          // Notify parent that fade-out is complete
+          onFadeOutComplete?.();
+        }, 350); // 300ms fade + 50ms reset
+      }
+    }, [fadeOutClear, wordLength, locked, revealedLetters]);
 
     // bubble changes - only when cells actually change
     useEffect(() => {

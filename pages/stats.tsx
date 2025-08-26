@@ -41,7 +41,7 @@ export default function StatsPage() {
       if (latestResult.won) {
         // Try to get the actual game state from localStorage for accurate emoji grid
         const gameStateStr = localStorage.getItem('wordibble-puzzle-state');
-        let emojiGrid = `Wordibble #${puzzleNumber} ${latestResult.guesses}/6\n\n`;
+        let emojiGrid = `Wordibble #${puzzleNumber} ${latestResult.guesses}/6\nhttps://wordibble.com\n`;
         
         if (gameStateStr) {
           try {

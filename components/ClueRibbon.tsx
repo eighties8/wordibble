@@ -40,7 +40,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
                 className="hover:underline cursor-pointer"
                 type="button"
               >
-                Need a clue? Vowels? Click here <Settings className="w-4 h-4 inline-block align-middle"/>
+                Enable clues & vowels? <Settings className="w-4 h-4 inline-block align-middle"/>
               </button>
             )}
             {targetWord && (

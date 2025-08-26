@@ -82,7 +82,18 @@ export default function Game() {
   const [clueError, setClueError] = useState<string | null>(null);
   const [flippingRows, setFlippingRows] = useState<Set<number>>(new Set());
   const [showFadeInForInput, setShowFadeInForInput] = useState(false);
+  const [fadeOutClearInput, setFadeOutClearInput] = useState(false);
   const [previouslyRevealedPositions, setPreviouslyRevealedPositions] = useState<Set<number>>(new Set());
+  
+  // Callback when fade-out clear animation completes
+  const handleFadeOutComplete = useCallback(() => {
+    setFadeOutClearInput(false);
+    
+    // Focus first empty editable after the fade-out clear completes
+    if (gameState.gameStatus === 'playing') {
+      queueFocusFirstEmpty();
+    }
+  }, [gameState.gameStatus]);
 
 
   // Imperative handle to control focus inside GuessInputRow
@@ -279,7 +290,7 @@ export default function Game() {
     const puzzleNumber = daysDiff + 1;
 
     // Generate emoji grid from game state
-    let emojiGrid = `Wordibble #${puzzleNumber} ${gameState.attemptIndex + 1}/${settings.maxGuesses}\n`;
+    let emojiGrid = `Wordibble #${puzzleNumber} ${gameState.attemptIndex + 1}/${settings.maxGuesses}\nhttps://wordibble.com\n`;
     
     // Add each attempt as emoji rows
     gameState.attempts.forEach((attempt, attemptIndex) => {
@@ -388,14 +399,54 @@ export default function Game() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === '0') {
+      if (e.metaKey && e.key === '8') {
         e.preventDefault();
-        setDebugMode((p) => !p);
+        
+        // Use the callback approach to get the new value
+        setDebugMode((prevDebugMode) => {
+          const newDebugMode = !prevDebugMode;
+          
+          // If debug mode is being enabled, focus the Reset Puzzle button
+          if (newDebugMode) {
+            
+            // Try immediate focus first
+            const immediateButton = document.querySelector('button[onclick*="clearPuzzleState"]') as HTMLButtonElement;
+            if (immediateButton) {
+              immediateButton.focus();
+            }
+            
+            // Also try after a short delay
+            setTimeout(() => {              
+              // Try multiple selectors to find the button
+              let resetButton = document.querySelector('button[onclick*="clearPuzzleState"]') as HTMLButtonElement;
+              
+              if (!resetButton) {
+                resetButton = Array.from(document.querySelectorAll('button')).find(btn => 
+                  btn.textContent?.includes('Reset Puzzle')
+                ) as HTMLButtonElement;
+              }
+              
+              if (resetButton) {
+                resetButton.focus();
+              } 
+            }, 200); // Increased timeout to ensure DOM is fully updated
+            
+            // Try one more time after a longer delay
+            setTimeout(() => {
+              const finalButton = document.querySelector('button[onclick*="clearPuzzleState"]') as HTMLButtonElement;
+              if (finalButton) {
+                finalButton.focus();
+              }
+            }, 500);
+          }
+          
+          return newDebugMode;
+        });
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, []);
+  }, []); // Remove debugMode dependency since we're using the callback approach
 
   // ===== Initialize guess row length =====
   useEffect(() => {
@@ -764,6 +815,9 @@ export default function Game() {
     const newRowIndex = gameState.attempts.length;
     setFlippingRows(prev => new Set([...Array.from(prev), newRowIndex]));
     
+    // Don't clear the input row yet - wait for flip animation to complete
+    // The input row will keep showing the submitted text until the flip is done
+    
     // Clear the flip animation after all letters have flipped
     // Each tile takes TILE_FLIP_DURATION and tiles flip sequentially, so total time is (wordLength - 1) * TILE_FLIP_DURATION + TILE_FLIP_DURATION
     const flipDuration = gameState.wordLength * ANIMATION_CONFIG.TILE_FLIP_DURATION;
@@ -822,6 +876,9 @@ export default function Game() {
         }
         return next;
       });
+      
+      // Now that flip animation is complete, trigger fade-out clear for the input row
+      setFadeOutClearInput(true);
     }, flipDuration);
 
     // Record stats for completed game (only for daily puzzles, not archive or random)
@@ -846,8 +903,8 @@ export default function Game() {
       );
     }
 
-    // Focus first empty editable after render commit
-    queueFocusFirstEmpty();
+    // Don't focus immediately - wait for the flip animation to complete
+    // Focus will be handled after the flip animation finishes
     }, [
     gameState.gameStatus,
     gameState.wordLength,
@@ -1164,6 +1221,8 @@ export default function Game() {
                 onChange={handleGuessChange}
                 isShaking={isShaking}
                 forceClear={forceClear}
+                fadeOutClear={fadeOutClearInput}
+                onFadeOutComplete={handleFadeOutComplete}
                 revealedLetters={gameState.revealedLetters}
                 readOnly={gameState.gameStatus !== 'playing'}
                 showFadeIn={showFadeInForInput}
