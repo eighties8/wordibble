@@ -36,6 +36,7 @@ interface GameSettings {
   revealVowelCount: number;
   revealClue: boolean;
   randomPuzzle: boolean;
+  lockGreenMatchedLetters: boolean;
 }
 
 export default function Game() {
@@ -52,6 +53,7 @@ export default function Game() {
     revealVowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT,
     revealClue: GAME_CONFIG.REVEAL_CLUE,
     randomPuzzle: GAME_CONFIG.RANDOM_PUZZLE,
+    lockGreenMatchedLetters: GAME_CONFIG.LOCK_GREEN_MATCHED_LETTERS,
   });
 
   const [gameState, setGameState] = useState<GameState>({
@@ -225,6 +227,29 @@ export default function Game() {
       setTimeout(() => {
         setWinAnimationComplete(true);
         console.log('Letter flip animation sequence completed');
+        
+        // Always show the solved letters in the input row after win animation
+      // This ensures the solution is visible regardless of the lockGreenMatchedLetters setting
+      // Update lockedLetters to show all positions as correct
+      setGameState(prev => ({
+        ...prev,
+        lockedLetters: Object.fromEntries(
+          Array.from({ length: gameState.wordLength }, (_, i) => [i, gameState.secretWord[i]])
+        )
+      }));
+      
+      // Also update currentGuess to show the solution
+      setCurrentGuess(() => {
+        const next = new Array(gameState.wordLength).fill('');
+        for (let i = 0; i < gameState.wordLength; i++) {
+          next[i] = gameState.secretWord[i];
+        }
+        return next;
+      });
+      
+      // Always trigger fade-in animations for the win state input row
+      // This ensures the nice animation effect regardless of the lockGreenMatchedLetters setting
+      setShowFadeInForInput(true);
       }, totalAnimationTime);
     }
   }, [gameState.gameStatus, showWinAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
@@ -566,10 +591,83 @@ export default function Game() {
 
   // Manual cleanup function for stuck puzzle state
   const clearPuzzleState = useCallback(() => {
-    localStorage.removeItem('wordibble-puzzle-state');
-    localStorage.removeItem('wordibble-puzzle-completed');
-    window.location.reload();
-  }, []);
+    if (confirm('Reset the current puzzle? This will clear your progress and start fresh.')) {
+      localStorage.removeItem('wordibble-puzzle-state');
+      localStorage.removeItem('wordibble-puzzle-completed');
+      
+      // Instead of reloading, reset the game state directly
+      setGameState(prev => ({
+        ...prev,
+        attempts: [],
+        attemptIndex: 0,
+        gameStatus: 'playing',
+        lockedLetters: {},
+        revealedLetters: new Set()
+      }));
+      
+      // Reset other state variables
+      setCurrentGuess(new Array(gameState.wordLength).fill(''));
+      setFlippingRows(new Set());
+      setShowWinAnimation(false);
+      setWinAnimationComplete(false);
+      setShowFadeInForInput(false);
+      setClueError(null);
+      setIsShaking(false);
+      setForceClear(false);
+      
+      // Focus the input row after reset
+      setTimeout(() => {
+        queueFocusFirstEmpty();
+      }, 100);
+    }
+  }, [gameState.wordLength, queueFocusFirstEmpty]);
+
+  // Clear ALL Wordibble data and reset to factory defaults
+  const clearAllWordibbleData = useCallback(() => {
+    if (confirm('This will clear ALL Wordibble data including stats, settings, and puzzle state. Are you sure?')) {
+      localStorage.removeItem('wordibble-puzzle-state');
+      localStorage.removeItem('wordibble-puzzle-completed');
+      localStorage.removeItem('wordibble-settings');
+      localStorage.removeItem('wordibble:stats:v1');
+      localStorage.removeItem('wordibble-debug-mode');
+      
+      // Reset to factory defaults instead of reloading
+      setGameState(prev => ({
+        ...prev,
+        attempts: [],
+        attemptIndex: 0,
+        gameStatus: 'playing',
+        lockedLetters: {},
+        revealedLetters: new Set()
+      }));
+      
+      // Reset other state variables
+      setCurrentGuess(new Array(gameState.wordLength).fill(''));
+      setFlippingRows(new Set());
+      setShowWinAnimation(false);
+      setWinAnimationComplete(false);
+      setShowFadeInForInput(false);
+      setClueError(null);
+      setIsShaking(false);
+      setForceClear(false);
+      
+      // Reset settings to defaults
+      setSettings({
+        wordLength: GAME_CONFIG.WORD_LENGTH,
+        maxGuesses: GAME_CONFIG.MAX_GUESSES,
+        revealVowels: GAME_CONFIG.REVEAL_VOWELS,
+        revealVowelCount: GAME_CONFIG.REVEAL_VOWEL_COUNT,
+        revealClue: GAME_CONFIG.REVEAL_CLUE,
+        randomPuzzle: GAME_CONFIG.RANDOM_PUZZLE,
+        lockGreenMatchedLetters: GAME_CONFIG.LOCK_GREEN_MATCHED_LETTERS,
+      });
+      
+      // Focus the input row after reset
+      setTimeout(() => {
+        queueFocusFirstEmpty();
+      }, 100);
+    }
+  }, [gameState.wordLength, queueFocusFirstEmpty]);
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
@@ -676,17 +774,22 @@ export default function Game() {
       }
       
       // Now that flip animation is complete, set the locked letters and trigger fade-in
+      // Only lock green letters if the setting is enabled
+      const finalLockedLetters = settings.lockGreenMatchedLetters ? newLocked : gameState.lockedLetters;
+      
       setGameState(prev => ({
         ...prev,
-        lockedLetters: newLocked,
+        lockedLetters: finalLockedLetters,
       }));
       
-      // Only trigger fade-in for NEWLY revealed positions
+      // Only trigger fade-in for NEWLY revealed positions (and only if locking is enabled)
       const newlyRevealedPositions = new Set<number>();
-      for (const [posStr, letter] of Object.entries(newLocked)) {
-        const pos = Number(posStr);
-        if (letter && !previouslyRevealedPositions.has(pos)) {
-          newlyRevealedPositions.add(pos);
+      if (settings.lockGreenMatchedLetters) {
+        for (const [posStr, letter] of Object.entries(newLocked)) {
+          const pos = Number(posStr);
+          if (letter && !previouslyRevealedPositions.has(pos)) {
+            newlyRevealedPositions.add(pos);
+          }
         }
       }
       
@@ -703,12 +806,14 @@ export default function Game() {
         }, 500);
       }
       
-      // Reset current guess to only the locked positions (greens)
+      // Reset current guess to only the locked positions (greens) if locking is enabled
       setCurrentGuess(() => {
         const next = new Array(gameState.wordLength).fill('');
-        for (const [idxStr, letter] of Object.entries(newLocked)) {
-          const i = Number(idxStr);
-          if (letter) next[i] = letter;
+        if (settings.lockGreenMatchedLetters) {
+          for (const [idxStr, letter] of Object.entries(newLocked)) {
+            const i = Number(idxStr);
+            if (letter) next[i] = letter;
+          }
         }
         return next;
       });
@@ -738,7 +843,7 @@ export default function Game() {
 
     // Focus first empty editable after render commit
     queueFocusFirstEmpty();
-  }, [
+    }, [
     gameState.gameStatus,
     gameState.wordLength,
     gameState.lockedLetters,
@@ -746,10 +851,12 @@ export default function Game() {
     currentGuess,
     dictionary,
     addToast,
-            settings.maxGuesses,
+    settings.maxGuesses,
     settings.randomPuzzle,
     router.query.date,
     router.query.archive,
+    settings.lockGreenMatchedLetters,
+    previouslyRevealedPositions,
   ]);
 
   // ===== Global Enter handler =====
@@ -998,13 +1105,14 @@ export default function Game() {
           clue={(() => {
             if (gameState.gameStatus === 'lost') {
               return gameState.secretWord;
-            } else if (gameState.gameStatus === 'won') {
+            } else if (gameState.gameStatus === 'won' && winAnimationComplete) {
+              // Only show win message after animation is complete
               // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
               const startDate = new Date('2025-08-25');
               const today = new Date();
               const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
               const puzzleNumber = daysDiff + 1;
-              return `Wordibble #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
+              return `Win! Nice. Wordibble #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
             } else if (clueError) {
               return clueError;
             } else {
@@ -1020,7 +1128,7 @@ export default function Game() {
           }}
           variant={(() => {
             if (gameState.gameStatus === 'lost') return 'solution';
-            if (gameState.gameStatus === 'won') return 'success';
+            if (gameState.gameStatus === 'won' && winAnimationComplete) return 'success';
             if (clueError) return 'error'; // Return 'error' variant for different styling
             return 'clue';
           })()}
@@ -1132,13 +1240,20 @@ export default function Game() {
 
           {/* Debug: Clear Puzzle State Button */}
           {debugMode && (
-            <div className="text-center mb-4">
+            <div className="text-center mb-4 space-x-2">
               <button
                 onClick={clearPuzzleState}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors"
                 title="Clear saved puzzle state and reload (for debugging stuck puzzles)"
               >
-                🧹 Clear Puzzle State
+                Reset Puzzle
+              </button>
+              <button
+                onClick={clearAllWordibbleData}
+                className="px-4 py-2 bg-red-700 text-white rounded-lg text-sm hover:bg-red-800 transition-colors"
+                title="Clear ALL Wordibble data including stats, settings, and puzzle state"
+              >
+                Clear All Data
               </button>
             </div>
           )}
@@ -1175,6 +1290,7 @@ export default function Game() {
       </main>
 
       <Footer />
+      
 
       {isSettingsOpen && (
         <Settings

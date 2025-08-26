@@ -22,15 +22,17 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       
       {/* Speech Bubble - Maintain consistent green background for all variants */}
       {/* <div className={`clue-ribbon relative shadow-md rounded-lg pl-4 bg-green-500 text-white`}> */}
-      <div className={`clue-ribbon relative shadow-md rounded-lg pl-3 transition-all duration-300 ease-in-out ${
-          variant === 'error' ? 'bg-amber-500' : 'bg-green-500'
+      <div className={`clue-ribbon relative shadow-md rounded-lg pl-3 transition-all duration-500 ease-in-out ${
+          variant === 'error' ? 'bg-red-500' : variant === 'success' ? 'bg-green-500' : 'bg-gray-500'
         } text-white`}>
-        <div className="text-sm font-medium flex items-center justify-between gap-2">
-          <span className="transition-all duration-300 ease-in-out flex items-center gap-2 pl-1 pr-2">
+        <div className="text-sm flex items-center justify-between gap-2">
+          <span className="transition-all duration-500 ease-in-out flex items-center gap-2 pl-1 pr-2">
             {clue ? (
               <>
-                {clue.startsWith('Wordibble #') && <PartyPopper className="w-5 h-5 text-white" />}
-                {clue}
+                {clue.startsWith('Win! Nice. Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
+                <span className={`transition-all duration-500 ease-in-out ${
+                  clue.startsWith('Win! Nice. Wordibble #') ? 'animate-fade-in' : ''
+                }`}>{clue}</span>
               </>
             ) : (
               <button 
@@ -72,11 +74,11 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
         </div>
         
         {/* Speech bubble tail - Change color based on variant */}
-        <div className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-t-4 border-t-transparent border-b-4 border-b-transparent transition-all duration-300 ease-in-out ${
-          variant === 'error' ? '!border-r-amber-500' : '!border-r-green-500'
+        <div className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-t-4 border-t-transparent border-b-4 border-b-transparent transition-all duration-500 ease-in-out ${
+          variant === 'error' ? '!border-r-red-500' : variant === 'success' ? '!border-r-green-500' : '!border-r-gray-500'
         }`} 
         style={{
-          borderRightColor: variant === 'error' ? '#ef4444' : '#22c55e'
+          borderRightColor: variant === 'error' ? '#ef4444' : variant === 'success' ? '#22c55e' : '#6b7280'
         }}
         ></div>
       </div>

@@ -7,6 +7,7 @@ interface SettingsConfig {
   revealVowelCount: number;
   revealClue: boolean;
   randomPuzzle: boolean;
+  lockGreenMatchedLetters: boolean;
 }
 
 interface Props {
@@ -23,7 +24,8 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
     ...currentSettings,
     randomPuzzle: currentSettings.randomPuzzle ?? false,
     // Auto-enable Show Clue if opened from clue link
-    revealClue: openedFromClue ? true : currentSettings.revealClue
+    revealClue: openedFromClue ? true : currentSettings.revealClue,
+    lockGreenMatchedLetters: currentSettings.lockGreenMatchedLetters ?? true,
   });
 
   useEffect(() => {
@@ -38,7 +40,8 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
         revealVowels: currentSettings.revealVowels,
         revealVowelCount: currentSettings.revealVowelCount,
         revealClue: openedFromClue ? true : currentSettings.revealClue,
-        randomPuzzle: currentSettings.randomPuzzle ?? false
+        randomPuzzle: currentSettings.randomPuzzle ?? false,
+        lockGreenMatchedLetters: currentSettings.lockGreenMatchedLetters ?? true,
       };
       console.log('Settings opened from clue:', openedFromClue);
       console.log('Current word length:', currentWordLength);
@@ -197,6 +200,28 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                   settings.randomPuzzle ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Lock Green Matched Letters Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Disable Green Letter Locking
+              </label>
+              <p className="text-xs text-gray-500">Disable automatic locking of exact matched letters in input row</p>
+            </div>
+            <button
+              onClick={() => setSettings(prev => ({ ...prev, lockGreenMatchedLetters: !prev.lockGreenMatchedLetters }))}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                !settings.lockGreenMatchedLetters ? 'bg-green-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  !settings.lockGreenMatchedLetters ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>

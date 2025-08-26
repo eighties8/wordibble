@@ -5,6 +5,7 @@ export const GAME_CONFIG = {
   REVEAL_VOWEL_COUNT: 0,                // number of vowels to reveal (0..N)
   REVEAL_CLUE: false,                    // show a clue ribbon
   RANDOM_PUZZLE: false,                 // random puzzle on each page load
+  LOCK_GREEN_MATCHED_LETTERS: true,     // lock exact matched letters in input row
   DAILY_PUZZLE_TIMEZONE: 'America/New_York', // date rollover
 };
 
