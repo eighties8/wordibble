@@ -28,7 +28,7 @@ export default function StatsPage() {
   }
 
   const generateAndShareEmojiGrid = (stats: StatsSnapshot) => {
-    // Calculate puzzle number (starting from 8/23/25 as puzzle #1)
+    // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
     const startDate = new Date('2025-08-25');
     const today = new Date();
     const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -39,30 +39,52 @@ export default function StatsPage() {
       const latestResult = stats.results[stats.results.length - 1];
       
       if (latestResult.won) {
-        // Generate emoji grid from the game result
-        let emojiGrid = `Wordibble #${puzzleNumber} ${latestResult.guesses}/5\n\n`;
+        // Try to get the actual game state from localStorage for accurate emoji grid
+        const gameStateStr = localStorage.getItem('wordibble-puzzle-state');
+        let emojiGrid = `Wordibble #${puzzleNumber} ${latestResult.guesses}/6\n\n`;
         
-        // For now, we'll show a placeholder since we don't have the actual game grid
-        // In a real implementation, this would come from the game state
-        const wordLength = latestResult.wordLength;
-        for (let attempt = 0; attempt < latestResult.guesses; attempt++) {
-          let row = '';
-          for (let i = 0; i < wordLength; i++) {
-            // This is a simplified version - in reality, we'd need the actual game grid
-            if (attempt === latestResult.guesses - 1) {
-              // Last row (winning row) - all green
-              row += '🟩';
+        if (gameStateStr) {
+          try {
+            const gameState = JSON.parse(gameStateStr);
+            const attempts = gameState.attempts || [];
+            const secretWord = gameState.secretWord || '';
+            
+            if (attempts.length > 0 && secretWord) {
+              // Generate accurate emoji grid from actual game state
+              attempts.forEach((attempt: string, attemptIndex: number) => {
+                let row = '';
+                for (let i = 0; i < attempt.length; i++) {
+                  const letter = attempt[i];
+                  const secretLetter = secretWord[i];
+                  
+                  if (letter === secretLetter) {
+                    row += '🟩'; // Correct position
+                  } else if (secretWord.includes(letter)) {
+                    row += '🟨'; // Correct letter, wrong position
+                  } else {
+                    row += '⬛'; // Letter not in word
+                  }
+                }
+                
+                // Add newline for all rows except the last one
+                if (attemptIndex < attempts.length - 1) {
+                  emojiGrid += row + '\n';
+                } else {
+                  emojiGrid += row; // No newline for the last row
+                }
+              });
             } else {
-              // Previous attempts - mix of colors
-              row += Math.random() > 0.5 ? '🟨' : '⬛';
+              // Fallback to placeholder if no valid game state
+              emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
             }
+          } catch (error) {
+            console.error('Error parsing game state:', error);
+            // Fallback to placeholder
+            emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
           }
-          // Add newline for all rows except the last one
-          if (attempt < latestResult.guesses - 1) {
-            emojiGrid += row + '\n';
-          } else {
-            emojiGrid += row; // No newline for the last row
-          }
+        } else {
+          // Fallback to placeholder if no game state
+          emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
         }
 
         // Copy to clipboard
@@ -82,6 +104,30 @@ export default function StatsPage() {
         });
       }
     }
+  };
+
+  // Helper function to generate placeholder grid when actual game state is unavailable
+  const generatePlaceholderGrid = (guesses: number, wordLength: number) => {
+    let grid = '';
+    for (let attempt = 0; attempt < guesses; attempt++) {
+      let row = '';
+      for (let i = 0; i < wordLength; i++) {
+        if (attempt === guesses - 1) {
+          // Last row (winning row) - all green
+          row += '🟩';
+        } else {
+          // Previous attempts - mix of colors for visual variety
+          row += Math.random() > 0.5 ? '🟨' : '⬛';
+        }
+      }
+      // Add newline for all rows except the last one
+      if (attempt < guesses - 1) {
+        grid += row + '\n';
+      } else {
+        grid += row; // No newline for the last row
+      }
+    }
+    return grid;
   };
 
   const loadPuzzleSnapshot = (puzzle: GameResult) => {

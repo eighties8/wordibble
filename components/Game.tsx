@@ -247,9 +247,14 @@ export default function Game() {
         return next;
       });
       
-      // Always trigger fade-in animations for the win state input row
-      // This ensures the nice animation effect regardless of the lockGreenMatchedLetters setting
-      setShowFadeInForInput(true);
+              // Always trigger fade-in animations for the win state input row
+        // This ensures the nice animation effect regardless of the lockGreenMatchedLetters setting
+        setShowFadeInForInput(true);
+        
+        // Wait 1.5 seconds after the clue text changes to win text, then redirect to stats
+        setTimeout(() => {
+          router.push('/stats');
+        }, 1500);
       }, totalAnimationTime);
     }
   }, [gameState.gameStatus, showWinAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
