@@ -37,11 +37,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     if (random === 'true') {
       const randomIndex = Math.floor(Math.random() * puzzles.length);
       const randomPuzzle = puzzles[randomIndex];
-      console.log(`Random puzzle selected: ${randomPuzzle.word} from ${puzzles.length} available puzzles`);
+
       return res.status(200).json([randomPuzzle]); // Return as array to maintain compatibility
     }
 
-    console.log(`Loaded ${puzzles.length} puzzles for ${length}-letter words from year ${loadedYear}`);
+
     res.status(200).json(puzzles);
   } catch (error) {
     console.error('Error reading puzzles file:', error);

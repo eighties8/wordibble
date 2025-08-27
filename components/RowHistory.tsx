@@ -19,6 +19,8 @@ export default function RowHistory({
   showAnimation = false, 
   showFlipAnimation = false
 }: Props) {
+  
+
   const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const getTileColor = (state: LetterState) => {
@@ -59,6 +61,8 @@ export default function RowHistory({
 
   // Set CSS custom properties with delay to match the 55% keyframe
   useEffect(() => {
+
+    
     // Set the flip backface color for all tiles
     document.documentElement.style.setProperty('--flip-backface-color', ANIMATION_CONFIG.FLIP_BACKFACE_COLOR);
     
@@ -82,14 +86,15 @@ export default function RowHistory({
     <div className="flex justify-center">
       <div className={`grid gap-2 md:gap-1 perspective-1000 ${getGridCols(wordLength)}`}>
         {Array.from({ length: wordLength }).map((_, i) => {
-          const state = evaluation[i] || 'absent';
+          // DEFENSIVE FIX: If this is a winning row, force all tiles to be 'correct'
+          const state = isWinningRow ? 'correct' : (evaluation[i] || 'absent');
           const isAbsent = state === 'absent';
           const isCorrect = state === 'correct';
 
           // For flip animations, each tile should wait for the previous one to complete
           // Both winning row and regular flip animations should use sequential timing
           const flipDelay = (isWinningRow && showAnimation) ? (i * ANIMATION_CONFIG.TILE_FLIP_DELAY) : (showFlipAnimation ? i * ANIMATION_CONFIG.TILE_FLIP_DELAY : 0);
-          const isRevealing = (isWinningRow && isCorrect && showAnimation) || showFlipAnimation;
+          const isRevealing = (isWinningRow && showAnimation) || showFlipAnimation;
 
           return (
             <div key={i} className="tile-frame w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg transform-gpu">
@@ -99,9 +104,16 @@ export default function RowHistory({
                   'tile-panel flex items-center justify-center text-center font-semibold uppercase text-lg md:text-lg lg:text-xl transform-gpu origin-center preserve-3d',
                   isRevealing ? 'animate-flip-simple' : getTileColor(state)
                 ].join(' ')}
-                style={isRevealing ? ({
+                style={isRevealing ? {
                   animationDelay: `${flipDelay}ms`,
-                } as React.CSSProperties) : undefined}
+                  ...(isWinningRow && !isRevealing ? {
+                    backgroundColor: '#22c55e', // Force green for winning rows
+                    color: '#ffffff'
+                  } : {})
+                } : (isWinningRow ? {
+                  backgroundColor: '#22c55e', // Force green for winning rows
+                  color: '#ffffff'
+                } : undefined)}
               >
                 <span className={`backface-hidden ${isAbsent ? 'line-through-custom' : ''}`}>
                   {guess[i] || ''}

@@ -43,9 +43,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
         randomPuzzle: currentSettings.randomPuzzle ?? false,
         lockGreenMatchedLetters: currentSettings.lockGreenMatchedLetters ?? true,
       };
-      console.log('Settings opened from clue:', openedFromClue);
-      console.log('Current word length:', currentWordLength);
-      console.log('Initial revealClue value:', settingsWithDefaults.revealClue);
+      
       setSettings(settingsWithDefaults);
     }
   }, [isOpen, currentSettings, openedFromClue]);

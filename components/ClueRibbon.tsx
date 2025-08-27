@@ -10,7 +10,6 @@ interface Props {
 }
 
 export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick, variant = 'clue' }: Props) {
-  console.log('ClueRibbon variant:', variant, 'clue:', clue);
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}

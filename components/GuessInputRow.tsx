@@ -30,11 +30,14 @@ type Props = {
   revealedLetters?: Set<number>; // positions of letters revealed by lifeline
   readOnly?: boolean;         // make entire row read-only (e.g., completed puzzle)
   showFadeIn?: boolean;      // trigger fade-in animation for locked cells
+  gameStatus?: string;        // game status to check if we're in won state
 };
 
 
 const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
-  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, fadeOutClear, onFadeOutComplete, revealedLetters, readOnly, showFadeIn }, ref) => {
+  ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, fadeOutClear, onFadeOutComplete, revealedLetters, readOnly, showFadeIn, gameStatus }, ref) => {
+
+    
     // keep a local controlled buffer to emit via onChange
     const [cells, setCells] = useState<string[]>(
       () => initialCells.slice(0, wordLength)
@@ -274,6 +277,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
             const isRevealed = revealedLetters?.has(i);
+            
             const stateClasses = isLocked 
               ? `bg-green-500 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
               : isRevealed 

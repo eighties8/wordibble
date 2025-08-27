@@ -11,11 +11,12 @@ export default function Header({ onSettingsClick }: Props) {
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
       <div className="max-w-md mx-auto flex items-center justify-between">
       {/* <Bot className="w-6 h-6 text-green-600" /> */}
-        <h1 className="logo text-xl font-bold text-gray-900">        
-        Word
-        <span>i</span>
-        bble
-        </h1>
+        <Link href="/" className="no-underline focus:outline-none">
+          <h1 className="logo text-xl italic font-bold text-gray-900 cursor-pointer">        
+          Wor
+          <span>dibble</span>
+          </h1>
+        </Link>
         <div className="flex items-center gap-2">
           <Link
             href="/stats"
