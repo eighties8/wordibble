@@ -41,16 +41,13 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false)
 
     const clue = clues[puzzle.word.toLowerCase()] || "I literally have no clue";
     
-    // Use local date for isToday calculation too
-    const now = new Date();
-    const today = now.getFullYear() + '-' + 
-                  String(now.getMonth() + 1).padStart(2, '0') + 
-                  String(now.getDate()).padStart(2, '0');
+    // Use EST timezone for isToday calculation to be consistent
+    const todayEST = getESTDateString();
     
     return {
       word: puzzle.word.toUpperCase(),
       clue: clue,
-      isToday: !randomMode && puzzle.date === today
+      isToday: !randomMode && puzzle.date === todayEST
     };
   } catch (error) {
     console.error('Error loading daily puzzle:', error);
@@ -80,7 +77,7 @@ export async function loadPuzzle(date: Date, wordLength: 5 | 6 | 7 = 6): Promise
     const puzzles: PuzzleData[] = await puzzlesResponse.json();
     const clues: CluesData = await cluesResponse.json();
 
-    // Format the target date
+    // Format the target date - use the date as-is since it's already in the correct format from the URL
     const targetDate = date.getFullYear() + '-' + 
                       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
                       String(date.getDate()).padStart(2, '0');
@@ -96,16 +93,13 @@ export async function loadPuzzle(date: Date, wordLength: 5 | 6 | 7 = 6): Promise
     const clue = clues[puzzle.word.toLowerCase()] || "I literally have no clue";
 
     
-    // Check if this is today's puzzle
-    const now = new Date();
-    const today = now.getFullYear() + '-' + 
-                  String(now.getMonth() + 1).padStart(2, '0') + 
-                  String(now.getDate()).padStart(2, '0');
+    // Check if this is today's puzzle using EST timezone
+    const todayEST = getESTDateString();
     
     return {
       word: puzzle.word.toUpperCase(),
       clue: clue,
-      isToday: puzzle.date === today
+      isToday: puzzle.date === todayEST
     };
   } catch (error) {
     console.error('Error loading puzzle for date:', error);

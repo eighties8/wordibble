@@ -4,12 +4,21 @@ import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { getESTDateString } from "../lib/timezone";
 
 export default function ArchivePage() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2025, 7, 1)); // Start with August 2025
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    // Initialize with today's date in EST timezone
+    const todayEST = getESTDateString();
+    return new Date(todayEST + 'T00:00:00');
+  });
+  const [currentMonth, setCurrentMonth] = useState<Date>(() => {
+    // Initialize with current month in EST timezone
+    const todayEST = getESTDateString();
+    const today = new Date(todayEST + 'T00:00:00');
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
   const [isClient, setIsClient] = useState(false);
 
-  // Start date: August 24, 2025 (when daily puzzles actually began)
-  const START_DATE = new Date(2025, 7, 24); // Month is 0-indexed, so 7 = August
+  // Start date: August 25, 2025 (when daily puzzles actually began)
+  const START_DATE = new Date(2025, 7, 25); // Month is 0-indexed, so 7 = August
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -25,8 +34,10 @@ export default function ArchivePage() {
 
   const isDateSelectable = (date: Date) => {
     // Use EST timezone for today's date comparison
-    const today = new Date(getESTDateString() + 'T00:00:00');
-    return date >= START_DATE && date <= today;
+    const todayEST = getESTDateString();
+    const dateEST = getESTDateString(date);
+    const startDateEST = getESTDateString(START_DATE);
+    return dateEST >= startDateEST && dateEST <= todayEST;
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -198,7 +209,7 @@ export default function ArchivePage() {
           
           <button
             onClick={() => navigateMonth('next')}
-            disabled={currentMonth.getMonth() === new Date(getESTDateString() + 'T00:00:00').getMonth() && currentMonth.getFullYear() === new Date(getESTDateString() + 'T00:00:00').getFullYear()}
+            disabled={currentMonth.getMonth() === new Date().getMonth() && currentMonth.getFullYear() === new Date().getFullYear()}
             className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             <ChevronRight className="w-5 h-5" />

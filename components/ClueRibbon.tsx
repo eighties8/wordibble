@@ -28,10 +28,10 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
           <span className="transition-all duration-500 ease-in-out flex items-center gap-2 pl-1 pr-2">
             {clue ? (
               <>
-                {clue.startsWith('Win! Nice. Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
+                {clue.startsWith('Sovled! Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
                 {clue.startsWith('Loss:') && <HeartCrack className="w-4 h-4 text-white" />}
                 <span className={`transition-all duration-500 ease-in-out ${
-                  clue.startsWith('Win! Nice. Wordibble #') ? 'animate-fade-in' : ''
+                  clue.startsWith('Solved! Wordibble #') ? 'animate-fade-in' : ''
                 }`}>{clue}</span>
               </>
             ) : (

@@ -19,10 +19,15 @@
   padding: 0.1em 0;
 } */
 
+.logo {
+  background:#22c55e;
+  padding:0 5px
+}
+
 .logo span {
   color: #fff;
   background-color: #22c55e; /* green-500 */
-  padding: 0 4px;
+  padding: 0 4px 0 0;
   font-style: italic;
 }
 
