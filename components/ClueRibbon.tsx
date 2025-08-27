@@ -1,4 +1,4 @@
-import { AArrowDown, PartyPopper, Settings, Trophy } from "lucide-react";
+import { AArrowDown, PartyPopper, Settings, Trophy, HeartCrack } from "lucide-react";
 
 interface Props {
   clue: string;
@@ -29,6 +29,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
             {clue ? (
               <>
                 {clue.startsWith('Win! Nice. Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
+                {clue.startsWith('Loss:') && <HeartCrack className="w-4 h-4 text-white" />}
                 <span className={`transition-all duration-500 ease-in-out ${
                   clue.startsWith('Win! Nice. Wordibble #') ? 'animate-fade-in' : ''
                 }`}>{clue}</span>

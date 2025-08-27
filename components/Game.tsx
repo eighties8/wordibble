@@ -11,7 +11,7 @@ import {
   validateGuess,
 } from '../lib/gameLogic';
 import { recordResult } from '../lib/stats';
-import { Brain, Trophy } from 'lucide-react';
+import { Brain, Trophy, EyeClosed } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 import Settings from './Settings';
@@ -79,6 +79,8 @@ export default function Game() {
   const [settingsOpenedFromClue, setSettingsOpenedFromClue] = useState(false);
   const [showWinAnimation, setShowWinAnimation] = useState(false);
   const [winAnimationComplete, setWinAnimationComplete] = useState(false);
+  const [showLossAnimation, setShowLossAnimation] = useState(false);
+  const [lossAnimationComplete, setLossAnimationComplete] = useState(false);
   const [clueError, setClueError] = useState<string | null>(null);
   const [flippingRows, setFlippingRows] = useState<Set<number>>(new Set());
   const [showFadeInForInput, setShowFadeInForInput] = useState(false);
@@ -280,6 +282,23 @@ export default function Game() {
       }, totalAnimationTime);
     }
   }, [gameState.gameStatus, showWinAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
+
+  // Handle loss animation and letter flip
+  useEffect(() => {
+    // Don't redirect for archive puzzles or random puzzles
+    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    if (gameState.gameStatus === 'lost' && !showLossAnimation && !settings.randomPuzzle && !isArchivePuzzle) {
+      setShowLossAnimation(true);
+      
+      // Wait for the flip animation to complete (same timing as row flips)
+      // Use the same duration as the tile flip animations
+      const totalAnimationTime = gameState.wordLength * ANIMATION_CONFIG.TILE_FLIP_DURATION;
+      
+      setTimeout(() => {
+        setLossAnimationComplete(true);
+      }, totalAnimationTime);
+    }
+  }, [gameState.gameStatus, showLossAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
 
   // Generate and share emoji grid
   const generateAndShareEmojiGrid = () => {
@@ -1238,10 +1257,10 @@ export default function Game() {
         {/* Clue Ribbon - Handles all message types */}
         <ClueRibbon 
           clue={(() => {
-            if (gameState.gameStatus === 'lost') {
-              return gameState.secretWord;
-            } else if (gameState.gameStatus === 'won' && winAnimationComplete) {
-              // Only show win message after animation is complete
+            if (gameState.gameStatus === 'lost' && lossAnimationComplete) {
+              return `Loss: ${gameState.secretWord}`;
+            } else if (gameState.gameStatus === 'won') {
+              // Show win message when game is won (either after animation or when restored from localStorage)
               // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
               const startDate = new Date('2025-08-25');
               const today = new Date();
@@ -1262,8 +1281,8 @@ export default function Game() {
             setIsSettingsOpen(true);
           }}
           variant={(() => {
-            if (gameState.gameStatus === 'lost') return 'solution';
-            if (gameState.gameStatus === 'won' && winAnimationComplete) return 'success';
+            if (gameState.gameStatus === 'lost' && lossAnimationComplete) return 'solution';
+            if (gameState.gameStatus === 'won') return 'success';
             if (clueError) return 'error'; // Return 'error' variant for different styling
             return 'clue';
           })()}
@@ -1279,8 +1298,8 @@ export default function Game() {
 
           {/* Game Grid */}
           <div className="space-y-3 md:space-y-1 mb-4 md:mb-8">
-            {/* Active Input Row - Show when playing or won */}
-            {(gameState.gameStatus === 'playing' || gameState.gameStatus === 'won') && (
+            {/* Active Input Row - Show when playing, won, or lost */}
+            {(gameState.gameStatus === 'playing' || gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
               <GuessInputRow
                 ref={inputRowRef as any}
                 key={`input-${gameState.gameStatus}-${gameState.attemptIndex}`}

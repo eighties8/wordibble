@@ -108,7 +108,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             </label>
             <input
               type="number"
-              min="4"
+              min="1"
               max="8"
               value={settings.maxGuesses}
               onChange={(e) => setSettings(prev => ({ ...prev, maxGuesses: Number(e.target.value) }))}
