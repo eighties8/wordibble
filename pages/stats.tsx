@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Share2 } from "lucide-react";
 import { loadStats, winRate, StatsSnapshot, GameResult } from "../lib/stats";
+import { loadAll, makeId, toDateISO } from "../lib/storage";
 
 export default function StatsPage() {
   const [stats, setStats] = useState<StatsSnapshot | null>(null);
@@ -39,51 +40,55 @@ export default function StatsPage() {
       const latestResult = stats.results[stats.results.length - 1];
       
       if (latestResult.won) {
-        // Try to get the actual game state from localStorage for accurate emoji grid
-        const gameStateStr = localStorage.getItem('wordibble-puzzle-state');
+        // Try to get the actual game state from new storage system for accurate emoji grid
         let emojiGrid = `Wordibble #${puzzleNumber} ${latestResult.guesses}/6\nhttps://wordibble.com\n`;
         
-        if (gameStateStr) {
-          try {
-            const gameState = JSON.parse(gameStateStr);
-            const attempts = gameState.attempts || [];
-            const secretWord = gameState.secretWord || '';
-            
-            if (attempts.length > 0 && secretWord) {
-              // Generate accurate emoji grid from actual game state
-              attempts.forEach((attempt: string, attemptIndex: number) => {
-                let row = '';
-                for (let i = 0; i < attempt.length; i++) {
-                  const letter = attempt[i];
-                  const secretLetter = secretWord[i];
-                  
-                  if (letter === secretLetter) {
-                    row += '🟩'; // Correct position
-                  } else if (secretWord.includes(letter)) {
-                    row += '🟨'; // Correct letter, wrong position
-                  } else {
-                    row += '⬛'; // Letter not in word
-                  }
-                }
-                
-                // Add newline for all rows except the last one
-                if (attemptIndex < attempts.length - 1) {
-                  emojiGrid += row + '\n';
-                } else {
-                  emojiGrid += row; // No newline for the last row
-                }
-              });
-            } else {
-              // Fallback to placeholder if no valid game state
-              emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
+        try {
+          // Get the puzzle state from new storage using the completed date
+          // We need to find which puzzle this result belongs to
+          const allPuzzles = loadAll();
+          let puzzleState = null;
+          
+          // Look for a puzzle with matching attempts and word length
+          for (const [puzzleId, state] of Object.entries(allPuzzles)) {
+            if (state.attempts && state.attempts.length === latestResult.guesses && 
+                state.wordLength === latestResult.wordLength) {
+              puzzleState = state;
+              break;
             }
-          } catch (error) {
-            console.error('Error parsing game state:', error);
-            // Fallback to placeholder
+          }
+          
+          if (puzzleState && puzzleState.attempts && puzzleState.secretWord) {
+            // Generate accurate emoji grid from actual game state
+            puzzleState.attempts.forEach((attempt: string, attemptIndex: number) => {
+              let row = '';
+              for (let i = 0; i < attempt.length; i++) {
+                const letter = attempt[i];
+                const secretLetter = puzzleState.secretWord[i];
+                
+                if (letter === secretLetter) {
+                  row += '🟩'; // Correct position
+                } else if (puzzleState.secretWord.includes(letter)) {
+                  row += '🟨'; // Correct letter, wrong position
+                } else {
+                  row += '⬛'; // Letter not in word
+                }
+              }
+              
+              // Add newline for all rows except the last one
+              if (attemptIndex < puzzleState.attempts.length - 1) {
+                emojiGrid += row + '\n';
+              } else {
+                emojiGrid += row; // No newline for the last row
+              }
+            });
+          } else {
+            // Fallback to placeholder if no valid game state
             emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
           }
-        } else {
-          // Fallback to placeholder if no game state
+        } catch (error) {
+          console.error('Error getting game state from new storage:', error);
+          // Fallback to placeholder
           emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
         }
 

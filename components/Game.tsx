@@ -12,6 +12,17 @@ import {
 } from '../lib/gameLogic';
 import { recordResult } from '../lib/stats';
 import { Brain, Trophy, EyeClosed } from 'lucide-react';
+import {
+  WordLength,
+  PuzzleStateV2,
+  ensurePuzzle,
+  upsertPuzzle,
+  getPuzzle,
+  makeId as makePuzzleId,
+  toDateISO,
+  loadAll,
+  saveAll,
+} from '../lib/storage';
 import Header from './Header';
 import Footer from './Footer';
 import Settings from './Settings';
@@ -302,16 +313,16 @@ export default function Game() {
 
   // Generate and share emoji grid
   const generateAndShareEmojiGrid = () => {
-    // Only allow sharing for daily puzzles (not random or archive)
-    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-    if (settings.randomPuzzle || isArchivePuzzle) {
-      setToasts(prev => [...prev, {
-        id: Date.now().toString(),
-        message: 'Sharing is only available for daily puzzles',
-        type: 'info'
-      }]);
-      return;
-    }
+    // Temporarily allow sharing for all puzzles to test logging
+    // const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+    // if (settings.randomPuzzle || isArchivePuzzle) {
+    //   setToasts(prev => [...prev, {
+    //     id: Date.now().toString(),
+    //       message: 'Sharing is only available for daily puzzles',
+    //       type: 'info'
+    //     }]);
+    //   return;
+    // }
 
     // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
     const startDate = new Date('2025-08-25');
@@ -320,14 +331,18 @@ export default function Game() {
     const puzzleNumber = daysDiff + 1;
 
     // Generate emoji grid from game state
-    let emojiGrid = `Wordibble #${puzzleNumber} ${gameState.attemptIndex + 1}/${settings.maxGuesses}\nhttps://wordibble.com\n`;
+    let emojiGrid = `Wordibble #${puzzleNumber} ${gameState.attemptIndex}/${settings.maxGuesses}\nhttps://wordibble.com\n`;
     
-    // Add each attempt as emoji rows
+    // Add each submitted attempt as emoji rows (exclude the top input row)
     gameState.attempts.forEach((attempt, attemptIndex) => {
       let row = '';
+      const evaluations = evaluateGuess(attempt, gameState.secretWord);
+      
+      console.log(`🔍 Emoji grid evaluation for "${attempt}" vs "${gameState.secretWord}":`, evaluations);
+      
       for (let i = 0; i < gameState.wordLength; i++) {
         const letter = attempt[i];
-        const evaluation = historyEvaluations[attemptIndex]?.[i];
+        const evaluation = evaluations[i];
         
         if (evaluation === 'correct') {
           row += '🟩';
@@ -498,31 +513,18 @@ export default function Game() {
       try {
   
         
-        // Clear any stale puzzle state before loading new puzzle
-        if (!router.query.date || router.query.archive !== 'true') {
-          const savedPuzzleState = localStorage.getItem('wordibble-puzzle-state');
-          if (savedPuzzleState) {
-            try {
-              const puzzleState = JSON.parse(savedPuzzleState);
-              const today = getESTDateString();
-              
-              if (puzzleState.date !== today) {
-    
-                localStorage.removeItem('wordibble-puzzle-state');
-                localStorage.removeItem('wordibble-puzzle-completed');
-              }
-            } catch (e) {
-              console.error('Failed to parse saved puzzle state for cleanup:', e);
-            }
-          }
-        }
+        // Note: localStorage cleanup is now handled in the dedicated persistence effect
+
         
         let puzzle;
                 let dict;
         
         // Check if this is an archive puzzle
         if (router.query.date && router.query.archive === 'true') {
-          const archiveDate = new Date(router.query.date as string);
+          // Parse the date string directly to avoid timezone issues
+          const dateString = router.query.date as string;
+          const [year, month, day] = dateString.split('-').map(Number);
+          const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
           const archiveLength = router.query.length ? parseInt(router.query.length as string) as 5 | 6 | 7 : settings.wordLength;
           
           puzzle = await loadPuzzle(archiveDate, archiveLength);
@@ -559,19 +561,107 @@ export default function Game() {
           ? (router.query.length ? parseInt(router.query.length as string) as 5 | 6 | 7 : settings.wordLength)
           : settings.wordLength;
 
-        setGameState((prev) => {
-          const newState = {
+        // After loading puzzle, check if we have saved state to restore
+        if (!hasRestoredFromStorage.current) {
+          let dateISO: string;
+          let wordLength: WordLength;
+          
+          if (router.query.date && router.query.archive === 'true') {
+            // Parse the date string directly to avoid timezone issues
+            const dateString = router.query.date as string;
+            const [year, month, day] = dateString.split('-').map(Number);
+            const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
+            dateISO = toDateISO(archiveDate);
+            wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
+          } else {
+            dateISO = toDateISO(new Date());
+            wordLength = settings.wordLength as WordLength;
+          }
+          
+          const puzzleId = makePuzzleId(dateISO, wordLength);
+          const savedState = getPuzzle(puzzleId);
+          
+          console.log('🔄 Checking for saved state:', {
+            puzzleId,
+            hasSavedState: !!savedState,
+            attempts: savedState?.attempts?.length || 0,
+            gameStatus: savedState?.gameStatus,
+            shouldRestore: savedState && (savedState.attempts.length > 0 || savedState.gameStatus !== 'playing')
+          });
+          
+          // Only restore if we have meaningful saved state
+          if (savedState && (savedState.attempts.length > 0 || savedState.gameStatus !== 'playing')) {
+            // Convert revealedLetters from Set to Record for compatibility
+            const revealedLettersRecord: Record<number, string> = {};
+            if (savedState.revealedLetters) {
+              Object.entries(savedState.revealedLetters).forEach(([key, value]) => {
+                const numericKey = parseInt(key, 10);
+                if (!isNaN(numericKey)) {
+                  revealedLettersRecord[numericKey] = value;
+                }
+              });
+            }
+            
+            const restoredGameState: GameState = {
+              wordLength: savedState.wordLength,
+              secretWord: puzzle.word, // Use the actual puzzle word, not saved word
+              clue: settings.revealClue ? puzzle.clue : undefined,
+              attempts: savedState.attempts,
+              lockedLetters: savedState.lockedLetters,
+              gameStatus: savedState.gameStatus,
+              attemptIndex: savedState.attemptIndex,
+              revealedLetters: new Set(Object.keys(revealedLettersRecord).map(Number)),
+              letterRevealsRemaining: savedState.letterRevealsRemaining,
+            };
+            
+            setGameState(restoredGameState);
+            
+            // For won games, ensure currentGuess shows the solution
+            if (restoredGameState.gameStatus === 'won' && restoredGameState.lockedLetters) {
+              const solutionGuess = Array.from({ length: restoredGameState.wordLength }, (_, i) => 
+                restoredGameState.lockedLetters[i] || ''
+              );
+              setCurrentGuess(solutionGuess);
+            } else {
+              setCurrentGuess(savedState.currentGuess || new Array(savedState.wordLength).fill(''));
+            }
+            
+            // Restore animation states to preserve exact visual appearance
+            if (savedState.gameStatus !== 'playing') {
+              setShowWinAnimation(savedState.showWinAnimation || false);
+              setWinAnimationComplete(savedState.winAnimationComplete || false);
+              setShowLossAnimation(savedState.showLossAnimation || false);
+              setLossAnimationComplete(savedState.lossAnimationComplete || false);
+              setShowFadeInForInput(savedState.showFadeInForInput || false);
+              setFadeOutClearInput(savedState.fadeOutClearInput || false);
+              setPreviouslyRevealedPositions(new Set(savedState.previouslyRevealedPositions || []));
+            }
+            
+            hasRestoredFromStorage.current = true;
+          } else {
+            // No saved state, set up fresh game
+            setGameState((prev) => ({
+              ...prev,
+              wordLength: puzzleWordLength,
+              secretWord: puzzle.word,
+              clue: settings.revealClue ? puzzle.clue : undefined,
+              lockedLetters,
+              revealedLetters: new Set<number>(),
+              letterRevealsRemaining: 1,
+            }));
+          }
+        } else {
+          // Already restored, just update with puzzle data
+          setGameState((prev) => ({
             ...prev,
             wordLength: puzzleWordLength,
             secretWord: puzzle.word,
             clue: settings.revealClue ? puzzle.clue : undefined,
-            // Only set lockedLetters if they haven't been restored from localStorage
             lockedLetters: Object.keys(prev.lockedLetters).length > 0 ? prev.lockedLetters : lockedLetters,
             revealedLetters: new Set<number>(),
             letterRevealsRemaining: 1,
-          };
-          return newState;
-        });
+          }));
+        }
         
         setDictionary(dict);
         
@@ -613,118 +703,89 @@ export default function Game() {
 
   // ===== Puzzle State Persistence =====
   const hasRestoredFromStorage = useRef(false);
-  
-  useEffect(() => {
-    // Only restore once per component mount
-    if (hasRestoredFromStorage.current) return;
-    
-    // Load saved puzzle state from localStorage
-    const savedPuzzleState = localStorage.getItem('wordibble-puzzle-state');
-    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-    if (savedPuzzleState && !settings.randomPuzzle && !isArchivePuzzle) {
-              try {
-          const puzzleState = JSON.parse(savedPuzzleState);
-          // Only restore if it's from today (using EST timezone)
-          const today = getESTDateString();
-          
-                  if (puzzleState.date === today) {
-          // Fix revealedLetters to be a proper Set - handle both array and object cases
-          let revealedLettersArray = [];
-          if (puzzleState.revealedLetters) {
-            if (Array.isArray(puzzleState.revealedLetters)) {
-              revealedLettersArray = puzzleState.revealedLetters;
-            } else if (typeof puzzleState.revealedLetters === 'object') {
-              // If it's an object (from old localStorage), extract the values
-              revealedLettersArray = Object.values(puzzleState.revealedLetters);
-            }
-          }
-          
-          // ALWAYS convert string keys back to numbers, regardless of game status
-          let finalLockedLetters: Record<number, string | null> = {};
-          
-          if (puzzleState.lockedLetters && Object.keys(puzzleState.lockedLetters).length > 0) {
-            // Convert string keys back to numbers from localStorage
-            Object.entries(puzzleState.lockedLetters).forEach(([key, value]) => {
-              const numericKey = parseInt(key, 10);
-              if (!isNaN(numericKey)) {
-                finalLockedLetters[numericKey] = value as string | null;
-              }
-            });
-          } else if (puzzleState.gameStatus === 'won' && puzzleState.secretWord) {
-            // Fallback: generate from secret word if no lockedLetters in localStorage
-            finalLockedLetters = Object.fromEntries(
-              Array.from({ length: puzzleState.wordLength }, (_, i) => [i, puzzleState.secretWord[i]])
-            );
-          }
-          
-          const fixedPuzzleState = {
-            ...puzzleState,
-            revealedLetters: new Set(revealedLettersArray),
-            lockedLetters: finalLockedLetters
-          };
-          
-          
-          setGameState(fixedPuzzleState);
-          
-          // For won games, ensure currentGuess shows the solution
-          if (fixedPuzzleState.gameStatus === 'won' && fixedPuzzleState.lockedLetters) {
-            const solutionGuess = Array.from({ length: fixedPuzzleState.wordLength }, (_, i) => 
-              fixedPuzzleState.lockedLetters[i] || ''
-            );
-            setCurrentGuess(solutionGuess);
-          } else {
-            setCurrentGuess(puzzleState.currentGuess || new Array(puzzleState.wordLength).fill(''));
-            
-            // Mark that we've restored from storage
-            hasRestoredFromStorage.current = true;
-          }
-          } else {
-    
-            // Clear old puzzle state
-            localStorage.removeItem('wordibble-puzzle-state');
-            // Also clear the completed flag to allow new games
-            localStorage.removeItem('wordibble-puzzle-completed');
-          }
-        } catch (e) {
-          console.error('Failed to parse saved puzzle state:', e);
-        }
-    }
-  }, [settings.randomPuzzle, router.query.date, router.query.archive]);
 
   // Save puzzle state to localStorage
   useEffect(() => {
-    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-    if (gameState.secretWord && !settings.randomPuzzle && !isArchivePuzzle) {
-      // Use EST timezone for date consistency
-      const today = getESTDateString();
+    if (gameState.secretWord && !settings.randomPuzzle) {
+      const isArchivePuzzle = router.query.date && router.query.archive === 'true';
       
-      // ALWAYS convert lockedLetters keys to numbers before saving to localStorage
-      const numericLockedLetters: Record<number, string | null> = {};
-      Object.entries(gameState.lockedLetters).forEach(([key, value]) => {
-        const numericKey = parseInt(key, 10);
-        if (!isNaN(numericKey)) {
-          numericLockedLetters[numericKey] = value;
+      let dateISO: string;
+      let wordLength: WordLength;
+      
+      if (isArchivePuzzle) {
+        // For archive puzzles, use the query date and length
+        const archiveDate = new Date(router.query.date as string);
+        dateISO = toDateISO(archiveDate);
+        wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
+      } else {
+        // For daily puzzles, use today's date
+        dateISO = toDateISO(new Date());
+        wordLength = settings.wordLength as WordLength;
+      }
+      
+      // Only save if we have meaningful data to save
+      // For won games, ensure we have attempts and lockedLetters
+      if (gameState.gameStatus === 'won' && (gameState.attempts.length === 0 || Object.keys(gameState.lockedLetters).length === 0)) {
+        // Don't save incomplete won state - wait for animation to complete
+        return;
+      }
+      
+      // Convert revealedLetters from Set to Record for storage
+      const revealedLettersRecord: Record<number, string> = {};
+      gameState.revealedLetters.forEach(position => {
+        if (gameState.secretWord[position]) {
+          revealedLettersRecord[position] = gameState.secretWord[position];
         }
       });
       
       // For won games, ensure lockedLetters contain the full solution
-      let finalLockedLetters = numericLockedLetters;
+      let finalLockedLetters: Record<number, string> = {};
+      Object.entries(gameState.lockedLetters).forEach(([key, value]) => {
+        if (value !== null) {
+          finalLockedLetters[parseInt(key, 10)] = value;
+        }
+      });
+      
       if (gameState.gameStatus === 'won' && gameState.secretWord) {
         finalLockedLetters = Object.fromEntries(
           Array.from({ length: gameState.wordLength }, (_, i) => [i, gameState.secretWord[i]])
         );
       }
       
-      const puzzleState = {
-        ...gameState,
+      const puzzleState: PuzzleStateV2 = {
+        id: makePuzzleId(dateISO, wordLength),
+        dateISO,
+        wordLength,
+        secretWord: gameState.secretWord,
+        attempts: gameState.attempts,
         lockedLetters: finalLockedLetters,
-        date: today,
-        currentGuess
+        revealedLetters: revealedLettersRecord,
+        letterRevealsRemaining: gameState.letterRevealsRemaining,
+        gameStatus: gameState.gameStatus,
+        attemptIndex: gameState.attemptIndex,
+        currentGuess,
+        completedAt: gameState.gameStatus !== 'playing' ? new Date().toISOString() : undefined,
+        // Preserve animation states for exact visual restoration
+        showWinAnimation,
+        winAnimationComplete,
+        showLossAnimation,
+        lossAnimationComplete,
+        showFadeInForInput,
+        fadeOutClearInput,
+        previouslyRevealedPositions: Array.from(previouslyRevealedPositions),
       };
       
-      localStorage.setItem('wordibble-puzzle-state', JSON.stringify(puzzleState));
+      console.log('💾 Saving puzzle state:', {
+        id: puzzleState.id,
+        gameStatus: puzzleState.gameStatus,
+        attempts: puzzleState.attempts,
+        lockedLetters: puzzleState.lockedLetters,
+        winAnimationComplete
+      });
+      
+      upsertPuzzle(puzzleState);
     }
-  }, [gameState.secretWord, gameState.attempts, gameState.attemptIndex, winAnimationComplete, currentGuess, settings.randomPuzzle, router.query.date, router.query.archive]);
+  }, [gameState.secretWord, gameState.attempts, gameState.attemptIndex, winAnimationComplete, currentGuess, settings.randomPuzzle, router.query.date, router.query.archive, router.query.length, gameState.lockedLetters, gameState.revealedLetters, gameState.letterRevealsRemaining, gameState.gameStatus, settings.wordLength, showWinAnimation, showLossAnimation, lossAnimationComplete, showFadeInForInput, fadeOutClearInput, previouslyRevealedPositions]);
 
   // ===== Toast helpers =====
   const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
@@ -735,8 +796,34 @@ export default function Game() {
   // Manual cleanup function for stuck puzzle state
   const clearPuzzleState = useCallback(() => {
     if (confirm('Reset the current puzzle? This will clear your progress and start fresh.')) {
+      // Clear from new storage system
+      const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+      let dateISO: string;
+      let wordLength: WordLength;
+      
+      if (isArchivePuzzle) {
+        // Parse the date string directly to avoid timezone issues
+        const dateString = router.query.date as string;
+        const [year, month, day] = dateString.split('-').map(Number);
+        const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
+        dateISO = toDateISO(archiveDate);
+        wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
+      } else {
+        dateISO = toDateISO(new Date());
+        wordLength = settings.wordLength as WordLength;
+      }
+      
+      const puzzleId = makePuzzleId(dateISO, wordLength);
+      const all = loadAll();
+      delete all[puzzleId];
+      saveAll(all);
+      
+      // Also clear old localStorage for backward compatibility
       localStorage.removeItem('wordibble-puzzle-state');
       localStorage.removeItem('wordibble-puzzle-completed');
+      
+      // Reset the restoration flag so we can start fresh
+      hasRestoredFromStorage.current = false;
       
       // Instead of reloading, reset the game state directly
       setGameState(prev => ({
@@ -763,11 +850,16 @@ export default function Game() {
         queueFocusFirstEmpty();
       }, 100);
     }
-  }, [gameState.wordLength, queueFocusFirstEmpty]);
+  }, [gameState.wordLength, queueFocusFirstEmpty, router.query.date, router.query.archive, router.query.length, settings.wordLength]);
 
   // Clear ALL Wordibble data and reset to factory defaults
   const clearAllWordibbleData = useCallback(() => {
     if (confirm('This will clear ALL Wordibble data including stats, settings, and puzzle state. Are you sure?')) {
+      // Clear from new storage system
+      saveAll({});
+      localStorage.removeItem('wordibble:lastPlayed:v2');
+      
+      // Also clear old localStorage for backward compatibility
       localStorage.removeItem('wordibble-puzzle-state');
       localStorage.removeItem('wordibble-puzzle-completed');
       localStorage.removeItem('wordibble-settings');
@@ -804,6 +896,9 @@ export default function Game() {
         randomPuzzle: GAME_CONFIG.RANDOM_PUZZLE,
         lockGreenMatchedLetters: GAME_CONFIG.LOCK_GREEN_MATCHED_LETTERS,
       });
+      
+      // Reset the restoration flag so we can start fresh
+      hasRestoredFromStorage.current = false;
       
       // Focus the input row after reset
       setTimeout(() => {
@@ -1250,7 +1345,10 @@ export default function Game() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header onSettingsClick={() => setIsSettingsOpen(true)} />
+              <Header 
+          onSettingsClick={() => setIsSettingsOpen(true)} 
+          onShareClick={gameState.gameStatus !== 'playing' ? generateAndShareEmojiGrid : undefined}
+        />
       
       <main className="flex-1 py-4 md:py-8 px-4">
         <div className="max-w-md mx-auto">
