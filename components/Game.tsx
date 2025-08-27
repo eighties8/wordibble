@@ -1389,6 +1389,7 @@ export default function Game() {
               ? `Guess the word in ${attemptsLeft} tries`
               : `${attemptsLeft} guesses left`
           ) : undefined}
+          revealClueEnabled={settings.revealClue}
         />
           {/* Debug: Show clue info */}
           {debugMode && (

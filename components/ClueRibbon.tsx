@@ -8,9 +8,10 @@ interface Props {
   onSettingsClick?: () => void;
   variant?: 'clue' | 'error' | 'success' | 'solution';
   guessesText?: string;
+  revealClueEnabled?: boolean;
 }
 
-export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick, variant = 'clue', guessesText }: Props) {
+export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick, variant = 'clue', guessesText, revealClueEnabled }: Props) {
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
@@ -26,16 +27,17 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
         } text-white`}>
         <div className="text-sm flex items-center justify-between gap-2">
           <span className="transition-all duration-500 ease-in-out flex items-center gap-2 pl-1 pr-2">
-            {clue ? (
+            {/* Special cases: show win/loss messages directly */}
+            {clue && (clue.startsWith('Solved! Wordibble #') || clue.startsWith('Loss:')) ? (
               <>
-                {clue.startsWith('Sovled! Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
+                {clue.startsWith('Solved! Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
                 {clue.startsWith('Loss:') && <HeartCrack className="w-4 h-4 text-white" />}
                 <span className={`transition-all duration-500 ease-in-out whitespace-nowrap ${
                   clue.startsWith('Solved! Wordibble #') ? 'animate-fade-in' : ''
                 }`}>{clue}</span>
               </>
             ) : (
-              // Show guesses text by default, but allow hover to show settings text
+              // Always show guesses text by default, with hover behavior for regular clues
               <button
                 onClick={onSettingsClick}
                 type="button"
@@ -46,14 +48,14 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
                   hover:grid-cols-[auto,1fr]
                 "
               >
-                {/* Left: the default/short text */}
+                {/* Left: the default/short text - always show guesses */}
                 <span className="whitespace-nowrap">
                   {guessesText || 'Click here for clues, vowels & settings'}
                 </span>
 
-                {/* Right: the long/hover text – starts at 0 width and slides in */}
+                {/* Right: the long/hover text - shows clue if enabled, otherwise guidance */}
                 <span className="whitespace-nowrap overflow-hidden">
-                  | Click for clues, vowels options
+                  | {revealClueEnabled && clue ? clue : 'Click for clues, vowels options'}
                 </span>
               </button>
             )}
