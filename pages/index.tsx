@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Wordibble - Refined Word Search Puzzle</title>
+        <title>Wordibble - Crack the daily word with clever clues, vowel vibes, or pure brain dazzle!</title>
         <meta name="description" content="A refined Wordle-style game with better UX and switchable 5, 6, or 7 letter modes" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#22c55e" />
