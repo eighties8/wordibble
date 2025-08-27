@@ -10,13 +10,18 @@ interface Props {
 export default function Header({ onSettingsClick, onShareClick }: Props) {
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
-      <div className="max-w-md mx-auto flex items-center justify-between">
-      {/* <Bot className="w-6 h-6 text-green-600" /> */}
-        <Link href="/" className="no-underline focus:outline-none">
-          <h1 className="logo text-xl italic font-bold text-gray-900 cursor-pointer">        
-          Wor
-          <span>dibble</span>
-          </h1>
+      <div className="max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex items-center justify-between px-4">
+        <Link 
+          href="/" 
+          className="no-underline focus:outline-none flex items-center gap-2"
+        >
+          <div className="logo grid grid-cols-2 gap-[2px] p-[2px] w-6 h-6 border border-gray-900 rounded-sm">
+            <div className="bg-green-500"></div>
+            <div className="bg-amber-500"></div>
+            <div className="bg-green-500"></div>
+            <div className="bg-green-500"></div>
+          </div>
+          <h1 className="text-xl font-medium text-gray-700">Wordibble</h1>
         </Link>
         <div className="flex items-center gap-2">
           {onShareClick && (

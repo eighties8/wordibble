@@ -1,12 +1,13 @@
 import { LetterState, WordLength } from './types';
 import { GAME_CONFIG } from './config';
 
-// Cache for dictionary words
-let dictionaryCache: Set<string> | null = null;
+// Cache for dictionary words - make it word-length specific
+let dictionaryCache: Map<WordLength, Set<string>> = new Map();
 
 export async function loadDictionary(wordLength: WordLength): Promise<Set<string>> {
-  if (dictionaryCache) {
-    return dictionaryCache;
+  // Check if we have a cached dictionary for this specific word length
+  if (dictionaryCache.has(wordLength)) {
+    return dictionaryCache.get(wordLength)!;
   }
 
   try {
@@ -18,8 +19,9 @@ export async function loadDictionary(wordLength: WordLength): Promise<Set<string
     }
     const words: string[] = await response.json();
     
-    dictionaryCache = new Set(words.map(w => w.toUpperCase()));
-    return dictionaryCache;
+    const wordSet = new Set(words.map(w => w.toUpperCase()));
+    dictionaryCache.set(wordLength, wordSet);
+    return wordSet;
   } catch (error) {
     console.error('Error loading dictionary via API, trying fallback:', error);
     
@@ -27,10 +29,11 @@ export async function loadDictionary(wordLength: WordLength): Promise<Set<string
     try {
       // Import dictionary data directly as a fallback
       const dictionaryData = await import(`./data/dictionary${wordLength}.json`);
-      const words = dictionaryData.default || dictionaryData;
+      const words = (dictionaryData.default || dictionaryData) as string[];
 
-      dictionaryCache = new Set(words.map((w: string) => w.toUpperCase()));
-      return dictionaryCache;
+      const wordSet = new Set(words.map((w: string) => w.toUpperCase()));
+      dictionaryCache.set(wordLength, wordSet);
+      return wordSet;
     } catch (fallbackError) {
       console.error('Fallback dictionary loading also failed:', fallbackError);
       // Return empty set as final fallback

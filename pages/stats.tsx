@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { Share2 } from "lucide-react";
 import { loadStats, winRate, StatsSnapshot, GameResult } from "../lib/stats";
 import { loadAll, makeId, toDateISO } from "../lib/storage";
@@ -19,7 +18,7 @@ export default function StatsPage() {
 
   if (isLoading || !stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-lg text-gray-600">Loading stats...</p>
@@ -111,161 +110,160 @@ export default function StatsPage() {
     }
   };
 
-  // Helper function to generate placeholder grid when actual game state is unavailable
   const generatePlaceholderGrid = (guesses: number, wordLength: number) => {
     let grid = '';
-    for (let attempt = 0; attempt < guesses; attempt++) {
+    for (let i = 0; i < guesses; i++) {
       let row = '';
-      for (let i = 0; i < wordLength; i++) {
-        if (attempt === guesses - 1) {
-          // Last row (winning row) - all green
-          row += '🟩';
+      for (let j = 0; j < wordLength; j++) {
+        if (i === guesses - 1) {
+          row += '🟩'; // Last row is all green (correct)
         } else {
-          // Previous attempts - mix of colors for visual variety
-          row += Math.random() > 0.5 ? '🟨' : '⬛';
+          row += '⬛'; // Previous rows are all black
         }
       }
-      // Add newline for all rows except the last one
-      if (attempt < guesses - 1) {
+      if (i < guesses - 1) {
         grid += row + '\n';
       } else {
-        grid += row; // No newline for the last row
+        grid += row;
       }
     }
     return grid;
   };
 
-  const loadPuzzleSnapshot = (puzzle: GameResult) => {
-    setSelectedPuzzle(puzzle);
+  const handlePuzzleClick = (result: GameResult) => {
+    setSelectedPuzzle(result);
     setShowPuzzleSnapshot(true);
   };
 
+  const closePuzzleSnapshot = () => {
+    setShowPuzzleSnapshot(false);
+    setSelectedPuzzle(null);
+  };
+
+  const getPuzzleState = (result: GameResult) => {
+    try {
+      const allPuzzles = loadAll();
+      // Look for a puzzle with matching date and word length
+      for (const [puzzleId, state] of Object.entries(allPuzzles)) {
+        if (state.dateISO === result.dateISO && state.wordLength === result.wordLength) {
+          return state;
+        }
+      }
+    } catch (error) {
+      console.error('Error getting puzzle state:', error);
+    }
+    return null;
+  };
+
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Your Stats</h1>
-        <Link href="/" className="text-blue-600 hover:underline">Back to game</Link>
-      </header>
-
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-        {/* Congratulations Message */}
-        {stats.wins > 0 && (
-          <section className="text-center">
-            <div className="text-4xl mb-2">✨</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Congratulations!</h2>
-            <p className="text-gray-600">Keep up the great work!</p>
-            
-            {/* Share Button */}
-            <button
-              onClick={() => generateAndShareEmojiGrid(stats)}
-              className="mt-4 px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors border border-blue-500 flex items-center gap-2 mx-auto"
-            >
-              <Share2 className="w-4 h-4" />
-              Share Results
-            </button>
-          </section>
-        )}
-
-        {/* Top numbers */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard label="Played" value={stats.played} />
-          <StatCard label="Wins" value={stats.wins} />
-          <StatCard label="Win Rate" value={`${winRate(stats)}%`} />
-          <StatCard label="Streak" value={`${stats.currentStreak}/${stats.maxStreak}`} />
-        </section>
-
-        {/* Guess distribution */}
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Guess Distribution</h2>
-          <div className="space-y-2">
-            {stats.guessDistribution.slice(0, 7).map((count, i) => (
-              <BarRow key={i} label={`${i + 1}`} count={count} max={Math.max(1, Math.max(...stats.guessDistribution))} />
-            ))}
-          </div>
-        </section>
-
-        {/* Recent games */}
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Recent Results</h2>
-          <div className="rounded-xl border border-gray-200 overflow-hidden">
-            {(() => {
-              const dailyResults = (stats.results ?? [])
-                .slice()
-                .reverse()
-                .filter(r => !r.mode?.randomPuzzle); // Only show daily puzzles
-              
-              if (dailyResults.length === 0) {
-                return (
-                  <div className="p-8 text-center text-gray-500">
-                    <p>No daily puzzle results yet.</p>
-                    <p className="text-sm mt-2">Complete daily puzzles to see your results here.</p>
-                  </div>
-                );
-              }
-              
-              return (
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 text-gray-600">
-                    <tr>
-                      <Th>Date</Th>
-                      <Th>WL</Th>
-                      <Th>Guesses</Th>
-                      <Th>Word</Th>
-                      <Th>Mode</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {dailyResults.slice(0, 20).map((r, idx) => (
-                      <tr key={idx} className="text-gray-800">
-                        <Td>{r.dateISO}</Td>
-                        <Td>{r.won ? "Win" : "Loss"}</Td>
-                        <Td>{r.guesses}</Td>
-                        <Td className="font-mono">
-                          <button
-                            onClick={() => loadPuzzleSnapshot(r)}
-                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                            title="Click to view puzzle snapshot"
-                          >
-                            {r.solution ?? "—"}
-                          </button>
-                        </Td>
-                        <Td className="text-xs text-gray-600">
-                          {r.mode
-                            ? [
-                                r.mode.revealClue ? "clue" : "no-clue",
-                                r.mode.revealVowels ? `vowels:${r.mode.vowelCount}` : "no-vowels",
-                                `L${r.wordLength}`,
-                              ].join(" · ")
-                            : "—"}
-                        </Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              );
-            })()}
-          </div>
-        </section>
-      </main>
-
-      {/* Toast */}
+    <div className="max-w-md mx-auto space-y-8">
+      {/* Toast notification */}
       {showToast && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          Results copied to clipboard
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg z-50">
+          Results copied to clipboard!
         </div>
       )}
+
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Statistics</h1>
+        <p className="text-gray-600">Your Wordibble performance</p>
+      </div>
+
+      {/* Overall Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+          <div className="text-2xl font-bold text-blue-600">{stats.played}</div>
+          <div className="text-sm text-gray-600">Games Played</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+          <div className="text-2xl font-bold text-green-600">{winRate(stats)}%</div>
+          <div className="text-sm text-gray-600">Win Rate</div>
+        </div>
+      </div>
+
+      {/* Guess Distribution */}
+      <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Guess Distribution</h3>
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5, 6].map((guesses) => {
+            const count = stats.guessDistribution[guesses] || 0;
+            const maxCount = Math.max(...Object.values(stats.guessDistribution));
+            const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+            
+            return (
+              <div key={guesses} className="flex items-center gap-2">
+                <span className="w-8 text-sm text-gray-600">{guesses}</span>
+                <div className="flex-1 bg-gray-200 rounded-full h-6">
+                  <div
+                    className="bg-green-500 h-6 rounded-full transition-all duration-300"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                <span className="w-12 text-sm text-gray-600 text-right">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Results */}
+      <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Recent Results</h3>
+          {stats.results && stats.results.length > 0 && (
+            <button
+              onClick={() => generateAndShareEmojiGrid(stats)}
+              className="flex items-center gap-2 px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+              Share
+            </button>
+          )}
+        </div>
+        
+        {stats.results && stats.results.length > 0 ? (
+          <div className="space-y-2">
+            {stats.results.slice(-10).reverse().map((result, index) => (
+              <div
+                key={index}
+                onClick={() => handlePuzzleClick(result)}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    result.won ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                  }`}>
+                    {result.won ? '✓' : '✗'}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">
+                      {result.won ? `${result.guesses}/6` : 'X/6'}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {new Date(result.dateISO).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {result.wordLength} letters
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-4">No games played yet</p>
+        )}
+      </div>
 
       {/* Puzzle Snapshot Modal */}
       {showPuzzleSnapshot && selectedPuzzle && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Header */}
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Puzzle Snapshot - {selectedPuzzle.dateISO}
-              </h2>
+              <h3 className="text-xl font-semibold text-gray-900">Puzzle Snapshot</h3>
               <button
-                onClick={() => setShowPuzzleSnapshot(false)}
+                onClick={closePuzzleSnapshot}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,111 +271,27 @@ export default function StatsPage() {
                 </svg>
               </button>
             </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Puzzle Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">{selectedPuzzle.wordLength}</div>
-                  <div className="text-sm text-gray-600">Letters</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">{selectedPuzzle.guesses}</div>
-                  <div className="text-sm text-gray-600">Guesses</div>
-                </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <div className="text-sm text-gray-600 mb-2">Date: {new Date(selectedPuzzle.dateISO).toLocaleDateString()}</div>
+                <div className="text-sm text-gray-600 mb-2">Word Length: {selectedPuzzle.wordLength} letters</div>
+                <div className="text-sm text-gray-600 mb-4">Result: {selectedPuzzle.won ? `Won in ${selectedPuzzle.guesses} guesses` : 'Lost'}</div>
               </div>
-
-              {/* Result */}
-              <div className="text-center">
-                <div className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
-                  selectedPuzzle.won ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {selectedPuzzle.won ? 'Won' : 'Lost'}
-                </div>
-              </div>
-
-              {/* Solution */}
-              {selectedPuzzle.solution && (
+              
+              {selectedPuzzle.won && (
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Solution</h3>
-                  <div className="text-3xl font-mono font-bold text-gray-800 bg-gray-100 px-6 py-3 rounded-lg">
-                    {selectedPuzzle.solution}
-                  </div>
+                  <button
+                    onClick={() => {
+                      generateAndShareEmojiGrid(stats);
+                      closePuzzleSnapshot();
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Share This Result
+                  </button>
                 </div>
               )}
-
-              {/* Attempt History */}
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Attempts</h3>
-                <div className="space-y-3">
-                  {(() => {
-                    // Try to get attempts from localStorage for this specific puzzle
-                    try {
-                      const puzzleState = localStorage.getItem('wordibble-puzzle-state');
-                      if (puzzleState) {
-                        const state = JSON.parse(puzzleState);
-                        // Check if this is the same puzzle (by solution and date)
-                        if (state.secretWord === selectedPuzzle.solution && 
-                            state.date === selectedPuzzle.dateISO &&
-                            state.attempts && state.attempts.length > 0) {
-                          return state.attempts.map((attempt: string, index: number) => (
-                            <div key={index} className="flex items-center justify-center gap-2">
-                              <span className="text-sm text-gray-600">#{index + 1}:</span>
-                              <div className="text-lg font-mono font-semibold bg-gray-100 px-4 py-2 rounded-lg">
-                                {attempt}
-                              </div>
-                              {index === state.attempts.length - 1 && state.gameStatus === 'won' && (
-                                <span className="text-green-600 text-sm">✓</span>
-                              )}
-                            </div>
-                          ));
-                        }
-                      }
-                      // Fallback: show a generic message
-                      return (
-                        <div className="text-gray-500 text-sm">
-                          <p>Attempt history not available for this puzzle.</p>
-                          <p className="mt-1">This usually means the puzzle was completed in a different session.</p>
-                        </div>
-                      );
-                    } catch (error) {
-                      return (
-                        <div className="text-gray-500 text-sm">
-                          <p>Unable to load attempt history.</p>
-                        </div>
-                      );
-                    }
-                  })()}
-                </div>
-              </div>
-
-              {/* Game Mode */}
-              {selectedPuzzle.mode && (
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Game Mode</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        selectedPuzzle.mode.revealClue ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {selectedPuzzle.mode.revealClue ? 'Clue Enabled' : 'No Clue'}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        selectedPuzzle.mode.revealVowels ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {selectedPuzzle.mode.revealVowels ? `Vowels: ${selectedPuzzle.mode.vowelCount}` : 'No Vowels'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Note about game grid */}
-              <div className="text-center text-gray-600 text-sm">
-                <p>Note: Attempt history is shown if available from your current session.</p>
-                <p>The visual game grid with letter-by-letter feedback is not stored.</p>
-              </div>
             </div>
           </div>
         </div>
@@ -386,38 +300,5 @@ export default function StatsPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-gray-200 p-4 text-center">
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">{label}</div>
-    </div>
-  );
-}
-
-function BarRow({ label, count, max }: { label: string; count: number; max: number }) {
-  const width = Math.max(6, Math.round((count / max) * 100));
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-6 text-right text-sm text-gray-600">{label}</div>
-      <div className="flex-1">
-        <div className="h-7 rounded-md bg-gray-100 overflow-hidden">
-          <div
-            className="h-full bg-green-500 text-white text-xs flex items-center px-2"
-            style={{ width: `${width}%` }}
-          >
-            {count}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return <th className="text-left font-medium px-3 py-2">{children}</th>;
-}
-
-function Td({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <td className={`px-3 py-2 ${className || ''}`}>{children}</td>;
-}
+StatsPage.title = "Stats";  // header shows "Wordibble · Stats"
+StatsPage.narrow = true;     // stats uses narrower container

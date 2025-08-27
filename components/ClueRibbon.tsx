@@ -1,4 +1,4 @@
-import { AArrowDown, PartyPopper, Settings, Trophy, HeartCrack } from "lucide-react";
+import { AArrowDown, PartyPopper, Settings, Trophy, HeartCrack, Crown, Grid3x2, Medal } from "lucide-react";
 
 interface Props {
   clue: string;
@@ -30,12 +30,17 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
             {/* Special cases: show win/loss messages directly */}
             {clue && (clue.startsWith('Solved! Wordibble #') || clue.startsWith('Loss:')) ? (
               <>
-                {clue.startsWith('Solved! Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
+                {clue.startsWith('Solved! Wordibble #') && <Medal className="w-5 h-5 text-white animate-pulse" />}
                 {clue.startsWith('Loss:') && <HeartCrack className="w-4 h-4 text-white" />}
                 <span className={`transition-all duration-500 ease-in-out whitespace-nowrap ${
                   clue.startsWith('Solved! Wordibble #') ? 'animate-fade-in' : ''
                 }`}>{clue}</span>
               </>
+            ) : variant === 'error' ? (
+              // Show error messages prominently
+              <span className="whitespace-nowrap font-medium">
+                {clue}
+              </span>
             ) : (
               // Always show guesses text by default, with hover behavior for regular clues
               <button

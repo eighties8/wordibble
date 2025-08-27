@@ -98,193 +98,190 @@ export default function ArchivePage() {
       } else {
         newMonth.setMonth(newMonth.getMonth() + 1);
       }
+      
       return newMonth;
     });
   };
 
-  const renderCalendar = () => {
-    const { firstDayOfWeek, daysInMonth } = getDaysInMonth(currentMonth);
+  const generateCalendarDays = (month: Date) => {
+    const { firstDayOfWeek, daysInMonth } = getDaysInMonth(month);
     const days = [];
     
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push(<div key={`empty-${i}`} className="w-10 h-10" />);
+      days.push(null);
     }
     
-    // Add cells for each day of the month
+    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-      const isSelectable = isDateSelectable(date);
-      const isSelected = selectedDate && formatDateKey(date) === formatDateKey(selectedDate);
-      const isToday = formatDateKey(date) === getESTDateString();
-      
-      days.push(
-        <button
-          key={`${currentMonth.getFullYear()}-${currentMonth.getMonth()}-${day}`}
-          onClick={() => handleDateSelect(date)}
-          disabled={!isSelectable}
-          className={`
-            w-10 h-10 rounded-lg text-sm font-medium transition-colors relative
-            ${isSelectable 
-              ? 'hover:bg-gray-200 cursor-pointer' 
-              : 'text-gray-300 cursor-not-allowed'
-            }
-            ${isSelected 
-              ? 'bg-blue-500 text-white hover:bg-blue-600' 
-              : 'text-gray-800'
-            }
-            ${isToday && !isSelected ? 'ring-2 ring-blue-300' : ''}
-          `}
-        >
-          {/* Puzzle status indicator box above date - only show on client to prevent hydration mismatch */}
-          {isSelectable && (
-            <>
-              {isClient ? (
-                <div className={`
-                  absolute -top-1 left-1/2 transform -translate-x-1/2
-                  w-3 h-3 rounded-sm
-                  ${hasPlayedPuzzle(date) ? 'bg-green-500' : 'bg-gray-300'}
-                `} />
-              ) : (
-                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-sm bg-gray-200 animate-pulse" />
-              )}
-            </>
-          )}
-          {day}
-        </button>
-      );
+      const date = new Date(month.getFullYear(), month.getMonth(), day);
+      days.push(date);
     }
     
     return days;
   };
 
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid grid-cols-2 gap-1 w-6 h-6">
-            <div className="bg-green-500 rounded-sm"></div>
-            <div className="bg-yellow-500 rounded-sm"></div>
-            <div className="bg-gray-500 rounded-sm"></div>
-            <div className="bg-green-500 rounded-sm"></div>
-          </div>
-          <h1 className="text-xl font-bold text-gray-900">Wordibble archive</h1>
-        </div>
-        <Link href="/" className="text-blue-600 hover:underline">
-          Back to game
-        </Link>
-      </header>
+    <div className="max-w-md mx-auto">
+      <p className="text-gray-600 text-center mb-8">
+        Play puzzles since August 25, 2025
+      </p>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <p className="text-gray-600 text-center mb-8">
-          Play puzzles since August 25, 2025
-        </p>
-
-        {/* Calendar Navigation */}
-        <div className="flex items-center justify-center gap-4 mb-8">
-          <button
-            onClick={() => navigateMonth('prev')}
-            disabled={currentMonth <= START_DATE}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      {/* Calendar Navigation */}
+      <div className="flex items-center justify-center gap-4 mb-8">
+        <button
+          onClick={() => navigateMonth('prev')}
+          disabled={currentMonth <= START_DATE}
+          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        
+        <div className="flex items-center gap-2">
+          <select
+            value={currentMonth.getMonth()}
+            onChange={(e) => setCurrentMonth(prev => {
+              const newMonth = new Date(prev);
+              newMonth.setMonth(parseInt(e.target.value));
+              return newMonth;
+            })}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
           >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          
-          <div className="flex items-center gap-2">
-            <select
-              value={currentMonth.getMonth()}
-              onChange={(e) => setCurrentMonth(prev => {
-                const newMonth = new Date(prev);
-                newMonth.setMonth(parseInt(e.target.value));
-                return newMonth;
-              })}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-            >
-              {months.map((month, index) => (
-                <option key={`month-${index}`} value={index}>{month}</option>
-              ))}
-            </select>
-            
-            <select
-              value={currentMonth.getFullYear()}
-              onChange={(e) => setCurrentMonth(prev => {
-                const newMonth = new Date(prev);
-                newMonth.setFullYear(parseInt(e.target.value));
-                return newMonth;
-              })}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-            >
-              {years.map(year => (
-                <option key={`year-${year}`} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-          
-          <button
-            onClick={() => navigateMonth('next')}
-            disabled={currentMonth.getMonth() === new Date().getMonth() && currentMonth.getFullYear() === new Date().getFullYear()}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Calendar Grid */}
-        <div className="max-w-md mx-auto mb-8">
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-              <div key={`day-label-${index}`} className="w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-500">
-                {day}
-              </div>
+            {months.map((month, index) => (
+              <option key={`month-${index}`} value={index}>{month}</option>
             ))}
+          </select>
+          
+          <select
+            value={currentMonth.getFullYear()}
+            onChange={(e) => setCurrentMonth(prev => {
+              const newMonth = new Date(prev);
+              newMonth.setFullYear(parseInt(e.target.value));
+              return newMonth;
+            })}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
+          >
+            {years.map(year => (
+              <option key={`year-${year}`} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+        
+        <button
+          onClick={() => navigateMonth('next')}
+          disabled={currentMonth.getMonth() === new Date().getMonth() && currentMonth.getFullYear() === new Date().getFullYear()}
+          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="max-w-md mx-auto mb-8">
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+            <div key={`day-label-${index}`} className="w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-500">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-7 gap-1">
+          {generateCalendarDays(currentMonth).map((day, index) => (
+            <button
+              key={`${currentMonth.getFullYear()}-${currentMonth.getMonth()}-${day?.getDate() || index}`}
+              onClick={() => day && handleDateSelect(day)}
+              disabled={!day || !isDateSelectable(day)}
+              className={`
+                w-10 h-10 rounded-lg text-sm font-medium transition-colors relative
+                ${day && isDateSelectable(day) 
+                  ? 'hover:bg-gray-200 cursor-pointer' 
+                  : 'text-gray-300 cursor-not-allowed'
+                }
+                ${day && selectedDate && formatDateKey(day) === formatDateKey(selectedDate) 
+                  ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                  : 'text-gray-800'
+                }
+                ${day && formatDateKey(day) === getESTDateString() && !selectedDate 
+                  ? 'ring-2 ring-blue-300' 
+                  : ''
+                }
+              `}
+            >
+              {/* Puzzle status indicator box above date - only show on client to prevent hydration mismatch */}
+              {day && (
+                <>
+                  {isClient ? (
+                    <div className={`
+                      absolute -top-1 left-1/2 transform -translate-x-1/2
+                      w-3 h-3 rounded-sm
+                      ${hasPlayedPuzzle(day) ? 'bg-green-500' : 'bg-gray-300'}
+                    `} />
+                  ) : (
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-sm bg-gray-200 animate-pulse" />
+                  )}
+                </>
+              )}
+              {day?.getDate()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Wordibble Length Selection */}
+      {selectedDate && isDateSelectable(selectedDate) && (
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-50 rounded-lg border border-blue-200">
+            <Calendar className="w-5 h-5 text-blue-600" />
+            <span className="text-blue-900 font-medium">
+              {selectedDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </span>
           </div>
           
-          <div className="grid grid-cols-7 gap-1">
-            {renderCalendar()}
+          <div className="mt-6 space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900">Choose Puzzle:</h3>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=5`}
+                className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+              >
+                Wordibble 5
+              </Link>
+              <Link
+                href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=6`}
+                className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+              >
+                Wordibble 6
+              </Link>
+              <Link
+                href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=7`}
+                className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+              >
+                Wordibble 7
+              </Link>
+            </div>
           </div>
         </div>
-
-        {/* Wordibble Length Selection */}
-        {selectedDate && isDateSelectable(selectedDate) && (
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-50 rounded-lg border border-blue-200">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              <span className="text-blue-900 font-medium">
-                {selectedDate.toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </span>
-            </div>
-            
-            <div className="mt-6 space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Choose Puzzle:</h3>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link
-                  href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=5`}
-                  className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
-                >
-                  Wordibble 5
-                </Link>
-                <Link
-                  href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=6`}
-                  className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
-                >
-                  Wordibble 6
-                </Link>
-                <Link
-                  href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=7`}
-                  className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
-                >
-                  Wordibble 7
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
+      )}
     </div>
   );
 }
+
+ArchivePage.title = "Archive";  // header shows "Wordibble · Archive"
+ArchivePage.narrow = true;      // archive uses narrower container

@@ -1,0 +1,121 @@
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { BarChart3, CalendarDays, Settings } from "lucide-react";
+import React, { useState } from "react";
+import SettingsModal from "./Settings";
+
+type LayoutProps = {
+  children: React.ReactNode;
+  title?: string;               // optional page title shown in header
+  narrow?: boolean;             // use a narrower content width on some pages
+  onSettingsChange?: (settings: any) => void;  // callback for settings changes
+  currentSettings?: any;        // current settings to pass to Settings modal
+  debugMode?: boolean;          // debug mode flag
+};
+
+export default function Layout({ children, title, narrow, onSettingsChange, currentSettings, debugMode = false }: LayoutProps) {
+  const router = useRouter();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const handleSettingsClick = () => {
+    setIsSettingsOpen(true);
+  };
+
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+  };
+
+  const handleSettingsChange = (newSettings: any) => {
+    if (onSettingsChange) {
+      onSettingsChange(newSettings);
+    }
+    setIsSettingsOpen(false);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <Link
+            href="/"
+            className="no-underline focus:outline-none flex items-center gap-2"
+          >
+            {/* logo tile */}
+            <div className="grid grid-cols-2 gap-[2px] p-[2px] w-6 h-6 border border-gray-900 rounded-sm">
+              <div className="bg-green-500" />
+              <div className="bg-amber-500" />
+              <div className="bg-green-500" />
+              <div className="bg-green-500" />
+            </div>
+            <h1 className="text-xl font-medium text-gray-700">
+              Wordibble{title ? <span className="text-gray-400"> · {title}</span> : null}
+            </h1>
+          </Link>
+
+          {/* Header actions (keep same across pages) */}
+          <div className="flex items-center gap-4 text-gray-600">
+            <button
+              aria-label="Stats"
+              className="p-2 rounded hover:bg-gray-100"
+              onClick={() => router.push("/stats")}
+              title="Stats"
+            >
+              <BarChart3 className="w-5 h-5" />
+            </button>
+            <button
+              aria-label="Archive"
+              className="p-2 rounded hover:bg-gray-100"
+              onClick={() => router.push("/archive")}
+              title="Archive"
+            >
+              <CalendarDays className="w-5 h-5" />
+            </button>
+            <button
+              aria-label="Settings"
+              className="p-2 rounded hover:bg-gray-100"
+              onClick={handleSettingsClick}
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content wrapper – identical on every page */}
+      <main className="flex-1">
+        <div
+          className={[
+            "mx-auto px-4",
+            // game wants a bit wider than stats/archive; toggle with `narrow`
+            narrow ? "max-w-3xl" : "max-w-4xl",
+            // vertical rhythm
+            "py-4 md:py-8",
+          ].join(" ")}
+        >
+          {children}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 px-4 py-3">
+        <div className="max-w-4xl mx-auto text-center text-sm text-gray-500">
+          Wordibble – Crack the daily word with clever clues, vowel vibes, or pure brain dazzle!
+        </div>
+      </footer>
+
+      {/* Settings Modal */}
+      {isSettingsOpen && currentSettings && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={handleSettingsClose}
+          onSettingsChange={handleSettingsChange}
+          currentSettings={currentSettings}
+          debugMode={debugMode}
+          openedFromClue={false}
+        />
+      )}
+    </div>
+  );
+}

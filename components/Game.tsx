@@ -24,9 +24,10 @@ import {
   toDateISO,
   loadAll,
   saveAll,
+  getLastPlayed,
 } from '../lib/storage';
-import Header from './Header';
-import Footer from './Footer';
+
+
 import Settings from './Settings';
 import GuessInputRow from './GuessInputRow';
 import RowHistory from './RowHistory';
@@ -240,11 +241,19 @@ export default function Game() {
   useEffect(() => {
     // Don't redirect for archive puzzles or random puzzles
     const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-    if (gameState.gameStatus === 'won' && !showWinAnimation && !localStorage.getItem('wordibble-puzzle-completed') && !settings.randomPuzzle && !isArchivePuzzle) {
+    
+    // Check if this is a fresh win (not restored from localStorage)
+    // Use a puzzle-specific completion key to avoid conflicts
+    const puzzleCompletionKey = `wordibble-puzzle-completed-${gameState.secretWord}-${router.query.date || 'today'}`;
+    const isFreshWin = !localStorage.getItem(puzzleCompletionKey);
+    
+    if (gameState.gameStatus === 'won' && !showWinAnimation && !settings.randomPuzzle && !isArchivePuzzle) {
       setShowWinAnimation(true);
       
-      // Mark puzzle as completed to prevent future redirects
-      localStorage.setItem('wordibble-puzzle-completed', 'true');
+      // Only mark as completed for fresh wins to prevent redirect loops
+      if (isFreshWin) {
+        localStorage.setItem(puzzleCompletionKey, 'true');
+      }
       
       // DO NOT set lockedLetters immediately - wait for flip animation to complete
       // This prevents the top input row from turning green prematurely
@@ -288,10 +297,28 @@ export default function Game() {
         // This ensures the nice animation effect regardless of the lockGreenMatchedLetters setting
         setShowFadeInForInput(true);
         
-        // Wait 1.5 seconds after the clue text changes to win text, then redirect to stats
-        setTimeout(() => {
-          router.push('/stats');
-        }, 1500);
+        // Wait 2 seconds after the win animation completes, then redirect to stats with fade transition
+        // Only redirect for fresh wins, not restored wins
+        if (isFreshWin) {
+          console.log('🎯 Fresh win detected - will redirect to stats in 2 seconds');
+          setTimeout(() => {
+            console.log('🔄 Starting fade transition to stats...');
+            // Add fade out effect before redirecting
+            const gameContainer = document.querySelector('.game-container');
+            if (gameContainer) {
+              gameContainer.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+              setTimeout(() => {
+                console.log('🚀 Redirecting to stats page');
+                router.push('/stats');
+              }, 500);
+            } else {
+              console.log('⚠️ Game container not found, redirecting immediately');
+              router.push('/stats');
+            }
+          }, 2000);
+        } else {
+          console.log('📋 Restored win - no redirect to stats');
+        }
       }, totalAnimationTime);
     }
   }, [gameState.gameStatus, showWinAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
@@ -965,6 +992,15 @@ export default function Game() {
       delete all[puzzleId];
       saveAll(all);
       
+      // Clear dynamic puzzle completion keys for this specific puzzle
+      const puzzleCompletionKey = `wordibble-puzzle-completed-${gameState.secretWord}-${dateISO}`;
+      localStorage.removeItem(puzzleCompletionKey);
+      
+      // If this is the current puzzle, also clear the last played reference
+      if (puzzleId === getLastPlayed()) {
+        localStorage.removeItem('wordibble:lastPlayed:v2');
+      }
+      
       // Also clear old localStorage for backward compatibility
       localStorage.removeItem('wordibble-puzzle-state');
       localStorage.removeItem('wordibble-puzzle-completed');
@@ -997,7 +1033,7 @@ export default function Game() {
         queueFocusFirstEmpty();
       }, 100);
     }
-  }, [gameState.wordLength, queueFocusFirstEmpty, router.query.date, router.query.archive, router.query.length, settings.wordLength]);
+  }, [gameState.wordLength, gameState.secretWord, queueFocusFirstEmpty, router.query.date, router.query.archive, router.query.length, settings.wordLength]);
 
   // Clear ALL Wordibble data and reset to factory defaults
   const clearAllWordibbleData = useCallback(() => {
@@ -1006,11 +1042,26 @@ export default function Game() {
       saveAll({});
       localStorage.removeItem('wordibble:lastPlayed:v2');
       
+      // Clear current stats
+      localStorage.removeItem('wordibble:stats:v1');
+      
+      // Clear current settings
+      localStorage.removeItem('wordibble-settings');
+      
+      // Clear dynamic puzzle completion keys (these are puzzle-specific)
+      // We need to clear all keys that match the pattern wordibble-puzzle-completed-*
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('wordibble-puzzle-completed-')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
       // Also clear old localStorage for backward compatibility
       localStorage.removeItem('wordibble-puzzle-state');
       localStorage.removeItem('wordibble-puzzle-completed');
-      localStorage.removeItem('wordibble-settings');
-      localStorage.removeItem('wordibble:stats:v1');
       localStorage.removeItem('wordibble-debug-mode');
       
       // Reset to factory defaults instead of reloading
@@ -1491,12 +1542,7 @@ export default function Game() {
   const attemptsLeft = settings.maxGuesses - gameState.attemptIndex;
 
   return (
-    <div className="min-h-screen flex flex-col">
-              <Header 
-          onSettingsClick={() => setIsSettingsOpen(true)} 
-          onShareClick={gameState.gameStatus !== 'playing' ? generateAndShareEmojiGrid : undefined}
-        />
-      
+    <div className="min-h-screen flex flex-col game-container">
       <main className="flex-1 py-4 md:py-8 px-4">
         <div className="max-w-md mx-auto">
         {/* Clue Ribbon - Handles all message types */}
@@ -1696,22 +1742,10 @@ export default function Game() {
         </div>
       </main>
 
-      <Footer />
+
       
 
-      {isSettingsOpen && (
-        <Settings
-          isOpen={isSettingsOpen}
-          onClose={() => {
-            setIsSettingsOpen(false);
-            setSettingsOpenedFromClue(false);
-          }}
-          onSettingsChange={handleSettingsChange}
-          currentSettings={settings}
-          debugMode={debugMode}
-          openedFromClue={settingsOpenedFromClue}
-        />
-      )}
+      {/* Settings modal now handled by Layout component */}
 
       {/* Toasts */}
       {toasts.map((toast) => (
