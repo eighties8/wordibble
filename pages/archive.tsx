@@ -57,6 +57,19 @@ export default function ArchivePage() {
 
   const hasPlayedPuzzle = (date: Date) => {
     try {
+      // Check the new puzzle storage system first
+      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
+      if (puzzles) {
+        const puzzlesData = JSON.parse(puzzles);
+        const dateString = formatDateKey(date);
+        
+        // Check if any puzzles exist for this date (any word length)
+        return Object.values(puzzlesData).some((puzzle: any) => 
+          puzzle.dateISO === dateString && puzzle.gameStatus === 'won'
+        );
+      }
+      
+      // Fallback to old stats system for backward compatibility
       const stats = localStorage.getItem('wordibble:stats:v1');
       if (!stats) return false;
       
@@ -164,7 +177,7 @@ export default function ArchivePage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <p className="text-gray-600 text-center mb-8">
-          Play puzzles since August 24, 2025
+          Play puzzles since August 25, 2025
         </p>
 
         {/* Calendar Navigation */}

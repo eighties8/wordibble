@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+
+
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { GAME_CONFIG, ANIMATION_CONFIG } from '../lib/config';
 import { GameState, Toast } from '../lib/types';
@@ -324,10 +326,21 @@ export default function Game() {
     //   return;
     // }
 
-    // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
+    // Calculate puzzle number based on the actual puzzle date, not current date
     const startDate = new Date('2025-08-25');
-    const today = new Date();
-    const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    let puzzleDate: Date;
+    
+    if (router.query.date && router.query.archive === 'true') {
+      // For archive puzzles, use the puzzle's date
+      const dateString = router.query.date as string;
+      const [year, month, day] = dateString.split('-').map(Number);
+      puzzleDate = new Date(year, month - 1, day);
+    } else {
+      // For daily puzzles, use current date
+      puzzleDate = new Date();
+    }
+    
+    const daysDiff = Math.floor((puzzleDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const puzzleNumber = daysDiff + 1;
 
     // Generate emoji grid from game state
@@ -337,9 +350,7 @@ export default function Game() {
     gameState.attempts.forEach((attempt, attemptIndex) => {
       let row = '';
       const evaluations = evaluateGuess(attempt, gameState.secretWord);
-      
-      console.log(`🔍 Emoji grid evaluation for "${attempt}" vs "${gameState.secretWord}":`, evaluations);
-      
+            
       for (let i = 0; i < gameState.wordLength; i++) {
         const letter = attempt[i];
         const evaluation = evaluations[i];
@@ -562,84 +573,35 @@ export default function Game() {
           : settings.wordLength;
 
         // After loading puzzle, check if we have saved state to restore
-        if (!hasRestoredFromStorage.current) {
-          let dateISO: string;
-          let wordLength: WordLength;
-          
-          if (router.query.date && router.query.archive === 'true') {
-            // Parse the date string directly to avoid timezone issues
-            const dateString = router.query.date as string;
-            const [year, month, day] = dateString.split('-').map(Number);
-            const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
-            dateISO = toDateISO(archiveDate);
-            wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
-          } else {
-            dateISO = toDateISO(new Date());
-            wordLength = settings.wordLength as WordLength;
-          }
-          
-          const puzzleId = makePuzzleId(dateISO, wordLength);
-          const savedState = getPuzzle(puzzleId);
-          
-          console.log('🔄 Checking for saved state:', {
-            puzzleId,
-            hasSavedState: !!savedState,
-            attempts: savedState?.attempts?.length || 0,
-            gameStatus: savedState?.gameStatus,
-            shouldRestore: savedState && (savedState.attempts.length > 0 || savedState.gameStatus !== 'playing')
-          });
-          
-          // Only restore if we have meaningful saved state
-          if (savedState && (savedState.attempts.length > 0 || savedState.gameStatus !== 'playing')) {
-            // Convert revealedLetters from Set to Record for compatibility
-            const revealedLettersRecord: Record<number, string> = {};
-            if (savedState.revealedLetters) {
-              Object.entries(savedState.revealedLetters).forEach(([key, value]) => {
-                const numericKey = parseInt(key, 10);
-                if (!isNaN(numericKey)) {
-                  revealedLettersRecord[numericKey] = value;
-                }
-              });
-            }
-            
-            const restoredGameState: GameState = {
-              wordLength: savedState.wordLength,
-              secretWord: puzzle.word, // Use the actual puzzle word, not saved word
-              clue: settings.revealClue ? puzzle.clue : undefined,
-              attempts: savedState.attempts,
-              lockedLetters: savedState.lockedLetters,
-              gameStatus: savedState.gameStatus,
-              attemptIndex: savedState.attemptIndex,
-              revealedLetters: new Set(Object.keys(revealedLettersRecord).map(Number)),
-              letterRevealsRemaining: savedState.letterRevealsRemaining,
-            };
-            
-            setGameState(restoredGameState);
-            
-            // For won games, ensure currentGuess shows the solution
-            if (restoredGameState.gameStatus === 'won' && restoredGameState.lockedLetters) {
-              const solutionGuess = Array.from({ length: restoredGameState.wordLength }, (_, i) => 
-                restoredGameState.lockedLetters[i] || ''
-              );
-              setCurrentGuess(solutionGuess);
-            } else {
-              setCurrentGuess(savedState.currentGuess || new Array(savedState.wordLength).fill(''));
-            }
-            
-            // Restore animation states to preserve exact visual appearance
-            if (savedState.gameStatus !== 'playing') {
-              setShowWinAnimation(savedState.showWinAnimation || false);
-              setWinAnimationComplete(savedState.winAnimationComplete || false);
-              setShowLossAnimation(savedState.showLossAnimation || false);
-              setLossAnimationComplete(savedState.lossAnimationComplete || false);
-              setShowFadeInForInput(savedState.showFadeInForInput || false);
-              setFadeOutClearInput(savedState.fadeOutClearInput || false);
-              setPreviouslyRevealedPositions(new Set(savedState.previouslyRevealedPositions || []));
-            }
-            
-            hasRestoredFromStorage.current = true;
-          } else {
-            // No saved state, set up fresh game
+        let dateISO: string;
+        let wordLength: WordLength;
+        
+        if (router.query.date && router.query.archive === 'true') {
+          // Parse the date string directly to avoid timezone issues
+          const dateString = router.query.date as string;
+          const [year, month, day] = dateString.split('-').map(Number);
+          const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
+          dateISO = toDateISO(archiveDate);
+          wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
+        } else {
+          dateISO = toDateISO(new Date());
+          wordLength = settings.wordLength as WordLength;
+        }
+        
+        const puzzleId = makePuzzleId(dateISO, wordLength);
+        const savedState = getPuzzle(puzzleId);
+        
+        // Only restore if we have meaningful saved state AND it's for the same puzzle
+        if (savedState && (savedState.attempts.length > 0 || savedState.gameStatus !== 'playing')) {
+          // CRITICAL: Only restore if the saved state matches the current puzzle
+          if (savedState.secretWord !== puzzle.word) {
+            console.warn('⚠️ Saved state mismatch - not restoring:', {
+              savedStateSecretWord: savedState.secretWord,
+              currentPuzzleWord: puzzle.word,
+              puzzleId,
+              isArchivePuzzle: router.query.date && router.query.archive === 'true'
+            });
+            // Don't restore mismatched state - start fresh
             setGameState((prev) => ({
               ...prev,
               wordLength: puzzleWordLength,
@@ -649,18 +611,91 @@ export default function Game() {
               revealedLetters: new Set<number>(),
               letterRevealsRemaining: 1,
             }));
+            
+            // Mark this route as hydrated and track which puzzle the state belongs to
+            activePuzzleIdRef.current = puzzleId;
+            hydratedForRouteRef.current = true;
+            
+            setCurrentGuess(new Array(puzzleWordLength).fill(''));
+            hasRestoredFromStorage.current = true;
+            return;
           }
+          
+          // Convert revealedLetters from Set to Record for compatibility
+          const revealedLettersRecord: Record<number, string> = {};
+          if (savedState.revealedLetters) {
+            Object.entries(savedState.revealedLetters).forEach(([key, value]) => {
+              const numericKey = parseInt(key, 10);
+              if (!isNaN(numericKey)) {
+                revealedLettersRecord[numericKey] = value;
+              }
+            });
+          }
+          
+          const restoredGameState: GameState = {
+            wordLength: savedState.wordLength,
+            secretWord: puzzle.word, // Use the actual puzzle word, not saved word
+            clue: settings.revealClue ? puzzle.clue : undefined,
+            attempts: savedState.attempts,
+            lockedLetters: savedState.lockedLetters,
+            gameStatus: savedState.gameStatus,
+            attemptIndex: savedState.attemptIndex,
+            revealedLetters: new Set(Object.keys(revealedLettersRecord).map(Number)),
+            letterRevealsRemaining: savedState.letterRevealsRemaining,
+          };
+          
+          setGameState(restoredGameState);
+          
+          // Mark this route as hydrated and track which puzzle the state belongs to
+          activePuzzleIdRef.current = puzzleId;
+          hydratedForRouteRef.current = true;
+          
+          // For won games, ensure currentGuess shows the solution and restore animation states
+          if (restoredGameState.gameStatus === 'won' && restoredGameState.lockedLetters) {
+            const solutionGuess = Array.from({ length: restoredGameState.wordLength }, (_, i) => 
+              restoredGameState.lockedLetters[i] || ''
+            );
+            setCurrentGuess(solutionGuess);
+            setShowWinAnimation(savedState.showWinAnimation || false);
+            setWinAnimationComplete(savedState.winAnimationComplete || false);
+            setShowLossAnimation(savedState.showLossAnimation || false);
+            setLossAnimationComplete(savedState.lossAnimationComplete || false);
+            setShowFadeInForInput(savedState.showFadeInForInput || false);
+            setFadeOutClearInput(savedState.fadeOutClearInput || false);
+            setPreviouslyRevealedPositions(new Set(savedState.previouslyRevealedPositions || []));
+          } else {
+            setCurrentGuess(savedState.currentGuess || new Array(savedState.wordLength).fill(''));
+          }
+          
+          hasRestoredFromStorage.current = true;
         } else {
-          // Already restored, just update with puzzle data
+          // No saved state, set up fresh game
+          
           setGameState((prev) => ({
             ...prev,
             wordLength: puzzleWordLength,
             secretWord: puzzle.word,
             clue: settings.revealClue ? puzzle.clue : undefined,
-            lockedLetters: Object.keys(prev.lockedLetters).length > 0 ? prev.lockedLetters : lockedLetters,
+            lockedLetters,
             revealedLetters: new Set<number>(),
             letterRevealsRemaining: 1,
           }));
+          
+          // Mark this route as hydrated and track which puzzle the state belongs to
+          activePuzzleIdRef.current = puzzleId;
+          hydratedForRouteRef.current = true;
+          
+          setCurrentGuess(new Array(puzzleWordLength).fill(''));
+          setFlippingRows(new Set());
+          setShowWinAnimation(false);
+          setWinAnimationComplete(false);
+          setShowLossAnimation(false);
+          setLossAnimationComplete(false);
+          setShowFadeInForInput(false);
+          setFadeOutClearInput(false);
+          setPreviouslyRevealedPositions(new Set());
+          
+          hasRestoredFromStorage.current = false;
         }
         
         setDictionary(dict);
@@ -703,89 +738,201 @@ export default function Game() {
 
   // ===== Puzzle State Persistence =====
   const hasRestoredFromStorage = useRef(false);
+  
+  // Helper function to get the expected secret word synchronously
+  function getExpectedSecretSync(dateISO: string, wordLength: WordLength): string | null {
+    // TODO: Implement actual puzzle lookup from your data
+    // For now, return null to disable this validation until you implement the lookup
+    // Example: look up in your preloaded puzzles map
+    // const entry = puzzlesByLength[wordLength]?.find(p => p.date === dateISO);
+    // return entry?.word ?? null;
+    return null; // <- replace with your real lookup
+  }
+  
+  // Reset restoration flag when route changes (e.g., navigating between puzzles)
+  useEffect(() => {
+    hasRestoredFromStorage.current = false;
+  }, [router.query.date, router.query.archive, router.query.length]);
+
+  // Build the active "route puzzle" from the URL (archive) or today (daily)
+  const isArchiveRoute =
+    router.isReady &&
+    router.query.archive === 'true' &&
+    typeof router.query.date === 'string';
+
+  const routePuzzle = React.useMemo(() => {
+    if (!router.isReady) return null;
+
+    if (isArchiveRoute) {
+      // Parse the date string directly to avoid timezone issues (same logic as puzzle loading)
+      const dateString = router.query.date as string;
+      const [year, month, day] = dateString.split('-').map(Number);
+      const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
+      const dateISO = toDateISO(archiveDate);
+      const wl = Number(router.query.length) || (settings.wordLength as number);
+      return { id: makePuzzleId(dateISO, wl as WordLength), dateISO, wordLength: wl as WordLength, isArchive: true as const };
+    }
+
+    const todayISO = toDateISO(new Date());
+    const wl = settings.wordLength as number;
+    return { id: makePuzzleId(todayISO, wl as WordLength), dateISO: todayISO, wordLength: wl as WordLength, isArchive: false as const };
+  }, [router.isReady, router.query.archive, router.query.date, router.query.length, settings.wordLength]);
+
+  // Ref that says: "the in-memory gameState belongs to THIS puzzle id"
+  const activePuzzleIdRef = useRef<string>('');
+  
+  // Ref that says: "we have finished hydrating/initializing state for this route"
+  const hydratedForRouteRef = useRef(false);
+
+  // When route changes, block saving until we hydrate for that route
+  useEffect(() => {
+    hydratedForRouteRef.current = false;
+  }, [routePuzzle?.id]);
+
+  // Also add this tiny effect so route changes don't leave stale refs
+  useEffect(() => {
+    if (!routePuzzle) return;
+    activePuzzleIdRef.current = routePuzzle.id;
+  }, [routePuzzle?.id]);
 
   // Save puzzle state to localStorage
   useEffect(() => {
-    if (gameState.secretWord && !settings.randomPuzzle) {
-      const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-      
-      let dateISO: string;
-      let wordLength: WordLength;
-      
-      if (isArchivePuzzle) {
-        // For archive puzzles, use the query date and length
-        const archiveDate = new Date(router.query.date as string);
-        dateISO = toDateISO(archiveDate);
-        wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
-      } else {
-        // For daily puzzles, use today's date
-        dateISO = toDateISO(new Date());
-        wordLength = settings.wordLength as WordLength;
+    if (!router.isReady || !routePuzzle) return;
+
+    // Quick debug to confirm values line up while pressing Enter on archive puzzle
+    // console.log('[SAVE GUARDS]', {
+    //   isReady: router.isReady,
+    //   routePuzzle,
+    //   activeId: activePuzzleIdRef.current,
+    //   hydrated: hydratedForRouteRef.current,
+    //   secret: gameState.secretWord,
+    //   status: gameState.gameStatus,
+    // });
+
+    // Must be hydrated for this route and state must belong to this route
+    if (!hydratedForRouteRef.current) return;
+    if (activePuzzleIdRef.current !== routePuzzle.id) return;
+
+    // --- IMPORTANT: Don't block on randomPuzzle when saving archives or daily.
+    // If you still want the flag, gate only the DAILY case; archives should save.
+    // if (!routePuzzle.isArchive && settings.randomPuzzle) return;
+
+    // Optional "expected secret" check should run only for DAILY, not ARCHIVE.
+    if (!routePuzzle.isArchive && typeof getExpectedSecretSync === 'function') {
+      const expected = getExpectedSecretSync(routePuzzle.dateISO, routePuzzle.wordLength);
+      if (expected && expected.toUpperCase() !== (gameState.secretWord || '').toUpperCase()) {
+        return; // still mismatched during route change; skip this save tick
       }
-      
-      // Only save if we have meaningful data to save
-      // For won games, ensure we have attempts and lockedLetters
-      if (gameState.gameStatus === 'won' && (gameState.attempts.length === 0 || Object.keys(gameState.lockedLetters).length === 0)) {
-        // Don't save incomplete won state - wait for animation to complete
-        return;
-      }
-      
-      // Convert revealedLetters from Set to Record for storage
-      const revealedLettersRecord: Record<number, string> = {};
-      gameState.revealedLetters.forEach(position => {
-        if (gameState.secretWord[position]) {
-          revealedLettersRecord[position] = gameState.secretWord[position];
-        }
-      });
-      
-      // For won games, ensure lockedLetters contain the full solution
-      let finalLockedLetters: Record<number, string> = {};
-      Object.entries(gameState.lockedLetters).forEach(([key, value]) => {
-        if (value !== null) {
-          finalLockedLetters[parseInt(key, 10)] = value;
-        }
-      });
-      
-      if (gameState.gameStatus === 'won' && gameState.secretWord) {
-        finalLockedLetters = Object.fromEntries(
-          Array.from({ length: gameState.wordLength }, (_, i) => [i, gameState.secretWord[i]])
-        );
-      }
-      
-      const puzzleState: PuzzleStateV2 = {
-        id: makePuzzleId(dateISO, wordLength),
-        dateISO,
-        wordLength,
-        secretWord: gameState.secretWord,
-        attempts: gameState.attempts,
-        lockedLetters: finalLockedLetters,
-        revealedLetters: revealedLettersRecord,
-        letterRevealsRemaining: gameState.letterRevealsRemaining,
-        gameStatus: gameState.gameStatus,
-        attemptIndex: gameState.attemptIndex,
-        currentGuess,
-        completedAt: gameState.gameStatus !== 'playing' ? new Date().toISOString() : undefined,
-        // Preserve animation states for exact visual restoration
-        showWinAnimation,
-        winAnimationComplete,
-        showLossAnimation,
-        lossAnimationComplete,
-        showFadeInForInput,
-        fadeOutClearInput,
-        previouslyRevealedPositions: Array.from(previouslyRevealedPositions),
-      };
-      
-      console.log('💾 Saving puzzle state:', {
-        id: puzzleState.id,
-        gameStatus: puzzleState.gameStatus,
-        attempts: puzzleState.attempts,
-        lockedLetters: puzzleState.lockedLetters,
-        winAnimationComplete
-      });
-      
-      upsertPuzzle(puzzleState);
     }
-  }, [gameState.secretWord, gameState.attempts, gameState.attemptIndex, winAnimationComplete, currentGuess, settings.randomPuzzle, router.query.date, router.query.archive, router.query.length, gameState.lockedLetters, gameState.revealedLetters, gameState.letterRevealsRemaining, gameState.gameStatus, settings.wordLength, showWinAnimation, showLossAnimation, lossAnimationComplete, showFadeInForInput, fadeOutClearInput, previouslyRevealedPositions]);
+
+    // For WINS, avoid saving half-populated state while animations finish
+    if (
+      gameState.gameStatus === 'won' &&
+      (gameState.attempts.length === 0 || Object.keys(gameState.lockedLetters).length === 0)
+    ) {
+      return;
+    }
+
+    // ---- Build storage payload STRICTLY from routePuzzle for id/date/length ----
+    const { id, dateISO, wordLength } = routePuzzle;
+
+    // Convert revealedLetters Set -> Record
+    const revealedLettersRecord: Record<number, string> = {};
+    gameState.revealedLetters.forEach((pos) => {
+      if (gameState.secretWord[pos]) revealedLettersRecord[pos] = gameState.secretWord[pos];
+    });
+
+    // Normalize locked letters; if won, force full solution
+    let finalLocked: Record<number, string> = {};
+    for (const [k, v] of Object.entries(gameState.lockedLetters)) {
+      if (v != null) finalLocked[parseInt(k, 10)] = v;
+    }
+    if (gameState.gameStatus === 'won' && gameState.secretWord) {
+      finalLocked = Object.fromEntries(
+        Array.from({ length: gameState.wordLength }, (_, i) => [i, gameState.secretWord[i]])
+      );
+    }
+
+    const puzzleState: PuzzleStateV2 = {
+      id,                 // <--- use routePuzzle.id (e.g. "2025-08-25:5")
+      dateISO,            // <--- use routePuzzle.dateISO
+      wordLength,         // <--- use routePuzzle.wordLength
+      secretWord: gameState.secretWord,
+      attempts: gameState.attempts,
+      lockedLetters: finalLocked,
+      revealedLetters: revealedLettersRecord,
+      letterRevealsRemaining: gameState.letterRevealsRemaining,
+      gameStatus: gameState.gameStatus,
+      attemptIndex: gameState.attemptIndex,
+      currentGuess,
+      completedAt: gameState.gameStatus !== 'playing' ? new Date().toISOString() : undefined,
+
+      // animation flags you already store:
+      showWinAnimation,
+      winAnimationComplete,
+      showLossAnimation,
+      lossAnimationComplete,
+      showFadeInForInput,
+      fadeOutClearInput,
+      previouslyRevealedPositions: Array.from(previouslyRevealedPositions),
+    };
+
+    // console.log('💾 Saving puzzle state:', {
+    //   id: puzzleState.id,
+    //   dateISO,
+    //   wordLength,
+    //   isArchive: routePuzzle.isArchive,
+    //   routeId: routePuzzle.id,
+    //   gameStateSecretWord: gameState.secretWord,
+    //   gameStateAttempts: gameState.attempts,
+    //   gameStatus: puzzleState.gameStatus,
+    //   attempts: puzzleState.attempts,
+    //   lockedLetters: puzzleState.lockedLetters,
+    //   winAnimationComplete
+    // });
+
+    upsertPuzzle(puzzleState);
+  }, [
+    router.isReady,
+    routePuzzle?.id,            // include the routed id so effect re-evaluates on route change
+    routePuzzle?.dateISO,
+    routePuzzle?.wordLength,
+    // game progress deps:
+    gameState.secretWord,
+    gameState.attempts,
+    gameState.attemptIndex,
+    gameState.lockedLetters,
+    gameState.revealedLetters,
+    gameState.letterRevealsRemaining,
+    gameState.gameStatus,
+    // ui flags you persist:
+    winAnimationComplete,
+    showWinAnimation,
+    showLossAnimation,
+    lossAnimationComplete,
+    showFadeInForInput,
+    fadeOutClearInput,
+    // current input:
+    currentGuess,
+  ]);
+
+  // Belt-and-suspenders: force one immediate save when a puzzle transitions to WON
+  // Sometimes the state after a route switch doesn't change again post-win (no dependency tick).
+  // This tiny effect guarantees one save on the status transition:
+  const saveNowRef = useRef<null | (() => void)>(null);
+  saveNowRef.current = () => {
+    // call the same builder used in the save effect with current routePuzzle/gameState
+    // (or just rely on the effect—your call)
+  };
+
+  useEffect(() => {
+    if (gameState.gameStatus === 'won') {
+      // Kick a microtask so locks/reveals have landed
+      queueMicrotask(() => {
+        // optionally: saveNowRef.current?.();
+      });
+    }
+  }, [gameState.gameStatus]);
 
   // ===== Toast helpers =====
   const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
@@ -1359,10 +1506,21 @@ export default function Game() {
               return `Loss: ${gameState.secretWord}`;
             } else if (gameState.gameStatus === 'won') {
               // Show win message when game is won (either after animation or when restored from localStorage)
-              // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
+              // Calculate puzzle number based on the actual puzzle date, not current date
               const startDate = new Date('2025-08-25');
-              const today = new Date();
-              const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+              let puzzleDate: Date;
+              
+              if (router.query.date && router.query.archive === 'true') {
+                // For archive puzzles, use the puzzle's date
+                const dateString = router.query.date as string;
+                const [year, month, day] = dateString.split('-').map(Number);
+                puzzleDate = new Date(year, month - 1, day);
+              } else {
+                // For daily puzzles, use current date
+                puzzleDate = new Date();
+              }
+              
+              const daysDiff = Math.floor((puzzleDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
               const puzzleNumber = daysDiff + 1;
               return `Solved! Wordibble #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
             } else if (clueError) {
@@ -1371,7 +1529,7 @@ export default function Game() {
               return gameState.clue || '';
             }
           })()}
-          targetWord={debugMode ? gameState.clue || '' : undefined}
+          targetWord={debugMode ? gameState.secretWord : undefined}
           onRevealLetter={handleRevealLetter}
           letterRevealsRemaining={gameState.letterRevealsRemaining}
           onSettingsClick={() => {
