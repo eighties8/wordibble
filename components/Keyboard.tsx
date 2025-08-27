@@ -1,24 +1,30 @@
 import React from 'react';
-import { AArrowDown, Bot, Delete } from 'lucide-react';
+import { AArrowDown, Delete } from 'lucide-react';
 
 interface Props {
   onKeyPress: (key: string) => void;
   onEnter: () => void;
   onBackspace: () => void;
   letterStates: Record<string, 'correct' | 'present' | 'absent'>;
-  revealedLetters?: Set<string>; // Letters revealed by lifeline
+  revealedLetters?: Set<string>;
 }
 
-export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterStates, revealedLetters }: Props) {
-  const rows = [
+export default function Keyboard({
+  onKeyPress,
+  onEnter,
+  onBackspace,
+  letterStates,
+  revealedLetters,
+}: Props) {
+  const rows: string[][] = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
     ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'BACKSPACE'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER']
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER'],
   ];
 
   const getKeyColor = (key: string) => {
-    if (key === 'ENTER' || key === 'BACKSPACE') return 'bg-gray-600 hover:bg-gray-500 active:bg-gray-700 !text-white';
-    
+    if (key === 'ENTER' || key === 'BACKSPACE')
+      return 'bg-gray-600 hover:bg-gray-500 active:bg-gray-700 !text-white';
     const state = letterStates[key];
     switch (state) {
       case 'correct':
@@ -32,62 +38,77 @@ export default function Keyboard({ onKeyPress, onEnter, onBackspace, letterState
     }
   };
 
-  const getKeyClasses = (key: string) => {
-    const baseClasses = [
-      'px-1.5 py-4 md:px-3 md:py-4 rounded font-semibold text-white transition-colors touch-manipulation',
-      'text-center flex items-center justify-center',
-      'h-12 md:h-12 lg:h-14', // Explicit height for all keys
-      getKeyColor(key)
-    ];
-    
-    if (key === 'ENTER') {
-      baseClasses.push('flex-1 min-w-0'); // Make ENTER key fill remaining space
-    } else if (key === 'BACKSPACE') {
-      baseClasses.push('min-w-[64px] md:min-w-[96px]'); // Wider for backspace
+  // Mobile (default): 10-col grid; md+: flex like you had before
+  const getRowClasses = () =>
+    'w-full max-w-[520px] grid grid-cols-10 gap-0.5 md:gap-1 md:flex md:justify-center';
+
+  // Wrapper around each button:
+  // - Mobile: it’s the grid cell. We give ENTER col-span-3 on the last row, else col-span-1.
+  // - md+: we revert to your flex min widths and ENTER grows.
+  const getWrapperClasses = (key: string, rowIndex: number) => {
+    const base = ['relative'];
+
+    // MOBILE (grid)
+    if (key === 'ENTER' && rowIndex === 2) {
+      base.push('col-span-3'); // take remaining space on bottom row (7 letters + 3 = 10)
     } else {
-      baseClasses.push('min-w-[32px] md:min-w-[48px]'); // Standard width for letter keys
+      base.push('col-span-1'); // one column per key
     }
-    
-    return baseClasses.join(' ');
+
+    // DESKTOP/TABLET (md+ fallback to flex widths)
+    if (key === 'ENTER') {
+      base.push('md:flex md:flex-1 md:basis-0'); // grow on md+
+    } else if (key === 'BACKSPACE') {
+      base.push('md:flex md:min-w-[64px]'); // wider on md+
+    } else {
+      base.push('md:flex md:min-w-[48px]'); // standard letter min-width on md+
+    }
+
+    return base.join(' ');
   };
+
+  const getButtonClasses = (key: string) =>
+    [
+      'w-full', // fill the grid cell / flex wrapper
+      'px-1.5 py-4 md:px-3 md:py-4 rounded font-semibold transition-colors touch-manipulation',
+      'text-center flex items-center justify-center',
+      'h-12 md:h-12 lg:h-14',
+      getKeyColor(key),
+    ].join(' ');
 
   const getKeyContent = (key: string) => {
     if (key === 'BACKSPACE') return <Delete className="w-5 h-5" />;
     if (key === 'ENTER') return 'ENTER';
-    
-    const state = letterStates[key];
-    if (state === 'absent') {
-      return <span className="line-through-custom">{key}</span>;
-    }
-    return key;
+    return letterStates[key] === 'absent' ? (
+      <span className="line-through-custom">{key}</span>
+    ) : (
+      key
+    );
   };
 
   const handleKeyClick = (key: string) => {
-    if (key === 'ENTER') {
-      onEnter();
-    } else if (key === 'BACKSPACE') {
-      onBackspace();
-    } else {
-      onKeyPress(key);
-    }
+    if (key === 'ENTER') onEnter();
+    else if (key === 'BACKSPACE') onBackspace();
+    else onKeyPress(key);
   };
 
   return (
-    <div className="mt-4 md:mt-8 space-y-2 md:space-y-2 select-none">
+    <div className="mt-4 md:mt-8 space-y-2 select-none">
       {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex justify-center gap-0.5 md:gap-1">
+        <div key={rowIndex} className={getRowClasses()}>
           {row.map((key) => (
-            <div key={key} className="relative">
+            <div key={key} className={getWrapperClasses(key, rowIndex)}>
               <button
+                type="button"
                 onClick={() => handleKeyClick(key)}
-                onTouchStart={() => {}} // Ensure touch events work
-                className={getKeyClasses(key)}
+                onTouchStart={() => {}}
+                className={getButtonClasses(key)}
               >
                 {getKeyContent(key)}
               </button>
-              {/* Bot icon badge for revealed letters */}
+
               {revealedLetters?.has(key) && (
-                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-green-500 rounded-full p-0.5">
+                <div className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 transform bg-green-500 rounded-full p-0.5">
                   <AArrowDown className="w-4 h-4 text-white" />
                 </div>
               )}

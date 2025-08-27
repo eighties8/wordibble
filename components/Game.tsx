@@ -1364,14 +1364,14 @@ export default function Game() {
               const today = new Date();
               const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
               const puzzleNumber = daysDiff + 1;
-              return `Win! Nice. Wordibble #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
+              return `Solved! Wordibble #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
             } else if (clueError) {
               return clueError;
             } else {
               return gameState.clue || '';
             }
           })()}
-          targetWord={debugMode ? gameState.secretWord : undefined}
+          targetWord={debugMode ? gameState.clue || '' : undefined}
           onRevealLetter={handleRevealLetter}
           letterRevealsRemaining={gameState.letterRevealsRemaining}
           onSettingsClick={() => {
@@ -1384,6 +1384,11 @@ export default function Game() {
             if (clueError) return 'error'; // Return 'error' variant for different styling
             return 'clue';
           })()}
+          guessesText={gameState.gameStatus === 'playing' ? (
+            gameState.attemptIndex === 0 
+              ? `Guess the word in ${attemptsLeft} tries`
+              : `${attemptsLeft} guesses left`
+          ) : undefined}
         />
           {/* Debug: Show clue info */}
           {debugMode && (
@@ -1450,18 +1455,10 @@ export default function Game() {
             })}
           </div>
 
-          {/* Guesses Left */}
-          {gameState.gameStatus === 'playing' && (
+          {/* Debug info - moved from old Guesses Left section */}
+          {debugMode && (
             <div className="text-center mb-4">
-              <span className="text-gray-900 text-lg">
-                {gameState.attemptIndex === 0 
-                  ? `Guess the word in ${attemptsLeft} tries`
-                  : `${attemptsLeft} guesses left`
-                }
-              </span>
-              {debugMode && (
-                <span className="ml-3 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">DEBUG</span>
-              )}
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">DEBUG</span>
             </div>
           )}
 

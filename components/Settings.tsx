@@ -125,7 +125,12 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
               <p className="text-xs text-gray-500">Show vowel positions at the start</p>
             </div>
             <button
-              onClick={() => setSettings(prev => ({ ...prev, revealVowels: !prev.revealVowels }))}
+              onClick={() => setSettings(prev => ({ 
+                ...prev, 
+                revealVowels: !prev.revealVowels,
+                // Auto-set to max vowel count when enabling
+                revealVowelCount: !prev.revealVowels ? 3 : prev.revealVowelCount
+              }))}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.revealVowels ? 'bg-green-600' : 'bg-gray-200'
               }`}

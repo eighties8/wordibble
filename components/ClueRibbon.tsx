@@ -6,10 +6,11 @@ interface Props {
   onRevealLetter?: () => void;
   letterRevealsRemaining?: number;
   onSettingsClick?: () => void;
-  variant?: 'clue' | 'error' | 'success' | 'solution'; // Add this line
+  variant?: 'clue' | 'error' | 'success' | 'solution';
+  guessesText?: string;
 }
 
-export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick, variant = 'clue' }: Props) {
+export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick, variant = 'clue', guessesText }: Props) {
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
@@ -19,9 +20,8 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
         </svg>
       </div>
       
-      {/* Speech Bubble - Maintain consistent green background for all variants */}
-      {/* <div className={`clue-ribbon relative shadow-md rounded-lg pl-4 bg-green-500 text-white`}> */}
-      <div className={`clue-ribbon relative shadow-md rounded-lg pl-3 transition-all duration-500 ease-in-out ${
+      {/* Speech Bubble - Use passed variant for background */}
+      <div className={`clue-ribbon relative shadow-md rounded-lg pl-3 pr-3 transition-all duration-500 ease-in-out ${
           variant === 'error' ? 'bg-red-500' : variant === 'success' ? 'bg-green-500' : 'bg-gray-500'
         } text-white`}>
         <div className="text-sm flex items-center justify-between gap-2">
@@ -30,21 +30,35 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
               <>
                 {clue.startsWith('Sovled! Wordibble #') && <PartyPopper className="w-5 h-5 text-white animate-pulse" />}
                 {clue.startsWith('Loss:') && <HeartCrack className="w-4 h-4 text-white" />}
-                <span className={`transition-all duration-500 ease-in-out ${
+                <span className={`transition-all duration-500 ease-in-out whitespace-nowrap ${
                   clue.startsWith('Solved! Wordibble #') ? 'animate-fade-in' : ''
                 }`}>{clue}</span>
               </>
             ) : (
-              <button 
+              // Show guesses text by default, but allow hover to show settings text
+              <button
                 onClick={onSettingsClick}
-                className="hover:underline cursor-pointer"
                 type="button"
+                className="
+                  inline-grid items-center gap-1 cursor-pointer group
+                  grid-cols-[auto,0fr]
+                  transition-[grid-template-columns] duration-300 ease-out
+                  hover:grid-cols-[auto,1fr]
+                "
               >
-                Enable clues & vowels? <Settings className="w-4 h-4 inline-block align-middle"/>
+                {/* Left: the default/short text */}
+                <span className="whitespace-nowrap">
+                  {guessesText || 'Click here for clues, vowels & settings'}
+                </span>
+
+                {/* Right: the long/hover text – starts at 0 width and slides in */}
+                <span className="whitespace-nowrap overflow-hidden">
+                  | Click for clues, vowels options
+                </span>
               </button>
             )}
             {targetWord && (
-              <span className="ml-2 opacity-90">
+              <span className="ml-2 opacity-90 whitespace-nowrap">
                 • {targetWord}
               </span>
             )}
