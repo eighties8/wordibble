@@ -77,49 +77,7 @@ export function isVowel(letter: string): boolean {
   return /[AEIOU]/i.test(letter);
 }
 
-export function getVowelPositions(word: string): number[] {
-  const positions: number[] = [];
-  for (let i = 0; i < word.length; i++) {
-    if (isVowel(word[i])) {
-      positions.push(i);
-    }
-  }
-  return positions;
-}
 
-export function getRandomVowelPositions(word: string, count: number): number[] {
-  const vowelPositions = getVowelPositions(word);
-  if (count >= vowelPositions.length) {
-    return vowelPositions;
-  }
-  
-  // Fisher-Yates shuffle and take first N
-  const shuffled = [...vowelPositions];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  
-  return shuffled.slice(0, count);
-}
-
-export function computeRevealsForWord(
-  word: string, 
-  options: { revealVowels: boolean; vowelCount: number }
-): boolean[] {
-  if (!options.revealVowels || options.vowelCount === 0) {
-    return new Array(word.length).fill(false);
-  }
-
-  const revealedPositions = getRandomVowelPositions(word, options.vowelCount);
-  const mask = new Array(word.length).fill(false);
-  
-  for (const pos of revealedPositions) {
-    mask[pos] = true;
-  }
-  
-  return mask;
-}
 
 export function validateGuess(guess: string, wordLength: WordLength): boolean {
   return guess.length === wordLength && /^[A-Z]+$/.test(guess);

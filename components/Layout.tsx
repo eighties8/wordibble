@@ -11,14 +11,17 @@ type LayoutProps = {
   onSettingsChange?: (settings: any) => void;  // callback for settings changes
   currentSettings?: any;        // current settings to pass to Settings modal
   debugMode?: boolean;          // debug mode flag
+  onOpenSettings?: (openedFromClue: boolean) => void; // Callback to open settings from children
 };
 
-export default function Layout({ children, title, narrow, onSettingsChange, currentSettings, debugMode = false }: LayoutProps) {
+export default function Layout({ children, title, narrow, onSettingsChange, currentSettings, debugMode = false, onOpenSettings }: LayoutProps) {
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [openedFromClue, setOpenedFromClue] = useState(false);
 
   const handleSettingsClick = () => {
     setIsSettingsOpen(true);
+    setOpenedFromClue(false);
   };
 
   const handleSettingsClose = () => {
@@ -31,6 +34,41 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
     }
     setIsSettingsOpen(false);
   };
+
+  // Function to open settings from children components
+  const openSettings = (openedFromClue: boolean = false) => {
+    setIsSettingsOpen(true);
+    setOpenedFromClue(openedFromClue);
+    // Store the source for the SettingsModal
+    if (onOpenSettings) {
+      onOpenSettings(openedFromClue);
+    }
+  };
+
+  // Function to reset settings to defaults
+  const resetSettings = () => {
+    // Reset to factory defaults
+    const defaultSettings = {
+      wordLength: 5,
+      maxGuesses: 6,
+      revealClue: false,
+      randomPuzzle: false,
+      lockGreenMatchedLetters: true,
+    };
+    
+    // Update parent settings
+    if (onSettingsChange) {
+      onSettingsChange(defaultSettings);
+    }
+  };
+
+  // Clone children and pass the openSettings and resetSettings functions
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { openSettings, resetSettings } as any);
+    }
+    return child;
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -94,7 +132,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
             "py-4 md:py-8",
           ].join(" ")}
         >
-          {children}
+          {childrenWithProps}
         </div>
       </main>
 
@@ -113,7 +151,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
           onSettingsChange={handleSettingsChange}
           currentSettings={currentSettings}
           debugMode={debugMode}
-          openedFromClue={false}
+          openedFromClue={openedFromClue}
         />
       )}
     </div>

@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 interface SettingsConfig {
   wordLength: 5 | 6 | 7;
   maxGuesses: number;
-  revealVowels: boolean;
-  revealVowelCount: number;
   revealClue: boolean;
   randomPuzzle: boolean;
   lockGreenMatchedLetters: boolean;
@@ -29,7 +27,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
   });
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && currentSettings) {
       // Ensure all required properties exist with defaults
       // Use current puzzle's word length, fallback to stored settings, then default to 6
       const currentWordLength = currentSettings.wordLength || 6;
@@ -37,8 +35,6 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
       const settingsWithDefaults: SettingsConfig = {
         wordLength: currentWordLength,
         maxGuesses: currentSettings.maxGuesses,
-        revealVowels: currentSettings.revealVowels,
-        revealVowelCount: currentSettings.revealVowelCount,
         revealClue: openedFromClue ? true : currentSettings.revealClue,
         randomPuzzle: currentSettings.randomPuzzle ?? false,
         lockGreenMatchedLetters: currentSettings.lockGreenMatchedLetters ?? true,
@@ -116,53 +112,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             />
           </div>
 
-          {/* Reveal Vowels Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reveal Vowels
-              </label>
-              <p className="text-xs text-gray-500">Show vowel positions at the start</p>
-            </div>
-            <button
-              onClick={() => setSettings(prev => ({ 
-                ...prev, 
-                revealVowels: !prev.revealVowels,
-                // Auto-set to max vowel count when enabling
-                revealVowelCount: !prev.revealVowels ? 3 : prev.revealVowelCount
-              }))}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.revealVowels ? 'bg-green-600' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.revealVowels ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
 
-          {/* Vowel Count (only if revealVowels is true) */}
-          {settings.revealVowels && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Number of Vowels to Reveal
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="3"
-                value={settings.revealVowelCount}
-                onChange={(e) => {
-                  const value = Math.min(3, Math.max(1, Number(e.target.value)));
-                  setSettings(prev => ({ ...prev, revealVowelCount: value }));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-              <p className="text-xs text-gray-500 mt-1">Range: 1-3</p>
-            </div>
-          )}
 
           {/* Reveal Clue Toggle */}
           <div className={`flex items-center justify-between ${openedFromClue ? 'rounded bg-green-500 p-4 text-white' : ''}`}>

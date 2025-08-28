@@ -5,13 +5,14 @@ interface Props {
   targetWord?: string;
   onRevealLetter?: () => void;
   letterRevealsRemaining?: number;
+  letterRevealsAllowed?: boolean;
   onSettingsClick?: () => void;
   variant?: 'clue' | 'error' | 'success' | 'solution';
   guessesText?: string;
   revealClueEnabled?: boolean;
 }
 
-export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, onSettingsClick, variant = 'clue', guessesText, revealClueEnabled }: Props) {
+export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, letterRevealsAllowed = true, onSettingsClick, variant = 'clue', guessesText, revealClueEnabled }: Props) {
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
@@ -22,7 +23,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       </div>
       
       {/* Speech Bubble - Use passed variant for background */}
-      <div className={`clue-ribbon relative shadow-md rounded-lg pl-3 pr-3 transition-all duration-500 ease-in-out ${
+      <div className={`clue-ribbon !min-h-[30px] flex items-center shadow-md rounded-lg pl-3 pr-3 transition-all duration-500 ease-in-out ${
           variant === 'error' ? 'bg-red-500' : variant === 'success' ? 'bg-green-500' : 'bg-gray-500'
         } text-white`}>
         <div className="text-sm flex items-center justify-between gap-2">
@@ -60,34 +61,58 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
 
                 {/* Right: the long/hover text - shows clue if enabled, otherwise guidance */}
                 <span className="whitespace-nowrap overflow-hidden">
-                  | {revealClueEnabled && clue ? clue : 'Click for clues, vowels options'}
+                  {revealClueEnabled && clue ? clue : <Settings className="w-5 h-5 pl-1" />}
                 </span>
               </button>
             )}
-            {targetWord && (
+            {/* {targetWord && (
               <span className="ml-2 opacity-90 whitespace-nowrap">
                 • {targetWord}
               </span>
-            )}
+            )} */}
           </span>
           
-          {/* Bot reveal button - Show for all variants to maintain consistent structure */}
-          {onRevealLetter && (
+          {/* clue-letter reveal button - Only show when letter reveals are allowed */}
+          {onRevealLetter && letterRevealsAllowed && (
             <button
               onClick={onRevealLetter}
-              className="clue-letter bg-gray-300 shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 hover:bg-green-600 transition-colors duration-200 group relative"
-              title={letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
-              disabled={!letterRevealsRemaining || letterRevealsRemaining <= 0}
+              className={`clue-letter shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 transition-colors duration-200 group relative ${
+                letterRevealsAllowed && letterRevealsRemaining && letterRevealsRemaining > 0
+                  ? 'bg-gray-300 hover:bg-green-600'
+                  : 'bg-gray-200 cursor-not-allowed'
+              }`}
+              title={(() => {
+                if (!letterRevealsAllowed) {
+                  return "Letter reveals are only available on the first guess!";
+                }
+                if (letterRevealsRemaining && letterRevealsRemaining > 0) {
+                  return "Need help? Click here to reveal one letter";
+                }
+                return "No more reveals available";
+              })()}
+              disabled={!letterRevealsAllowed || !letterRevealsRemaining || letterRevealsRemaining <= 0}
             >
-              {letterRevealsRemaining && letterRevealsRemaining > 0 ? (
-                <AArrowDown className="w-5 h-5 !text-gray-800" />
-              ) : (
-                <AArrowDown className="w-5 h-5 !text-gray-800 opacity-50" />
-              )}
+              {(() => {
+                if (!letterRevealsAllowed) {
+                  return <AArrowDown className="w-5 h-5 !text-gray-500" />;
+                }
+                if (letterRevealsRemaining && letterRevealsRemaining > 0) {
+                  return <AArrowDown className="w-5 h-5 !text-gray-800" />;
+                }
+                return <AArrowDown className="w-5 h-5 !text-gray-800 opacity-50" />;
+              })()}
 
               {/* Tooltip */}
               <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-50">
-                {letterRevealsRemaining && letterRevealsRemaining > 0 ? "Need help? Click here to reveal one letter" : "No more reveals available"}
+                {(() => {
+                  if (!letterRevealsAllowed) {
+                    return "Letter reveals are only available on the first guess!";
+                  }
+                  if (letterRevealsRemaining && letterRevealsRemaining > 0) {
+                    return "Need help? Click here to reveal one letter";
+                  }
+                  return "No more reveals available";
+                })()}
                 <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
               </div>
             </button>

@@ -7,6 +7,11 @@ export const GAME_CONFIG = {
   RANDOM_PUZZLE: false,                 // random puzzle on each page load
   LOCK_GREEN_MATCHED_LETTERS: true,     // lock exact matched letters in input row
   DAILY_PUZZLE_TIMEZONE: 'America/New_York', // date rollover
+  LETTER_REVEALS: {
+    5: 1,                               // 1 reveals for 5-letter puzzles
+    6: 2,                               // 2 reveals for 6-letter puzzles  
+    7: 3,                               // 3 reveals for 7-letter puzzles
+  },
 };
 
 // Animation timing constants

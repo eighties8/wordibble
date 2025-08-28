@@ -13,8 +13,6 @@ type NextPageWithLayout = AppProps["Component"] & {
 const DEFAULT_SETTINGS = {
   wordLength: 5,
   maxGuesses: 6,
-  revealVowels: false,
-  revealVowelCount: 1,
   revealClue: false,
   randomPuzzle: false,
   lockGreenMatchedLetters: true,
@@ -55,6 +53,12 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     }
   };
 
+  // Handle opening settings from children components (like Game component)
+  const handleOpenSettings = (openedFromClue: boolean = false) => {
+    // This callback can be used to track or handle settings being opened from specific sources
+    console.log('Settings opened from:', openedFromClue ? 'clue ribbon' : 'header');
+  };
+
   return (
     <Layout 
       title={C.title} 
@@ -62,6 +66,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       onSettingsChange={handleSettingsChange}
       currentSettings={settings}
       debugMode={debugMode}
+      onOpenSettings={handleOpenSettings}
     >
       <C {...pageProps} />
     </Layout>
