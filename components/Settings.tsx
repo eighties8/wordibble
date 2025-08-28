@@ -77,9 +77,10 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
         <div className="p-6 space-y-6">
           {/* Word Length */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Word Length
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Default Daily Puzzle Word Length
             </label>
+            {/* <p className="text-xs opacity-90 mb-1">Specify the default word length for your daily puzzle.</p> */}
             <div className="flex space-x-4">
               {([5, 6, 7] as const).map((length) => (
                 <label key={length} className="flex items-center">
@@ -98,7 +99,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
           </div>
 
           {/* Max Guesses */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Max Guesses
             </label>
@@ -110,7 +111,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
               onChange={(e) => setSettings(prev => ({ ...prev, maxGuesses: Number(e.target.value) }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
-          </div>
+          </div> */}
 
 
 
@@ -118,7 +119,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
           <div className={`flex items-center justify-between ${openedFromClue ? 'rounded bg-green-500 p-4 text-white' : ''}`}>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Show Clue (Current: {settings.revealClue ? 'ON' : 'OFF'})
+                Show Word Clue (Current: {settings.revealClue ? 'ON' : 'OFF'})
               </label>
               <p className="text-xs opacity-90">Display a hint for each puzzle</p>
             </div>
@@ -137,7 +138,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
           </div>
 
           {/* Random Puzzle Toggle */}
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Random Puzzle
@@ -156,7 +157,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
                 }`}
               />
             </button>
-          </div>
+          </div> */}
 
           {/* Lock Green Matched Letters Toggle */}
           <div className="flex items-center justify-between">
@@ -183,11 +184,17 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
 
         {/* Footer Actions */}
         <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-          <button
+          {/* <button
             onClick={handleReset}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
           >
             Reset
+          </button> */}
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          >
+            Close
           </button>
           <button
             onClick={handleSave}
