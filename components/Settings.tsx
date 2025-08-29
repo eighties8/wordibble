@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface SettingsConfig {
   wordLength: 5 | 6 | 7;
@@ -15,9 +15,10 @@ interface Props {
   currentSettings: SettingsConfig;
   debugMode: boolean;
   openedFromClue?: boolean;
+  puzzleInProgress?: boolean;
 }
 
-export default function Settings({ isOpen, onClose, onSettingsChange, currentSettings, debugMode, openedFromClue = false }: Props) {
+export default function Settings({ isOpen, onClose, onSettingsChange, currentSettings, debugMode, openedFromClue = false, puzzleInProgress = false }: Props) {
   const [settings, setSettings] = useState<SettingsConfig>({
     ...currentSettings,
     randomPuzzle: currentSettings.randomPuzzle ?? false,
@@ -28,6 +29,9 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
   
   // Track if this is the initial render to prevent auto-saving on open
   const isInitialRender = React.useRef(true);
+  
+  // Ref for the modal content to detect clicks outside
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && currentSettings) {
@@ -72,6 +76,13 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
     }
   }, [isOpen]);
 
+  // Handle clicks outside the modal to close it
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      onClose();
+    }
+  };
+
   const handleReset = () => {
     setSettings(currentSettings);
   };
@@ -79,8 +90,8 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleBackdropClick}>
+      <div ref={modalRef} className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
@@ -96,24 +107,50 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
 
         {/* Settings Content */}
         <div className="p-6 space-y-6">
+          {/* Puzzle In Progress Note */}
+          {puzzleInProgress && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    Puzzle in Progress
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>Settings are disabled while you have an active puzzle. Complete or reset the current puzzle to modify settings.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Word Length */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${puzzleInProgress ? 'text-gray-400' : 'text-gray-700'}`}>
               Default Daily Puzzle Word Length
             </label>
             {/* <p className="text-xs opacity-90 mb-1">Specify the default word length for your daily puzzle.</p> */}
             <div className="flex space-x-4">
               {([5, 6, 7] as const).map((length) => (
-                <label key={length} className="flex items-center">
+                <label key={length} className={`flex items-center ${puzzleInProgress ? 'cursor-not-allowed opacity-50' : ''}`}>
                   <input
                     type="radio"
                     name="wordLength"
                     value={length}
                     checked={settings.wordLength === length}
                     onChange={(e) => setSettings(prev => ({ ...prev, wordLength: Number(e.target.value) as 5 | 6 | 7 }))}
-                    className="mr-2 text-green-600 focus:ring-green-500"
+                    disabled={puzzleInProgress}
+                    className={`mr-2 text-green-600 focus:ring-green-500 focus:ring-2 focus:ring-offset-2 focus:border-green-500 [&:focus]:ring-green-500 [&:focus]:ring-2 [&:focus]:ring-offset-2 [&:focus]:border-green-500 ${puzzleInProgress ? 'cursor-not-allowed opacity-50' : ''}`}
+                    style={{
+                      accentColor: '#10b981', // green-500
+                      outline: 'none'
+                    }}
                   />
-                  <span className="text-sm text-gray-700">{length} letters</span>
+                  <span className={`text-sm ${puzzleInProgress ? 'text-gray-400' : 'text-gray-700'}`}>{length} letters</span>
                 </label>
               ))}
             </div>
@@ -139,16 +176,17 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
           {/* Reveal Clue Toggle */}
           <div className={`flex items-center justify-between ${openedFromClue ? 'rounded bg-green-500 p-4 text-white' : ''}`}>
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className={`block text-sm font-medium mb-1 ${puzzleInProgress ? 'text-gray-400' : ''}`}>
                 Show Word Clue (Current: {settings.revealClue ? 'ON' : 'OFF'})
               </label>
-              <p className="text-xs opacity-90">Display a hint for each puzzle</p>
+              <p className={`text-xs ${puzzleInProgress ? 'text-gray-400' : 'opacity-90'}`}>Display a hint for each puzzle</p>
             </div>
             <button
               onClick={() => setSettings(prev => ({ ...prev, revealClue: !prev.revealClue }))}
+              disabled={puzzleInProgress}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.revealClue ? 'bg-green-600' : 'bg-gray-200'
-              }`}
+              } ${puzzleInProgress ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -183,16 +221,17 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
           {/* Enable Hard Mode Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-sm font-medium mb-1 ${puzzleInProgress ? 'text-gray-400' : 'text-gray-700'}`}>
                 Enable Hard Mode (Current: {settings.lockGreenMatchedLetters ? 'ON' : 'OFF'})
               </label>
-              <p className="text-xs text-gray-500">Found exact matches remain locked for every subsequent guess</p>
+              <p className={`text-xs ${puzzleInProgress ? 'text-gray-400' : 'text-gray-500'}`}>Found exact matches remain locked for every subsequent guess</p>
             </div>
             <button
               onClick={() => setSettings(prev => ({ ...prev, lockGreenMatchedLetters: !prev.lockGreenMatchedLetters }))}
+              disabled={puzzleInProgress}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.lockGreenMatchedLetters ? 'bg-green-600' : 'bg-gray-200'
-              }`}
+              } ${puzzleInProgress ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${

@@ -54,9 +54,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   };
 
   // Handle opening settings from children components (like Game component)
-  const handleOpenSettings = (openedFromClue: boolean = false) => {
+  const handleOpenSettings = (openedFromClue: boolean = false, puzzleInProgress: boolean = false) => {
     // This callback can be used to track or handle settings being opened from specific sources
-    console.log('Settings opened from:', openedFromClue ? 'clue ribbon' : 'header');
   };
 
   return (

@@ -21,7 +21,7 @@ export default function Header({ onSettingsClick, onShareClick }: Props) {
             <div className="bg-green-500"></div>
             <div className="bg-green-500"></div>
           </div>
-          <h1 className="text-xl font-medium text-gray-700">Wordibble</h1>
+          <h1 className="text-xl font-medium text-gray-600">Wordibble</h1>
         </Link>
         <div className="flex items-center gap-2">
           {onShareClick && (

@@ -29,6 +29,7 @@ export type PuzzlesById = Record<PuzzleId, PuzzleStateV2>;
 
 const V2_KEY = 'wordibble:puzzles:v2';
 const LAST_KEY = 'wordibble:lastPlayed:v2';
+const IS_PLAYING_KEY = 'wordibble:isPlaying';
 
 // ---- utils ----
 export const toDateISO = (d: Date) => {
@@ -52,9 +53,16 @@ const readJSON = <T>(k: string): T | null => {
 
 const writeJSON = (k: string, v: unknown) => {
   try {
-    if (typeof window !== 'undefined') localStorage.setItem(k, JSON.stringify(v));
-  } catch {
-    /* ignore quota errors */
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(k, JSON.stringify(v));
+      // Verify the write was successful
+      const written = localStorage.getItem(k);
+      if (!written) {
+        console.error('Failed to write to localStorage:', k);
+      }
+    }
+  } catch (error) {
+    console.error('Error writing to localStorage:', error);
   }
 };
 
@@ -172,4 +180,56 @@ export function getLastPlayed(): PuzzleId | null {
 // convenience helpers
 export function todayId(len: WordLength): PuzzleId {
   return makeId(toDateISO(new Date()), len);
+}
+
+// ---- isPlaying shortcut ----
+export function setIsPlaying(): void {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    return; // Do nothing during SSR
+  }
+  
+  // Test if localStorage is working
+  try {
+    localStorage.setItem('test', 'test');
+    const testValue = localStorage.getItem('test');
+    if (testValue !== 'test') {
+      console.error('localStorage test failed - cannot read what was written');
+      return;
+    }
+    localStorage.removeItem('test');
+  } catch (error) {
+    console.error('localStorage test failed:', error);
+    return;
+  }
+  
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  
+  const data = {
+    isPlaying: true,
+    expiresAt: midnight.getTime()
+  };
+  
+  writeJSON(IS_PLAYING_KEY, data);
+}
+
+export function isCurrentlyPlaying(): boolean {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    return false; // Default to false during SSR
+  }
+  
+  const data = readJSON<{isPlaying: boolean, expiresAt: number}>(IS_PLAYING_KEY);
+  
+  if (!data) return false;
+  
+  // Check if expired
+  if (Date.now() > data.expiresAt) {
+    // Clean up expired data
+    localStorage.removeItem(IS_PLAYING_KEY);
+    return false;
+  }
+  
+  return data.isPlaying;
 }

@@ -11,17 +11,40 @@ type LayoutProps = {
   onSettingsChange?: (settings: any) => void;  // callback for settings changes
   currentSettings?: any;        // current settings to pass to Settings modal
   debugMode?: boolean;          // debug mode flag
-  onOpenSettings?: (openedFromClue: boolean) => void; // Callback to open settings from children
+  onOpenSettings?: (openedFromClue: boolean, puzzleInProgress?: boolean) => void; // Callback to open settings from children
 };
 
 export default function Layout({ children, title, narrow, onSettingsChange, currentSettings, debugMode = false, onOpenSettings }: LayoutProps) {
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [openedFromClue, setOpenedFromClue] = useState(false);
+  const [puzzleInProgress, setPuzzleInProgress] = useState(false);
 
   const handleSettingsClick = () => {
     setIsSettingsOpen(true);
     setOpenedFromClue(false);
+    
+    // Check if there's a currently active puzzle by looking at localStorage
+    try {
+      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
+      if (puzzles) {
+        const puzzlesData = JSON.parse(puzzles);
+        // Check if the current puzzle (most recent one) is in progress
+        const puzzleIds = Object.keys(puzzlesData).sort().reverse();
+        if (puzzleIds.length > 0) {
+          const currentPuzzleId = puzzleIds[0]; // Most recent puzzle
+          const currentPuzzle = puzzlesData[currentPuzzleId];
+          const hasActivePuzzle = currentPuzzle.gameStatus === 'playing';
+          setPuzzleInProgress(hasActivePuzzle);
+        } else {
+          setPuzzleInProgress(false);
+        }
+      } else {
+        setPuzzleInProgress(false);
+      }
+    } catch (error) {
+      setPuzzleInProgress(false);
+    }
   };
 
   const handleSettingsClose = () => {
@@ -37,12 +60,13 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
   };
 
   // Function to open settings from children components
-  const openSettings = (openedFromClue: boolean = false) => {
+  const openSettings = (openedFromClue: boolean = false, puzzleInProgress: boolean = false) => {
     setIsSettingsOpen(true);
     setOpenedFromClue(openedFromClue);
+    setPuzzleInProgress(puzzleInProgress);
     // Store the source for the SettingsModal
     if (onOpenSettings) {
-      onOpenSettings(openedFromClue);
+      onOpenSettings(openedFromClue, puzzleInProgress);
     }
   };
 
@@ -87,7 +111,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
               <div className="bg-green-500" />
               <div className="bg-green-500" />
             </div>
-            <h1 className="text-xl font-medium text-gray-700">
+            <h1 className="text-xl font-medium text-gray-600">
               Wordibble{title ? <span className="text-gray-400"> · {title}</span> : null}
             </h1>
           </Link>
@@ -131,7 +155,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
       </header>
 
       {/* Main content wrapper – identical on every page */}
-      <main className="flex-1">
+      <main className={`flex-1 ${title === undefined ? "flex items-center justify-center" : ""}`}>
         <div
           className={[
             "mx-auto",
@@ -159,6 +183,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
           currentSettings={currentSettings}
           debugMode={debugMode}
           openedFromClue={openedFromClue}
+          puzzleInProgress={puzzleInProgress}
         />
       )}
     </div>

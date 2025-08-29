@@ -24,6 +24,8 @@ import {
   loadAll,
   saveAll,
   getLastPlayed,
+  isCurrentlyPlaying,
+  setIsPlaying,
 } from '../lib/storage';
 
 
@@ -33,6 +35,7 @@ import RowHistory from './RowHistory';
 import ClueRibbon from './ClueRibbon';
 import ToastComponent from './Toast';
 import Keyboard from './Keyboard';
+import SplashScreen from './SplashScreen';
 import type { GuessInputRowHandle } from './GuessInputRow';
 
 type InputRowHandle = {
@@ -51,7 +54,7 @@ interface GameSettings {
 }
 
 export default function Game({ openSettings, resetSettings }: { 
-  openSettings?: (openedFromClue?: boolean) => void;
+  openSettings?: (openedFromClue?: boolean, puzzleInProgress?: boolean) => void;
   resetSettings?: () => void;
 }) {
   const router = useRouter();
@@ -97,6 +100,7 @@ export default function Game({ openSettings, resetSettings }: {
   const [showFadeInForInput, setShowFadeInForInput] = useState(false);
   const [fadeOutClearInput, setFadeOutClearInput] = useState(false);
   const [previouslyRevealedPositions, setPreviouslyRevealedPositions] = useState<Set<number>>(new Set());
+  const [showSplashScreen, setShowSplashScreen] = useState(true);
   
   // ===== Post-submission unlocked positions =====
   const [postSubmitUnlockedPositions, setPostSubmitUnlockedPositions] = useState<Set<number>>(new Set());
@@ -696,6 +700,9 @@ export default function Game({ openSettings, resetSettings }: {
           
           setGameState(restoredGameState);
           
+          // Set playing flag when restoring saved state
+          setIsPlaying();
+          
           // Mark this route as hydrated and track which puzzle the state belongs to
           activePuzzleIdRef.current = puzzleId;
           hydratedForRouteRef.current = true;
@@ -1201,6 +1208,11 @@ export default function Game({ openSettings, resetSettings }: {
       };
     });
 
+    // Set playing flag on first guess to hide splash screen
+    if (gameState.attempts.length === 0) {
+      setIsPlaying();
+    }
+
     // Mark this row for flip animation
     const newRowIndex = gameState.attempts.length;
     setFlippingRows(prev => new Set([...Array.from(prev), newRowIndex]));
@@ -1538,6 +1550,45 @@ export default function Game({ openSettings, resetSettings }: {
     );
   }
 
+  // Check if we should show the splash screen (only after loading is complete)
+  const isPlaying = isCurrentlyPlaying();
+  
+  // Show splash screen when: not loading, no active game, and splash hasn't been dismissed
+  if (!isLoading && !isPlaying && showSplashScreen) {
+    return (
+      <SplashScreen
+        onStartGame={() => {
+          // Set playing flag and hide splash
+          setIsPlaying();
+          setShowSplashScreen(false);
+        }}
+        onOpenSettings={() => {
+          if (openSettings) {
+            // Check if the currently loaded puzzle is in progress
+            const currentPuzzleId = activePuzzleIdRef.current;
+            let currentPuzzleInProgress = false;
+            
+            if (currentPuzzleId) {
+              try {
+                const currentPuzzle = getPuzzle(currentPuzzleId as any);
+                currentPuzzleInProgress = currentPuzzle?.gameStatus === 'playing';
+              } catch (error) {
+                currentPuzzleInProgress = false;
+              }
+            }
+            
+            openSettings(false, currentPuzzleInProgress);
+          }
+        }}
+      />
+    );
+  }
+
+  // Hide splash screen when there's an active game
+  if (!isLoading && isPlaying && showSplashScreen) {
+    setShowSplashScreen(false);
+  }
+
   const attemptsLeft = settings.maxGuesses - gameState.attemptIndex;
 
   return (
@@ -1580,7 +1631,20 @@ export default function Game({ openSettings, resetSettings }: {
           letterRevealsAllowed={gameState.attemptIndex === 0}
           onSettingsClick={() => {
             if (openSettings) {
-              openSettings(true); // true means opened from clue
+              // Check if the currently loaded puzzle is in progress
+              const currentPuzzleId = activePuzzleIdRef.current;
+              let currentPuzzleInProgress = false;
+              
+              if (currentPuzzleId) {
+                try {
+                  const currentPuzzle = getPuzzle(currentPuzzleId as any);
+                  currentPuzzleInProgress = currentPuzzle?.gameStatus === 'playing';
+                } catch (error) {
+                  currentPuzzleInProgress = false;
+                }
+              }
+              
+              openSettings(true, currentPuzzleInProgress); // true means opened from clue
             }
           }}
           variant={(() => {
