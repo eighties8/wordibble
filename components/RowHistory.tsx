@@ -30,7 +30,7 @@ export default function RowHistory({
       case 'present':
         return 'bg-amber-500 text-white';
       case 'absent':
-        return 'bg-gray-300 text-gray-400';
+        return 'bg-gray-300 text-gray-900';
       default:
         return 'bg-gray-200 text-gray-900';
     }
@@ -53,9 +53,9 @@ export default function RowHistory({
       case 'present':
         return { bg: '#f59e0b', fg: '#ffffff' }; // amber-500
       case 'absent':
-        return { bg: '#d1d5db', fg: '#6b7280' }; // gray-300 / gray-500-ish text
+        return { bg: '#d1d5db', fg: 'rgb(17, 24, 39)' }; // gray-300 / gray-500-ish text
       default:
-        return { bg: '#e5e7eb', fg: '#111827' }; // gray-200 / gray-900
+        return { bg: '#e5e7eb', fg: 'rgb(17, 24, 39)' }; // gray-200 / gray-900
     }
   };
 

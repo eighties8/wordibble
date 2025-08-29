@@ -93,7 +93,7 @@ export default function Keyboard({
   };
 
   return (
-    <div className="mt-4 md:mt-8 space-y-2 select-none">
+    <div className="mt-8 md:mt-10 space-y-2 select-none">
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className={getRowClasses()}>
           {row.map((key) => (
