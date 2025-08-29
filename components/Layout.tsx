@@ -73,7 +73,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
   return (
     <div className="background min-h-screen flex flex-col bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
+      <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-md border-b border-gray-200 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link
             href="/"

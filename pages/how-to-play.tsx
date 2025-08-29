@@ -18,6 +18,8 @@ export default function HowToPlayPage() {
             <li>Each guess must be a valid word with the selected length (5, 6, or 7 letters).</li>
             <li>The color of the tiles will change to show how close your guess was to the word.</li>
             <li>Stuck? You can use a lifeline to reveal a letter on the first guess.</li>
+            <li>Options? Use the personalized settings to choose the word length and enable word clues, & more.</li>
+            <li>Play past puzzles from the <Link href="/archive" className="text-blue-600 underline hover:text-blue-800">archive</Link>.</li>
           </ul>
         </div>
       </div>
@@ -100,9 +102,9 @@ export default function HowToPlayPage() {
 
       <div className="text-center text-gray-600 mt-12">
         <p>
-          A new puzzle is released daily at midnight. If you haven't already, you can{" "}
+          A new puzzle is released daily at midnight. If you haven&apos;t already, you can{" "}
           <Link href="/" className="text-blue-600 underline hover:text-blue-800">
-            play today's puzzle
+            play today&apos;s puzzle
           </Link>.
         </p>
       </div>
