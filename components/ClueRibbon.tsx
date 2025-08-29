@@ -10,9 +10,56 @@ interface Props {
   variant?: 'clue' | 'error' | 'success' | 'solution';
   guessesText?: string;
   revealClueEnabled?: boolean;
+  wordLength?: 5 | 6 | 7;
 }
 
-export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, letterRevealsAllowed = true, onSettingsClick, variant = 'clue', guessesText, revealClueEnabled }: Props) {
+export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRevealsRemaining, letterRevealsAllowed = true, onSettingsClick, variant = 'clue', guessesText, revealClueEnabled, wordLength }: Props) {
+  
+  // Helper function to generate tooltip message based on word length and remaining reveals
+  const getTooltipMessage = () => {
+    if (!letterRevealsAllowed) {
+      return "Letter reveals are only available on the first guess!";
+    }
+    
+    if (!letterRevealsRemaining || letterRevealsRemaining <= 0) {
+      return "You're all out of letter turns, solve that puzzle!";
+    }
+    
+    // Determine max reveals based on word length
+    const maxReveals = wordLength === 5 ? 1 : wordLength === 6 ? 2 : 3;
+    
+    if (letterRevealsRemaining === maxReveals) {
+      // First time use
+      if (wordLength === 5) {
+        return "Buy a vowel (its free)";
+      } else if (wordLength === 6) {
+        return "Need help? I can turn up to 2 letters for you";
+      } else {
+        return "Need help? I can turn up to 3 letters for you";
+      }
+    } else {
+      // Subsequent uses
+      if (wordLength === 5) {
+        return "You're all out of letter turns, solve that puzzle!";
+      } else if (wordLength === 6) {
+        if (letterRevealsRemaining === 1) {
+          return "Need another? You have 1 left";
+        } else {
+          return "Need help? I can turn up to 2 letters for you";
+        }
+      } else {
+        // 7 letter puzzles
+        if (letterRevealsRemaining === 2) {
+          return "Need another? You have 2 left";
+        } else if (letterRevealsRemaining === 1) {
+          return "Need another? You have 1 left";
+        } else {
+          return "Need help? I can turn up to 3 letters for you";
+        }
+      }
+    }
+  };
+
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
@@ -81,15 +128,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
                   ? 'bg-gray-300 hover:bg-green-600'
                   : 'bg-gray-200 cursor-not-allowed'
               }`}
-              title={(() => {
-                if (!letterRevealsAllowed) {
-                  return "Letter reveals are only available on the first guess!";
-                }
-                if (letterRevealsRemaining && letterRevealsRemaining > 0) {
-                  return "Need help? Click here to reveal one letter";
-                }
-                return "No more reveals available";
-              })()}
+              title={getTooltipMessage()}
               disabled={!letterRevealsAllowed || !letterRevealsRemaining || letterRevealsRemaining <= 0}
             >
               {(() => {
@@ -104,15 +143,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
 
               {/* Tooltip */}
               <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-50">
-                {(() => {
-                  if (!letterRevealsAllowed) {
-                    return "Letter reveals are only available on the first guess!";
-                  }
-                  if (letterRevealsRemaining && letterRevealsRemaining > 0) {
-                    return "Need help? Click here to reveal one letter";
-                  }
-                  return "No more reveals available";
-                })()}
+                {getTooltipMessage()}
                 <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
               </div>
             </button>

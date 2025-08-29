@@ -125,7 +125,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
       <main className="flex-1">
         <div
           className={[
-            "mx-auto px-4",
+            "mx-auto",
             // game wants a bit wider than stats/archive; toggle with `narrow`
             narrow ? "max-w-3xl" : "max-w-4xl",
             // vertical rhythm

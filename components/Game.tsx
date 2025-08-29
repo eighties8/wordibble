@@ -194,13 +194,13 @@ export default function Game({ openSettings, resetSettings }: {
     }));
 
     // Show success toast
-    const letter = gameState.secretWord[positionToReveal];
-    const isVowel = /[AEIOU]/i.test(letter);
-    setToasts(prev => [...prev, {
-      id: Date.now().toString(),
-      message: `Revealed ${isVowel ? 'vowel' : 'consonant'} "${letter}" at position ${positionToReveal + 1}!`,
-      type: 'success'
-    }]);
+    // const letter = gameState.secretWord[positionToReveal];
+    // const isVowel = /[AEIOU]/i.test(letter);
+    // setToasts(prev => [...prev, {
+    //   id: Date.now().toString(),
+    //   message: `Revealed ${isVowel ? 'vowel' : 'consonant'} "${letter}" at position ${positionToReveal + 1}!`,
+    //   type: 'success'
+    // }]);
   }, [gameState.letterRevealsRemaining, gameState.gameStatus, gameState.wordLength, isPositionRevealed, gameState.secretWord]);
 
   // Handle new game
@@ -1542,7 +1542,7 @@ export default function Game({ openSettings, resetSettings }: {
 
   return (
     <div className="min-h-screen flex flex-col game-container">
-      <main className="flex-1 py-4 md:py-8 px-4">
+      <main className="flex-1 py-4 md:py-8 px-2">
         <div className="max-w-md mx-auto">
         {/* Clue Ribbon - Handles all message types */}
         <ClueRibbon 
@@ -1595,6 +1595,7 @@ export default function Game({ openSettings, resetSettings }: {
               : `${attemptsLeft} guesses left`
           ) : undefined}
           revealClueEnabled={settings.revealClue}
+          wordLength={gameState.wordLength}
         />
           {/* Debug: Show clue info */}
           {/* {debugMode && (
