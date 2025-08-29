@@ -512,7 +512,7 @@ export default function Game({ openSettings, resetSettings }: {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === 'd') {
+      if (e.metaKey && e.shiftKey && e.key === 'd') {
         e.preventDefault();
         
         // Use the callback approach to get the new value
