@@ -165,7 +165,7 @@ export default function StatsPage() {
       )}
 
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center mt-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Statistics</h1>
         <p className="text-gray-600">Your Wordibble performance</p>
       </div>
@@ -174,7 +174,7 @@ export default function StatsPage() {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
           <div className="text-2xl font-bold text-blue-600">{stats.played}</div>
-          <div className="text-sm text-gray-600">Games Played</div>
+          <div className="text-sm text-gray-600">Played</div>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
           <div className="text-2xl font-bold text-green-600">{winRate(stats)}%</div>
@@ -252,7 +252,7 @@ export default function StatsPage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-4">No games played yet</p>
+          <p className="text-gray-500 text-center py-4">No plays yet</p>
         )}
       </div>
 

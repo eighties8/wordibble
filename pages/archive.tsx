@@ -216,10 +216,10 @@ export default function ArchivePage() {
   }
 
   return (
-    <div className="max-w-md mx-auto">
-      <p className="text-gray-600 text-center mb-8">
-        Play puzzles since August 25, 2025
-      </p>
+    <div className="max-w-md mx-auto pt-4">
+      <h1 className="text-gray-600 text-center mb-8 text-xl font-medium">
+        Play Wordibbles since August 25, 2025
+      </h1>
 
       {/* Calendar Navigation */}
       <div className="flex items-center justify-center gap-4 mb-8">

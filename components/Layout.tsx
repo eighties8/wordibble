@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { BarChart3, CalendarDays, Settings } from "lucide-react";
+import { BarChart3, CalendarDays, Settings, HelpCircle } from "lucide-react";
 import React, { useState } from "react";
 import SettingsModal from "./Settings";
 
@@ -71,7 +71,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="background min-h-screen flex flex-col bg-white">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -93,6 +93,14 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
 
           {/* Header actions (keep same across pages) */}
           <div className="flex items-center gap-4 text-gray-600">
+            <button
+              aria-label="How to Play"
+              className="p-2 rounded hover:bg-gray-100"
+              onClick={() => router.push("/how-to-play")}
+              title="How to Play"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
             <button
               aria-label="Stats"
               className="p-2 rounded hover:bg-gray-100"

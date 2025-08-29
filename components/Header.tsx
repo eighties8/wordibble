@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Settings, Calendar, Share2 } from 'lucide-react';
+import { BarChart3, Settings, Calendar, Share2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
@@ -46,6 +46,13 @@ export default function Header({ onSettingsClick, onShareClick }: Props) {
             aria-label="Archive"
           >
             <Calendar className="w-5 h-5" />
+          </Link>
+          <Link
+            href="/how-to-play"
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="How to Play"
+          >
+            <HelpCircle className="w-5 h-5" />
           </Link>
           <button
             onClick={onSettingsClick}
