@@ -370,12 +370,12 @@ export default function ArchivePage() {
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 rounded-lg border border-green-200">
             <Calendar className="w-5 h-5 text-green-600" />
             <span className="text-green-900 font-medium">
-              {selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              Wordibble #{(() => {
+                // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
+                const startDate = new Date('2025-08-25');
+                const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                return daysDiff + 1;
+              })()}
             </span>
           </div>
           
