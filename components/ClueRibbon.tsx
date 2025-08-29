@@ -70,7 +70,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       </div>
       
       {/* Speech Bubble - Use passed variant for background */}
-      <div className={`clue-ribbon !min-h-[30px] flex items-center shadow-md rounded-lg pl-3 pr-3 transition-all duration-500 ease-in-out ${
+      <div className={`clue-ribbon !min-h-[30px] flex items-center shadow-md rounded-lg pl-3 pr-3 transition-all duration-500 ease-in-out relative ${
           variant === 'error' ? 'bg-red-500' : variant === 'success' ? 'bg-green-500' : 'bg-gray-500'
         } text-white`}>
         <div className="text-sm flex items-center justify-between gap-2">
