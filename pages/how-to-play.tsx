@@ -66,23 +66,23 @@ export default function HowToPlayPage() {
         <div className="space-y-3">
           <div className="flex justify-center gap-2">
             <div className="w-12 h-12 bg-gray-200 text-gray-700 flex items-center justify-center text-xl font-bold rounded border-2 border-gray-300">
-              R
+              S
             </div>
             <div className="w-12 h-12 bg-gray-200 text-gray-700 flex items-center justify-center text-xl font-bold rounded border-2 border-gray-300">
-              O
+              N
             </div>
             <div className="w-12 h-12 bg-gray-200 text-gray-700 flex items-center justify-center text-xl font-bold rounded border-2 border-gray-300">
-              C
-            </div>
-            <div className="w-12 h-12 bg-gray-400 text-gray-600 flex items-center justify-center text-xl font-bold rounded border-2 border-gray-500">
-              K
+              A
             </div>
             <div className="w-12 h-12 bg-gray-200 text-gray-700 flex items-center justify-center text-xl font-bold rounded border-2 border-gray-300">
-              Y
+              F
+            </div>
+            <div className="w-12 h-12 bg-gray-200 text-gray-700 flex items-center justify-center text-xl font-bold rounded border-2 border-gray-300">
+              U
             </div>
           </div>
           <p className="text-center text-gray-700">
-            <strong>K</strong> is not in the word in any spot.
+            <strong>Doh!</strong> None of the letters are in the word.
           </p>
         </div>
       </div>
