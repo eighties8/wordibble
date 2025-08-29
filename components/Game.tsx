@@ -1553,41 +1553,41 @@ export default function Game({ openSettings, resetSettings }: {
   // Check if we should show the splash screen (only after loading is complete)
   const isPlaying = isCurrentlyPlaying();
   
-  // Show splash screen when: not loading, no active game, and splash hasn't been dismissed
-  if (!isLoading && !isPlaying && showSplashScreen) {
-    return (
-      <SplashScreen
-        onStartGame={() => {
-          // Set playing flag and hide splash
-          setIsPlaying();
-          setShowSplashScreen(false);
-        }}
-        onOpenSettings={() => {
-          if (openSettings) {
-            // Check if the currently loaded puzzle is in progress
-            const currentPuzzleId = activePuzzleIdRef.current;
-            let currentPuzzleInProgress = false;
+  // // Show splash screen when: not loading, no active game, and splash hasn't been dismissed
+  // if (!isLoading && !isPlaying && showSplashScreen) {
+  //   return (
+  //     <SplashScreen
+  //       onStartGame={() => {
+  //         // Set playing flag and hide splash
+  //         setIsPlaying();
+  //         setShowSplashScreen(false);
+  //       }}
+  //       onOpenSettings={() => {
+  //         if (openSettings) {
+  //           // Check if the currently loaded puzzle is in progress
+  //           const currentPuzzleId = activePuzzleIdRef.current;
+  //           let currentPuzzleInProgress = false;
             
-            if (currentPuzzleId) {
-              try {
-                const currentPuzzle = getPuzzle(currentPuzzleId as any);
-                currentPuzzleInProgress = currentPuzzle?.gameStatus === 'playing';
-              } catch (error) {
-                currentPuzzleInProgress = false;
-              }
-            }
+  //           if (currentPuzzleId) {
+  //             try {
+  //               const currentPuzzle = getPuzzle(currentPuzzleId as any);
+  //               currentPuzzleInProgress = currentPuzzle?.gameStatus === 'playing';
+  //             } catch (error) {
+  //               currentPuzzleInProgress = false;
+  //             }
+  //           }
             
-            openSettings(false, currentPuzzleInProgress);
-          }
-        }}
-      />
-    );
-  }
+  //           openSettings(false, currentPuzzleInProgress);
+  //         }
+  //       }}
+  //     />
+  //   );
+  // }
 
-  // Hide splash screen when there's an active game
-  if (!isLoading && isPlaying && showSplashScreen) {
-    setShowSplashScreen(false);
-  }
+  // // Hide splash screen when there's an active game
+  // if (!isLoading && isPlaying && showSplashScreen) {
+  //   setShowSplashScreen(false);
+  // }
 
   const attemptsLeft = settings.maxGuesses - gameState.attemptIndex;
 
