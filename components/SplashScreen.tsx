@@ -35,7 +35,7 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-gray-500 mb-4">Wordibble</h1>
+        <h1 className="text-4xl font-bold text-gray-500 mb-4">Wordseer</h1>
 
         <p className="text-lg text-gray-700 mb-8">
           Get 6 chances to guess a 5, 6 or 7 letter word.
@@ -52,7 +52,7 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
           </button>
 
           {/* Puzzle number */}
-          <div className="text-sm text-gray-500">Wordibble #{puzzleNumber}</div>
+          <div className="text-sm text-gray-500">Wordseer #{puzzleNumber}</div>
         </div>
 
         {/* Links */}
@@ -71,7 +71,7 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
         </div>
 
         {/* <div className="mt-12 text-xs text-gray-400">
-          <div className="mb-1">Wordibble – A word guessing game with clues</div>
+          <div className="mb-1">Wordseer – A word guessing game with clues</div>
           <div>Challenge your vocabulary and deduction skills</div>
         </div> */}
       </div>

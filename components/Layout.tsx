@@ -26,7 +26,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
     
     // Check if there's a currently active puzzle by looking at localStorage
     try {
-      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
+      const puzzles = localStorage.getItem('wordseer:puzzles:v2');
       if (puzzles) {
         const puzzlesData = JSON.parse(puzzles);
         // Check if the current puzzle (most recent one) is in progress
@@ -112,7 +112,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
               <div className="bg-green-500" />
             </div>
             <h1 className="text-xl font-medium text-gray-600">
-              Wordibble{title ? <span className="text-gray-400"> · {title}</span> : null}
+              Wordseer{title ? <span className="text-gray-400"> · {title}</span> : null}
             </h1>
           </Link>
 
@@ -170,7 +170,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 px-4 py-3">
         <div className="max-w-4xl mx-auto text-center text-sm text-gray-500">
-          Wordibble – Crack the daily word with clever clues, vowel vibes, or pure brain dazzle!
+          Wordseer – Crack the daily word with clever clues, vowel vibes, or pure brain dazzle!
         </div>
       </footer>
 

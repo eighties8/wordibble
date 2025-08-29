@@ -4,11 +4,11 @@ import Link from "next/link";
 export default function HowToPlayPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Guess the Wordibble in 6 tries</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">Guess the Word in 6 tries</h1>
       
       {/* <div className="text-center mb-8">
         <p className="text-lg text-gray-700">
-          Guess the Wordibble in 6 tries.
+          Guess the Words in 6 tries.
         </p>
       </div> */}
 
@@ -122,7 +122,7 @@ export default function HowToPlayPage() {
 
       <div className="space-y-6 mb-8">
         <div className="space-y-2">
-          <ul className="list-disc list-inside space-y-2 text-gray-700">
+          <ul className="list-disc list-outside space-y-2 text-gray-700">
             <li>Each guess must be a valid word with the selected length (5, 6, or 7 letters).</li>
             <li>The color of the tiles will change to show how close your guess was to the word.</li>
             <li>Stuck? You can use a lifeline to reveal a letter on the first guess.</li>

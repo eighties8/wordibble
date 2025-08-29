@@ -61,7 +61,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
       const hasUserChange = JSON.stringify(settings) !== JSON.stringify(prevSettingsRef.current);
       if (hasUserChange) {
         // Save to localStorage
-        localStorage.setItem('wordibble-settings', JSON.stringify(settings));
+        localStorage.setItem('wordseer-settings', JSON.stringify(settings));
         onSettingsChange(settings);
       }
     }
@@ -224,7 +224,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
               <label className={`block text-sm font-medium mb-1 ${puzzleInProgress ? 'text-gray-400' : 'text-gray-700'}`}>
                 Enable Hard Mode (Current: {settings.lockGreenMatchedLetters ? 'ON' : 'OFF'})
               </label>
-              <p className={`text-xs ${puzzleInProgress ? 'text-gray-400' : 'text-gray-500'}`}>Found exact matches remain locked for every subsequent guess</p>
+              <p className={`text-xs ${puzzleInProgress ? 'text-gray-400' : 'text-gray-500'}`}>Green letter matches get locked and must be used for each guess</p>
             </div>
             <button
               onClick={() => setSettings(prev => ({ ...prev, lockGreenMatchedLetters: !prev.lockGreenMatchedLetters }))}

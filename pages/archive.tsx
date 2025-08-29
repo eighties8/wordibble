@@ -53,7 +53,7 @@ export default function ArchivePage() {
       const completedDates = new Set<string>();
       
       // Check the new puzzle storage system first
-      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
+      const puzzles = localStorage.getItem('wordseer:puzzles:v2');
       if (puzzles) {
         const puzzlesData = JSON.parse(puzzles);
         
@@ -70,7 +70,7 @@ export default function ArchivePage() {
       }
       
       // Fallback to old stats system for backward compatibility
-      const stats = localStorage.getItem('wordibble:stats:v1');
+      const stats = localStorage.getItem('wordseer:stats:v1');
       if (stats) {
         const statsData = JSON.parse(stats);
         if (statsData.results) {
@@ -138,7 +138,7 @@ export default function ArchivePage() {
     // If not cached, fallback to old method
     try {
       // Check the new puzzle storage system first
-      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
+      const puzzles = localStorage.getItem('wordseer:puzzles:v2');
       if (puzzles) {
         const puzzlesData = JSON.parse(puzzles);
         
@@ -149,7 +149,7 @@ export default function ArchivePage() {
       }
       
       // Fallback to old stats system for backward compatibility
-      const stats = localStorage.getItem('wordibble:stats:v1');
+      const stats = localStorage.getItem('wordseer:stats:v1');
       if (!stats) return false;
       
       const statsData = JSON.parse(stats);
@@ -218,7 +218,7 @@ export default function ArchivePage() {
   return (
     <div className="max-w-md mx-auto pt-4">
       <h1 className="text-gray-600 text-center mb-8 text-xl font-medium">
-        Play Wordibbles since August 25, 2025
+        Play puzzles since August 25, 2025
       </h1>
 
       {/* Calendar Navigation */}
@@ -364,13 +364,13 @@ export default function ArchivePage() {
         </div>
       </div>
 
-      {/* Wordibble Length Selection */}
+      {/* Wordseer Length Selection */}
       {selectedDate && isDateSelectable(selectedDate) && (
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 rounded-lg border border-green-200">
             <Calendar className="w-5 h-5 text-green-600" />
             <span className="text-green-900 font-medium">
-              Wordibble #{(() => {
+              Wordseer #{(() => {
                 // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
                 const startDate = new Date('2025-08-25');
                 const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -386,19 +386,19 @@ export default function ArchivePage() {
                 href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=5`}
                 className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
               >
-                Wordibble 5
+                Wordseer 5
               </Link>
               <Link
                 href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=6`}
                 className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
               >
-                Wordibble 6
+                Wordseer 6
               </Link>
               <Link
                 href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=7`}
                 className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
               >
-                Wordibble 7
+                Wordseer 7
               </Link>
             </div>
           </div>
@@ -408,5 +408,5 @@ export default function ArchivePage() {
   );
 }
 
-ArchivePage.title = "Archive";  // header shows "Wordibble · Archive"
+ArchivePage.title = "Archive";  // header shows "Wordseer · Archive"
 ArchivePage.narrow = true;      // archive uses narrower container
