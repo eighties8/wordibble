@@ -1,4 +1,4 @@
-import { AArrowDown, PartyPopper, Settings, Trophy, HeartCrack, Crown, Grid3x2, Medal } from "lucide-react";
+import { AArrowDown, BadgeInfo, HeartCrack, LifeBuoy, Medal } from "lucide-react";
 
 interface Props {
   clue: string;
@@ -63,18 +63,19 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
   return (
     <div className="flex items-center justify-center mb-6">
       {/* Information/Clue Icon */}
-      <div className="w-8 h-8 mr-1 bg-gray-100 rounded-full flex items-center justify-center">
+      {/* <div className="w-8 h-8 mr-1 bg-gray-100 rounded-full flex items-center justify-center">
         <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-500">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
         </svg>
       </div>
-      
+       */}
+       <LifeBuoy className="w-6 h-6 mr-1 text-gray-400 mr-2" />
       {/* Speech Bubble - Use passed variant for background */}
-      <div className={`clue-ribbon !min-h-[30px] flex items-center shadow-md rounded-lg pl-3 pr-3 transition-all duration-500 ease-in-out relative ${
-          variant === 'error' ? 'bg-red-500' : variant === 'success' ? 'bg-green-500' : 'bg-gray-500'
-        } text-white`}>
+      <div className={`clue-ribbon !min-h-[30px] flex items-center shadow-md rounded-lg pl-3 transition-all duration-500 ease-in-out relative ${
+          variant === 'error' ? 'bg-gray-800 text-gray-200' : variant === 'success' ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'
+        } text-gray-900 `}>
         <div className="text-sm flex items-center justify-between gap-2">
-          <span className="transition-all duration-500 ease-in-out flex items-center gap-2 pl-1 pr-2">
+          <span className="transition-all duration-500 ease-in-out flex items-center gap-2 pl-1">
             {/* Special cases: show win/loss messages directly */}
             {clue && (clue.startsWith('Solved! Wordibble #') || clue.startsWith('Loss:')) ? (
               <>
@@ -86,7 +87,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
               </>
             ) : variant === 'error' ? (
               // Show error messages prominently
-              <span className="whitespace-nowrap font-medium">
+              <span className="whitespace-nowrap">
                 {clue}
               </span>
             ) : (
@@ -123,9 +124,9 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
           {onRevealLetter && letterRevealsAllowed && (
             <button
               onClick={onRevealLetter}
-              className={`clue-letter shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] flex-shrink-0 p-1 transition-colors duration-200 group relative ${
+              className={`clue-letter shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] px-1.5 rounded-tr-lg rounded-br-lg flex-shrink-0 p-1 transition-colors duration-200 group relative ${
                 letterRevealsAllowed && letterRevealsRemaining && letterRevealsRemaining > 0
-                  ? 'bg-gray-300 hover:bg-green-600'
+                  ? 'bg-green-500 hover:text-white'
                   : 'bg-gray-200 cursor-not-allowed'
               }`}
               title={getTooltipMessage()}
@@ -133,26 +134,26 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
             >
               {(() => {
                 if (!letterRevealsAllowed) {
-                  return <AArrowDown className="w-5 h-5 !text-gray-500" />;
+                  return <AArrowDown className="w-5 h-5 text-gray-500" />;
                 }
                 if (letterRevealsRemaining && letterRevealsRemaining > 0) {
-                  return <AArrowDown className="w-5 h-5 !text-gray-800" />;
+                  return <AArrowDown className="w-5 h-5" />;
                 }
-                return <AArrowDown className="w-5 h-5 !text-gray-800 opacity-50" />;
+                return <AArrowDown className="w-5 h-5 text-gray-800 opacity-50" />;
               })()}
 
               {/* Tooltip */}
               <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-50">
                 {getTooltipMessage()}
-                <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+                <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-300"></div>
               </div>
             </button>
           )}
         </div>
         
         {/* Speech bubble tail - Change color based on variant */}
-        <div className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-4 border-t-4 border-t-transparent border-b-4 border-b-transparent transition-all duration-500 ease-in-out ${
-          variant === 'error' ? '!border-r-red-500' : variant === 'success' ? '!border-r-green-500' : '!border-r-gray-500'
+        <div className={`absolute -left-[2px] top-1/2 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-r-8 border-t-8 border-t-transparent border-b-8 border-b-transparent transition-all duration-500 ease-in-out ${
+          variant === 'error' ? '!border-r-gray-800' : variant === 'success' ? '!border-r-green-500' : '!border-r-gray-300'
         }`} 
         style={{
           borderRightColor: variant === 'error' ? '#ef4444' : variant === 'success' ? '#22c55e' : '#6b7280'
