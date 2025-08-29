@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { Eye } from 'lucide-react';
 
 interface SplashScreenProps {
   onStartGame: () => void;
@@ -27,18 +28,21 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
       <div className="text-center max-w-md mx-auto">
         {/* Logo */}
         <div className="mb-6">
-          <div className="grid grid-cols-2 gap-1.5 p-2 w-20 h-20 border-4 border-gray-500 rounded-lg mx-auto mb-4">
+          {/* <div className="grid grid-cols-2 gap-1.5 p-2 w-20 h-20 border-4 border-gray-500 rounded-lg mx-auto mb-4">
             <div className="bg-green-500 rounded-sm" />
             <div className="bg-amber-500 rounded-sm" />
             <div className="bg-green-500 rounded-sm" />
             <div className="bg-green-500 rounded-sm" />
+          </div> */}
+          <div className="p-0 w-20 h-20 border-8 border-gray-500 bg-green-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <Eye className="w-20 h-20 text-gray-200" />
           </div>
         </div>
 
         <h1 className="text-4xl font-bold text-gray-500 mb-4">Wordseer</h1>
 
         <p className="text-lg text-gray-700 mb-8">
-          Get 6 chances to guess a 5, 6 or 7 letter word.
+          Get 6 chances to guess a 5-7 letter word.
         </p>
 
         {/* Action */}

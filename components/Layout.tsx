@@ -100,25 +100,19 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-md border-b border-gray-200 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link
+        <Link
             href="/"
             className="no-underline focus:outline-none flex items-center gap-2"
           >
-            {/* logo tile */}
-            {/* <div className="grid grid-cols-2 gap-[2px] p-[2px] w-6 h-6 border border-gray-900 rounded-sm">
-              <div className="bg-green-500" />
-              <div className="bg-amber-500" />
-              <div className="bg-green-500" />
-              <div className="bg-green-500" />
-            </div> */}
-            {/* <div className="flex items-center justify-center w-10 h-8 border-4 border-gray-400 rounded-2xl">
-              <div className="bg-green-500 rounded-md"><Eye className="w-8 h-6 text-white" /></div>
-            </div> */}
-            <div className="bg-gray-400 rounded-md">
-              <Eye className="w-8 h-6 text-white" />
+            {/* Logo container */}
+            <div className="flex items-center justify-center p-1 w-10 h-10 border-4 border-gray-500 bg-green-500 rounded-lg">
+              <Eye className="w-6 h-6 text-white" />
             </div>
+
+            {/* Title */}
             <h1 className="text-xl font-medium text-gray-600">
-              Wordseer{title ? <span className="text-gray-400"> · {title}</span> : null}
+              Wordseer
+              {title ? <span className="text-gray-400"> · {title}</span> : null}
             </h1>
           </Link>
 
