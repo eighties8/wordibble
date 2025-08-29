@@ -1541,7 +1541,7 @@ export default function Game({ openSettings, resetSettings }: {
   const attemptsLeft = settings.maxGuesses - gameState.attemptIndex;
 
   return (
-    <div className="min-h-screen flex flex-col game-container">
+    <div className="flex flex-col game-container">
       <main className="flex-1 py-4 md:py-8 px-2">
         <div className="max-w-md mx-auto">
         {/* Clue Ribbon - Handles all message types */}

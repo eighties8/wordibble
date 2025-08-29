@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, ChevronDown } from "lucide-react";
 import { getESTDateString } from "../lib/timezone";
 
 export default function ArchivePage() {
@@ -55,13 +55,28 @@ export default function ArchivePage() {
     return date.toISOString().slice(0, 10);
   };
 
+  const getMonthKey = (date: Date) => {
+    return `${date.getFullYear()}-${date.getMonth()}`;
+  };
+
+  const puzzleCache = new Map<string, Map<string, boolean>>();
+
   const hasPlayedPuzzle = (date: Date) => {
+    const monthKey = getMonthKey(date);
+    const dateString = formatDateKey(date);
+    
+    // Check cache first
+    const monthData = puzzleCache.get(monthKey);
+    if (monthData) {
+      return monthData.has(dateString);
+    }
+    
+    // If not cached, fallback to old method
     try {
       // Check the new puzzle storage system first
       const puzzles = localStorage.getItem('wordibble:puzzles:v2');
       if (puzzles) {
         const puzzlesData = JSON.parse(puzzles);
-        const dateString = formatDateKey(date);
         
         // Check if any puzzles exist for this date (any word length)
         return Object.values(puzzlesData).some((puzzle: any) => 
@@ -74,7 +89,6 @@ export default function ArchivePage() {
       if (!stats) return false;
       
       const statsData = JSON.parse(stats);
-      const dateString = formatDateKey(date);
       
       // Check if any results exist for this date
       return statsData.results && statsData.results.some((result: any) => 
@@ -95,6 +109,11 @@ export default function ArchivePage() {
       const newMonth = new Date(prev);
       if (direction === 'prev') {
         newMonth.setMonth(newMonth.getMonth() - 1);
+        // Ensure we don't go before August 2025
+        if (newMonth < START_DATE) {
+          newMonth.setFullYear(2025);
+          newMonth.setMonth(7); // August
+        }
       } else {
         newMonth.setMonth(newMonth.getMonth() + 1);
       }
@@ -140,48 +159,88 @@ export default function ArchivePage() {
 
       {/* Calendar Navigation */}
       <div className="flex items-center justify-center gap-4 mb-8">
+        {/* Prev button */}
         <button
           onClick={() => navigateMonth('prev')}
           disabled={currentMonth <= START_DATE}
-          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center pr-2"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        
+
+        {/* Month + Year Selects */}
         <div className="flex items-center gap-2">
-          <select
-            value={currentMonth.getMonth()}
-            onChange={(e) => setCurrentMonth(prev => {
-              const newMonth = new Date(prev);
-              newMonth.setMonth(parseInt(e.target.value));
-              return newMonth;
-            })}
-            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-          >
-            {months.map((month, index) => (
-              <option key={`month-${index}`} value={index}>{month}</option>
-            ))}
-          </select>
-          
-          <select
-            value={currentMonth.getFullYear()}
-            onChange={(e) => setCurrentMonth(prev => {
-              const newMonth = new Date(prev);
-              newMonth.setFullYear(parseInt(e.target.value));
-              return newMonth;
-            })}
-            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-          >
-            {years.map(year => (
-              <option key={`year-${year}`} value={year}>{year}</option>
-            ))}
-          </select>
+          {/* Month Select */}
+          <div className="relative inline-block">
+            <select
+              value={currentMonth.getMonth()}
+              onChange={(e) =>
+                setCurrentMonth((prev) => {
+                  const newMonth = new Date(prev);
+                  newMonth.setMonth(parseInt(e.target.value));
+                  // Ensure we don't go before August 2025
+                  if (newMonth < START_DATE) {
+                    newMonth.setFullYear(2025);
+                    newMonth.setMonth(7); // August
+                  }
+                  return newMonth;
+                })
+              }
+              className="appearance-none pl-8 pr-3 py-2 border border-gray-300 rounded-lg bg-white"
+            >
+              {months.map((month, index) => {
+                // Only show months from August 2025 onwards
+                if (currentMonth.getFullYear() === 2025 && index < 7) return null;
+                return (
+                  <option key={`month-${index}`} value={index}>
+                    {month}
+                  </option>
+                );
+              })}
+            </select>
+            <ChevronDown className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          </div>
+
+          {/* Year Select */}
+          <div className="relative inline-block">
+            <select
+              value={currentMonth.getFullYear()}
+              onChange={(e) =>
+                setCurrentMonth((prev) => {
+                  const newMonth = new Date(prev);
+                  newMonth.setFullYear(parseInt(e.target.value));
+                  // Ensure we don't go before August 2025
+                  if (newMonth < START_DATE) {
+                    newMonth.setFullYear(2025);
+                    newMonth.setMonth(7); // August
+                  }
+                  return newMonth;
+                })
+              }
+              className="appearance-none pl-8 pr-3 py-2 border border-gray-300 rounded-lg bg-white"
+            >
+              {years.map((year) => {
+                // Only show years from 2025 onwards
+                if (year < 2025) return null;
+                return (
+                  <option key={`year-${year}`} value={year}>
+                    {year}
+                  </option>
+                );
+              })}
+            </select>
+            <ChevronDown className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          </div>
         </div>
-        
+
+        {/* Next button */}
         <button
           onClick={() => navigateMonth('next')}
-          disabled={currentMonth.getMonth() === new Date().getMonth() && currentMonth.getFullYear() === new Date().getFullYear()}
-          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center"
+          disabled={
+            currentMonth.getMonth() === new Date().getMonth() &&
+            currentMonth.getFullYear() === new Date().getFullYear()
+          }
+          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center pr-2"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -196,6 +255,8 @@ export default function ArchivePage() {
             </div>
           ))}
         </div>
+        {/* Horizontal line under the days row */}
+        <div className="border-b border-gray-300 mb-2"></div>
         
         <div className="grid grid-cols-7 gap-1">
           {generateCalendarDays(currentMonth).map((day, index) => (
@@ -204,23 +265,23 @@ export default function ArchivePage() {
               onClick={() => day && handleDateSelect(day)}
               disabled={!day || !isDateSelectable(day)}
               className={`
-                w-10 h-10 rounded-lg text-sm font-medium transition-colors relative
+                w-10 h-10 rounded-lg text-base font-medium transition-colors relative
                 ${day && isDateSelectable(day) 
                   ? 'hover:bg-gray-200 cursor-pointer' 
                   : 'text-gray-300 cursor-not-allowed'
                 }
                 ${day && selectedDate && formatDateKey(day) === formatDateKey(selectedDate) 
-                  ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                  ? 'bg-green-500 text-white hover:bg-green-600' 
                   : 'text-gray-800'
                 }
                 ${day && formatDateKey(day) === getESTDateString() && !selectedDate 
-                  ? 'ring-2 ring-blue-300' 
+                  ? 'ring-2 ring-green-300' 
                   : ''
                 }
               `}
             >
-              {/* Puzzle status indicator box above date - only show on client to prevent hydration mismatch */}
-              {day && (
+              {/* Puzzle status indicator box above date - only show for selectable dates after 8/25/2025 */}
+              {day && isDateSelectable(day) && (
                 <>
                   {isClient ? (
                     <div className={`
@@ -242,9 +303,9 @@ export default function ArchivePage() {
       {/* Wordibble Length Selection */}
       {selectedDate && isDateSelectable(selectedDate) && (
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-50 rounded-lg border border-blue-200">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            <span className="text-blue-900 font-medium">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 rounded-lg border border-green-200">
+            <Calendar className="w-5 h-5 text-green-600" />
+            <span className="text-green-900 font-medium">
               {selectedDate.toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
