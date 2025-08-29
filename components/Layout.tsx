@@ -32,7 +32,8 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
     if (onSettingsChange) {
       onSettingsChange(newSettings);
     }
-    setIsSettingsOpen(false);
+    // Don't auto-close the modal - let user close it manually
+    // setIsSettingsOpen(false);
   };
 
   // Function to open settings from children components
@@ -53,7 +54,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
       maxGuesses: 6,
       revealClue: false,
       randomPuzzle: false,
-      lockGreenMatchedLetters: true,
+      lockGreenMatchedLetters: false,
     };
     
     // Update parent settings

@@ -25,6 +25,9 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
     revealClue: openedFromClue ? true : currentSettings.revealClue,
     lockGreenMatchedLetters: currentSettings.lockGreenMatchedLetters ?? true,
   });
+  
+  // Track if this is the initial render to prevent auto-saving on open
+  const isInitialRender = React.useRef(true);
 
   useEffect(() => {
     if (isOpen && currentSettings) {
@@ -44,12 +47,30 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
     }
   }, [isOpen, currentSettings, openedFromClue]);
 
-  const handleSave = () => {
-    // Save to localStorage
-    localStorage.setItem('wordibble-settings', JSON.stringify(settings));
-    onSettingsChange(settings);
-    onClose();
-  };
+  // Track previous settings to detect actual user changes
+  const prevSettingsRef = React.useRef<SettingsConfig | null>(null);
+  
+  // Auto-save settings when user makes changes (but not on parent updates)
+  useEffect(() => {
+    if (isOpen && !isInitialRender.current && prevSettingsRef.current) {
+      // Only save if the user actually changed something (not just parent update)
+      const hasUserChange = JSON.stringify(settings) !== JSON.stringify(prevSettingsRef.current);
+      if (hasUserChange) {
+        // Save to localStorage
+        localStorage.setItem('wordibble-settings', JSON.stringify(settings));
+        onSettingsChange(settings);
+      }
+    }
+    // Update the ref to track current settings
+    prevSettingsRef.current = settings;
+  }, [settings, isOpen, onSettingsChange]);
+  
+  // Mark that we're no longer in initial render after the first effect run
+  useEffect(() => {
+    if (isOpen) {
+      isInitialRender.current = false;
+    }
+  }, [isOpen]);
 
   const handleReset = () => {
     setSettings(currentSettings);
@@ -159,23 +180,23 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             </button>
           </div> */}
 
-          {/* Lock Green Matched Letters Toggle */}
+          {/* Enable Hard Mode Toggle */}
           <div className="flex items-center justify-between">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Disable Green Letter Locking
+                Enable Hard Mode (Current: {settings.lockGreenMatchedLetters ? 'ON' : 'OFF'})
               </label>
-              <p className="text-xs text-gray-500">Disable automatic locking of exact matched letters in input row</p>
+              <p className="text-xs text-gray-500">Found exact matches remain locked for every subsequent guess</p>
             </div>
             <button
               onClick={() => setSettings(prev => ({ ...prev, lockGreenMatchedLetters: !prev.lockGreenMatchedLetters }))}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                !settings.lockGreenMatchedLetters ? 'bg-green-600' : 'bg-gray-200'
+                settings.lockGreenMatchedLetters ? 'bg-green-600' : 'bg-gray-200'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  !settings.lockGreenMatchedLetters ? 'translate-x-6' : 'translate-x-1'
+                  settings.lockGreenMatchedLetters ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -195,12 +216,6 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
           >
             Close
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-          >
-            Save
           </button>
         </div>
       </div>

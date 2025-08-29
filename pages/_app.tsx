@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS = {
   maxGuesses: 6,
   revealClue: false,
   randomPuzzle: false,
-  lockGreenMatchedLetters: true,
+  lockGreenMatchedLetters: false,
 };
 
 export default function MyApp({ Component, pageProps }: AppProps) {
