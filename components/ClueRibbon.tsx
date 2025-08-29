@@ -31,7 +31,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
     if (letterRevealsRemaining === maxReveals) {
       // First time use
       if (wordLength === 5) {
-        return "Buy a vowel (its free)";
+        return "Buy a vowel (1st guess only)";
       } else if (wordLength === 6) {
         return "Need help? I can turn up to 2 letters for you";
       } else {
@@ -74,7 +74,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
       <div className={`clue-ribbon !min-h-[30px] flex items-center shadow-md rounded-lg pl-3 transition-all duration-500 ease-in-out relative ${
           variant === 'error' ? 'bg-gray-800 text-gray-200' : variant === 'success' ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'
         } text-gray-900 `}>
-        <div className="text-sm flex items-center justify-between gap-2">
+        <div className="text-sm flex items-center justify-between gap-2 pr-3">
           <span className="transition-all duration-500 ease-in-out flex items-center gap-2 pl-1">
             {/* Special cases: show win/loss messages directly */}
             {clue && (clue.startsWith('Solved! Wordibble #') || clue.startsWith('Loss:')) ? (
@@ -124,7 +124,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
           {onRevealLetter && letterRevealsAllowed && (
             <button
               onClick={onRevealLetter}
-              className={`clue-letter shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] px-1.5 rounded-tr-lg rounded-br-lg flex-shrink-0 p-1 transition-colors duration-200 group relative ${
+              className={`clue-letter shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] px-1.5 !-mr-3 rounded-tr-lg rounded-br-lg flex-shrink-0 p-1 transition-colors duration-200 group relative ${
                 letterRevealsAllowed && letterRevealsRemaining && letterRevealsRemaining > 0
                   ? 'bg-green-500 hover:text-white'
                   : 'bg-gray-200 cursor-not-allowed'
