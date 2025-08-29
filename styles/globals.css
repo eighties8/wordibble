@@ -1,9 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Jomhuria&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&display=swap'); */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* main h1, main .title, main h2 { */
+h1, h2, .title, .title button, .title a {
+  font-family: "Jomhuria", serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size-adjust: 0.6;
+  color: #777
+}
+
 .background {
   background-color: #efefef;
+}
+
+/* globals.css */
+h1.header-title {
+  line-height: 1 !important; /* same as leading-none */
+  transform: translateY(5px);
 }
 
 @keyframes shake {

@@ -166,7 +166,7 @@ export default function StatsPage() {
 
       {/* Header */}
       <div className="text-center mt-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Statistics</h1>
+        <h1 className="text-3xl mb-2">Statistics</h1>
         <p className="text-gray-600">Your Wordseer performance</p>
       </div>
 

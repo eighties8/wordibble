@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function HowToPlayPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Guess the Word in 6 tries</h1>
+      <h1 className="text-3xl text-center mb-8">Guess the Word in 6 tries</h1>
       
       {/* <div className="text-center mb-8">
         <p className="text-lg text-gray-700">
@@ -117,7 +117,7 @@ export default function HowToPlayPage() {
         </div>
       </div>
 
-      <h2 className="text-3xl font-bold text-center my-8">How to Play</h2>
+      <h2 className="text-3xl text-center my-8">How to Play</h2>
 
 
       <div className="space-y-6 mb-8">

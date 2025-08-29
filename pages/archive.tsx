@@ -217,7 +217,7 @@ export default function ArchivePage() {
 
   return (
     <div className="max-w-md mx-auto pt-4">
-      <h1 className="text-gray-600 text-center mb-8 text-xl font-medium">
+      <h1 className="text-2xl text-center mb-8">
         Play puzzles since August 25, 2025
       </h1>
 

@@ -39,36 +39,36 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-gray-500 mb-4">Wordseer</h1>
+        <h1 className="text-5xl mb-4">Wordseer</h1>
 
-        <p className="text-lg text-gray-700 mb-8">
+        <h2 className="text-lg mb-8">
           Get 6 chances to guess a 5-7 letter word.
-        </p>
+        </h2>
 
         {/* Action */}
         <div className="space-y-2">
           {/* inline, green button */}
           <button
             onClick={onStartGame}
-            className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-green-500 transition-colors"
           >
             Play
           </button>
 
           {/* Puzzle number */}
-          <div className="text-sm text-gray-500">Wordseer #{puzzleNumber}</div>
+          <div className="text-sm title">Wordseer #{puzzleNumber}</div>
         </div>
 
         {/* Links */}
-        <div className="mt-8 space-y-2 text-sm text-gray-500">
+        <div className="mt-10 space-y-2">
           <div className="flex justify-center space-x-4">
-            <button onClick={() => router.push('/how-to-play')} className="hover:text-gray-700 transition-colors">
+            <button onClick={() => router.push('/how-to-play')} className="hover:text-gray-700 transition-colors title">
               How to Play
             </button>
-            <button onClick={() => router.push('/stats')} className="hover:text-gray-700 transition-colors">
+            <button onClick={() => router.push('/stats')} className="hover:text-gray-700 transition-colors title">
               Statistics
             </button>
-            <button onClick={() => router.push('/archive')} className="hover:text-gray-700 transition-colors">
+            <button onClick={() => router.push('/archive')} className="hover:text-gray-700 transition-colors title">
               Archive
             </button>
           </div>

@@ -110,7 +110,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
             </div>
 
             {/* Title */}
-            <h1 className="text-xl font-medium text-gray-600">
+            <h1 className="header-title text-xl hidden sm:block">
               Wordseer
               {title ? <span className="text-gray-400"> · {title}</span> : null}
             </h1>
