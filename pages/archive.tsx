@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Calendar, ChevronDown } from "lucide-react";
 import { getESTDateString } from "../lib/timezone";
@@ -16,6 +16,9 @@ export default function ArchivePage() {
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
   const [isClient, setIsClient] = useState(false);
+  
+  // Cache for puzzle completion status by month
+  const [puzzleCache, setPuzzleCache] = useState<Map<string, Set<string>>>(new Map());
 
   // Start date: August 25, 2025 (when daily puzzles actually began)
   const START_DATE = new Date(2025, 7, 25); // Month is 0-indexed, so 7 = August
@@ -31,6 +34,73 @@ export default function ArchivePage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Get month key for caching (YYYY-MM format)
+  const getMonthKey = useCallback((date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+
+  // Optimized: Load puzzle completion data for a specific month
+  const loadMonthPuzzleData = useCallback((month: Date) => {
+    const monthKey = getMonthKey(month);
+    
+    // Check if we already have this month cached
+    if (puzzleCache.has(monthKey)) {
+      return;
+    }
+
+    try {
+      const completedDates = new Set<string>();
+      
+      // Check the new puzzle storage system first
+      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
+      if (puzzles) {
+        const puzzlesData = JSON.parse(puzzles);
+        
+        // Find all completed puzzles for this month
+        Object.values(puzzlesData).forEach((puzzle: any) => {
+          if (puzzle.dateISO && puzzle.gameStatus === 'won') {
+            const puzzleDate = new Date(puzzle.dateISO);
+            if (puzzleDate.getFullYear() === month.getFullYear() && 
+                puzzleDate.getMonth() === month.getMonth()) {
+              completedDates.add(puzzle.dateISO);
+            }
+          }
+        });
+      }
+      
+      // Fallback to old stats system for backward compatibility
+      const stats = localStorage.getItem('wordibble:stats:v1');
+      if (stats) {
+        const statsData = JSON.parse(stats);
+        if (statsData.results) {
+          statsData.results.forEach((result: any) => {
+            if (result.dateISO) {
+              const resultDate = new Date(result.dateISO);
+              if (resultDate.getFullYear() === month.getFullYear() && 
+                  resultDate.getMonth() === month.getMonth()) {
+                completedDates.add(result.dateISO);
+              }
+            }
+          });
+        }
+      }
+      
+      // Cache the results for this month
+      setPuzzleCache(prev => new Map(prev).set(monthKey, completedDates));
+    } catch (error) {
+      console.error('Error loading month puzzle data:', error);
+      // Cache empty set on error
+      setPuzzleCache(prev => new Map(prev).set(monthKey, new Set()));
+    }
+  }, [puzzleCache, getMonthKey]);
+
+  // Load puzzle data when month changes
+  useEffect(() => {
+    if (isClient) {
+      loadMonthPuzzleData(currentMonth);
+    }
+  }, [currentMonth, isClient, loadMonthPuzzleData]);
 
   const isDateSelectable = (date: Date) => {
     // Use EST timezone for today's date comparison
@@ -54,12 +124,6 @@ export default function ArchivePage() {
   const formatDateKey = (date: Date) => {
     return date.toISOString().slice(0, 10);
   };
-
-  const getMonthKey = (date: Date) => {
-    return `${date.getFullYear()}-${date.getMonth()}`;
-  };
-
-  const puzzleCache = new Map<string, Map<string, boolean>>();
 
   const hasPlayedPuzzle = (date: Date) => {
     const monthKey = getMonthKey(date);
@@ -186,7 +250,7 @@ export default function ArchivePage() {
                   return newMonth;
                 })
               }
-              className="appearance-none pl-8 pr-3 py-2 border border-gray-300 rounded-lg bg-white"
+              className="appearance-none pl-8 pr-3 py-2 border border-gray-300 rounded-lg bg-white focus:border-gray-500 focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 focus:outline-none"
             >
               {months.map((month, index) => {
                 // Only show months from August 2025 onwards
@@ -217,7 +281,7 @@ export default function ArchivePage() {
                   return newMonth;
                 })
               }
-              className="appearance-none pl-8 pr-3 py-2 border border-gray-300 rounded-lg bg-white"
+              className="appearance-none pl-8 pr-3 py-2 border border-gray-300 rounded-lg bg-white focus:border-gray-500 focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 focus:outline-none"
             >
               {years.map((year) => {
                 // Only show years from 2025 onwards
