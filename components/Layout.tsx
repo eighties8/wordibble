@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { BarChart3, CalendarDays, Settings, HelpCircle } from "lucide-react";
+import { BarChart3, CalendarDays, Settings, HelpCircle, Eye, Sparkles } from "lucide-react";
 import React, { useState } from "react";
 import SettingsModal from "./Settings";
 
@@ -105,11 +105,17 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
             className="no-underline focus:outline-none flex items-center gap-2"
           >
             {/* logo tile */}
-            <div className="grid grid-cols-2 gap-[2px] p-[2px] w-6 h-6 border border-gray-900 rounded-sm">
+            {/* <div className="grid grid-cols-2 gap-[2px] p-[2px] w-6 h-6 border border-gray-900 rounded-sm">
               <div className="bg-green-500" />
               <div className="bg-amber-500" />
               <div className="bg-green-500" />
               <div className="bg-green-500" />
+            </div> */}
+            {/* <div className="flex items-center justify-center w-10 h-8 border-4 border-gray-400 rounded-2xl">
+              <div className="bg-green-500 rounded-md"><Eye className="w-8 h-6 text-white" /></div>
+            </div> */}
+            <div className="bg-gray-400 rounded-md">
+              <Eye className="w-8 h-6 text-white" />
             </div>
             <h1 className="text-xl font-medium text-gray-600">
               Wordseer{title ? <span className="text-gray-400"> · {title}</span> : null}
