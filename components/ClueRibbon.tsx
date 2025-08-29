@@ -108,7 +108,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
 
                 {/* Right: the long/hover text - shows clue if enabled, otherwise guidance */}
                 <span className="whitespace-nowrap overflow-hidden">
-                  {revealClueEnabled && clue ? clue : <Settings className="w-5 h-5 pl-1" />}
+                  {revealClueEnabled && clue ? clue : ''}
                 </span>
               </button>
             )}
