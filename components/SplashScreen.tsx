@@ -24,7 +24,7 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
 
   return (
     // removed min-h-screen to avoid stacking overflow with layout header/footer
-    <div className="flex flex-col items-center justify-center p-6">
+    <div className="splashscreen flex flex-col items-center justify-center p-6">
       <div className="text-center max-w-md mx-auto">
         {/* Logo */}
         <div className="mb-6">
