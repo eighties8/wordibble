@@ -1542,13 +1542,13 @@ export default function Game({ openSettings, resetSettings }: {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="text-xl text-gray-900">Loading game...</div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <div className="text-xl text-gray-900">Loading</div>
+  //     </div>
+  //   );
+  // }
 
   // Check if we should show the splash screen (only after loading is complete)
   const isPlaying = isCurrentlyPlaying();
