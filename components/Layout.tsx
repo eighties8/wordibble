@@ -128,8 +128,6 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
             "mx-auto",
             // game wants a bit wider than stats/archive; toggle with `narrow`
             narrow ? "max-w-3xl" : "max-w-4xl",
-            // vertical rhythm
-            "py-4 md:py-8",
           ].join(" ")}
         >
           {childrenWithProps}
