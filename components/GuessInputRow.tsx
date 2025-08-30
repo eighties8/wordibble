@@ -124,60 +124,63 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       }
     }, [forceClear, wordLength, locked, revealedLetters]);
 
-    // Handle fade-out clear (for successful submissions)
+    // TEMPORARILY DISABLED: Handle fade-out clear (for successful submissions)
     useEffect(() => {
       if (fadeOutClear) {
+        // TEMPORARILY DISABLED: All fade-out and clearing logic
+        console.log('FADE-OUT CLEAR DISABLED - keeping input row intact');
         
-        // Add fade-out effect to all non-locked cells
-        const tilePanels = tilePanelRefs.current;
-        tilePanels.forEach((tilePanel, index) => {
-          if (tilePanel && !locked[index]) {
-            tilePanel.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-            tilePanel.style.transform = 'scale(0.8)';
-            tilePanel.style.opacity = '0';
-          } 
-        });
+        // TEMPORARILY DISABLED: Add fade-out effect to all non-locked cells
+        // const tilePanels = tilePanelRefs.current;
+        // tilePanels.forEach((tilePanel, index) => {
+        //   if (tilePanel && !locked[index]) {
+        //     tilePanel.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        //     tilePanel.style.transform = 'scale(0.8)';
+        //     tilePanel.style.opacity = '0';
+        //   } 
+        // });
         
-        // After fade-out completes, clear the cells and notify parent
-        setTimeout(() => {
-          // Clear all non-locked cells
-          setCells(prev => {
-            const next = prev.map((cell, index) => {
-              if (locked[index]) {
-                return cell;
-              } else {
-                return '';
-              }
-            });
-            return next;
-          });
+        // TEMPORARILY DISABLED: After fade-out completes, clear the cells and notify parent
+        // setTimeout(() => {
+        //   // Clear all non-locked cells
+        //   setCells(prev => {
+        //     const next = prev.map((cell, index) => {
+        //       if (locked[index]) {
+        //         return cell;
+        //       } else {
+        //       } else {
+        //         return '';
+        //       }
+        //     });
+        //     return next;
+        //   });
           
-          // Notify parent of the cleared cells
-          setTimeout(() => {
-            const clearedCells = Array.from({ length: wordLength }, (_, i) => 
-              locked[i] ? cells[i] : ''
-            );
-            onChange(clearedCells);
-          }, 0);
+        //   // Notify parent of the cleared cells
+        //   setTimeout(() => {
+        //     const clearedCells = Array.from({ length: wordLength }, (_, i) => 
+        //       locked[i] ? cells[i] : ''
+        //     );
+        //     onChange(clearedCells);
+        //   }, 0);
           
-          // Prevent initialCells from overriding our clear operation
-          isUpdatingFromParent.current = true;
-          setTimeout(() => {
-            isUpdatingFromParent.current = false;
-          }, 100);
+        //   // Prevent initialCells from overriding our clear operation
+        //   isUpdatingFromParent.current = true;
+        //   setTimeout(() => {
+        //     isUpdatingFromParent.current = false;
+        //   }, 100);
           
-          // Reset opacity, transform, and transition styles
-          tilePanels.forEach((tilePanel, index) => {
-            if (tilePanel && !locked[index]) {
-              tilePanel.style.opacity = '1';
-              tilePanel.style.transform = '';
-              tilePanel.style.transition = '';
-            }
-          });
+        //   // Reset opacity, transform, and transition styles
+        //   tilePanels.forEach((tilePanel, index) => {
+        //       if (tilePanel && !locked[index]) {
+        //         tilePanel.style.opacity = '1';
+        //         tilePanel.style.transform = '';
+        //         tilePanel.style.transition = '';
+        //       }
+        //     });
           
-          // Notify parent that fade-out is complete
-          onFadeOutComplete?.();
-        }, 300); // 300ms fade duration
+        //   // Notify parent that fade-out is complete
+        //   onFadeOutComplete?.();
+        // }, 300); // 300ms fade duration
       }
     }, [fadeOutClear, wordLength, locked, onFadeOutComplete, onChange, cells]);
 

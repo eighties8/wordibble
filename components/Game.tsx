@@ -1170,6 +1170,7 @@ export default function Game({ openSettings, resetSettings }: {
 
     // Only undo reveal behavior for VALID submissions if letter locking is disabled
     if (!settings.lockGreenMatchedLetters) {
+      // console.log('UNDO: Remove from revealedLetters, unlock positions, clear postSubmitUnlockedPositions');
       // UNDO: Remove from revealedLetters, unlock positions, clear postSubmitUnlockedPositions
       setGameState(prev => ({
         ...prev,
@@ -1271,11 +1272,11 @@ export default function Game({ openSettings, resetSettings }: {
         }, 500);
       }
       
-      // After flip animation completes, trigger fade-out transition for input row
-      setFadeOutClearInput(true);
+      // TEMPORARILY DISABLED: After flip animation completes, trigger fade-out transition for input row
+      // setFadeOutClearInput(true);
       
-      // The GuessInputRow component will handle the fade-out and clearing
-      // The onFadeOutComplete callback will handle focus and state reset
+      // TEMPORARILY DISABLED: The GuessInputRow component will handle the fade-out and clearing
+      // TEMPORARILY DISABLED: The onFadeOutComplete callback will handle focus and state reset
     }, flipDuration);
 
     // Record stats for completed game (only for daily puzzles, not archive or random)
