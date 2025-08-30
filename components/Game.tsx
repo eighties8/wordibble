@@ -1403,10 +1403,20 @@ export default function Game({ openSettings, resetSettings }: {
   const handleKeyboardBackspace = useCallback(() => {
     if (gameState.gameStatus !== 'playing') return;
     
-    // Find last filled editable cell
+    // Find last filled editable cell, skipping over locked/revealed letters
     let i = -1;
     for (let j = currentGuess.length - 1; j >= 0; j--) {
-      if (!gameState.lockedLetters[j] && currentGuess[j]) {
+      const isLocked = gameState.lockedLetters[j];
+      const isRevealed = isPositionRevealed(j);
+      const hasContent = currentGuess[j];
+      
+      // Skip over locked or revealed letters (these can't be edited)
+      if (isLocked || isRevealed) {
+        continue; // Skip to next position
+      }
+      
+      // Found an editable position with content
+      if (hasContent) {
         i = j;
         break;
       }
@@ -1432,7 +1442,7 @@ export default function Game({ openSettings, resetSettings }: {
         queueFocusSpecificIndex(i);
       }, 50);
     }
-  }, [gameState.gameStatus, currentGuess, gameState.lockedLetters]);
+  }, [gameState.gameStatus, currentGuess, gameState.lockedLetters, gameState.revealedLetters, isPositionRevealed]);
 
   // ===== Memoized keyboard letter states =====
   const keyboardLetterStates = useMemo(() => {
