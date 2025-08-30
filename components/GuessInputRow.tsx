@@ -367,12 +367,16 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-revealed={isRevealed}
                     className="w-full h-full text-center bg-transparent border-none outline-none font-semibold tracking-wider text-lg md:text-lg lg:text-xl"
                     value={cells[i] ?? ''}
-                    readOnly={true}
+                    readOnly={(() => {
+                      const finalReadOnly = readOnly || isLocked;
+                      return finalReadOnly;
+                    })()}
                     tabIndex={readOnly || isLocked ? -1 : 0}
                     onChange={e => {
                       handleChangeAt(i, e.target.value);
                     }}
                     onKeyDown={e => handleKeyDownAt(i, e)}
+                    inputMode="text"
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
