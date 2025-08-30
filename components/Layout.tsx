@@ -100,19 +100,24 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-md border-b border-gray-200 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <Link
+          <Link
             href="/"
             className="no-underline focus:outline-none flex items-center gap-2"
           >
             {/* Logo container */}
-            <div className="flex items-center justify-center p-0 w-10 h-10">
-              {/* <Eye size={40} className="text-white" /> */}
-              <svg viewBox="0 0 256 256">
-              <rect x="16" y="16" width="224" height="224" rx="40" fill="#22C55E"/>
-              <path d="M32 128c36-54 88-82 96-82s60 28 96 82c-36 54-88 82-96 82s-60-28-96-82Z" fill="#F8FAFC"/>
-              <circle cx="128" cy="128" r="36" fill="#22C55E"/>
-              <circle cx="128" cy="128" r="14" fill="#0B4D2A"/>
-            </svg>
+            <div className="flex items-center justify-center w-10 h-10">
+              <svg
+                viewBox="0 0 256 256"
+                className="block w-full h-full"           // <- fill the 40×40 wrapper
+                aria-hidden="true"
+                focusable="false"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <rect x="16" y="16" width="224" height="224" rx="40" fill="#22C55E" />
+                <path d="M32 128c36-54 88-82 96-82s60 28 96 82c-36 54-88 82-96 82s-60-28-96-82Z" fill="#F8FAFC" />
+                <circle cx="128" cy="128" r="36" fill="#22C55E" />
+                <circle cx="128" cy="128" r="14" fill="#0B4D2A" />
+              </svg>
             </div>
 
             {/* Title */}
