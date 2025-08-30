@@ -332,18 +332,19 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             // Show green styling for locked letters, revealed letters that are locked, or end-game reveal
             const stateClasses = isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
               ? `bg-green-500 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
-              : 'bg-white';
+              : 'bg-white text-red-500';
             
             // Debug: Log the styling decision
-            // if (i === 2) {
-            //   console.log(`DEBUG Input ${i} styling:`, {
-            //     isLocked,
-            //     isRevealed,
-            //     hasCells: !!cells[i],
-            //     isEndGameReveal,
-            //     stateClasses
-            //   });
-            // }
+            if (i === 0) { // Debug first input cell
+              console.log(`DEBUG Input ${i} styling:`, {
+                isLocked,
+                isRevealed,
+                hasCells: !!cells[i],
+                isEndGameReveal,
+                stateClasses,
+                textColor: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i]) ? 'WHITE' : 'DARK'
+              });
+            }
             
             return (
               <div key={i} className="tile-frame w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg transform-gpu">
@@ -359,7 +360,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-revealed={isRevealed}
                     className={`w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl ${
                       isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                        ? 'text-white' 
+                        ? 'text-white !bg-red-500' 
                         : 'text-gray-900'
                     }`}
                     style={{

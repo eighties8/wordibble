@@ -459,7 +459,12 @@ export default function Game({ openSettings, resetSettings }: {
   // ===== Debug flag (persisted) =====
   useEffect(() => {
     const savedDebugMode = localStorage.getItem('wordseer-debug-mode');
-    if (savedDebugMode) setDebugMode(JSON.parse(savedDebugMode));
+    if (savedDebugMode) {
+      setDebugMode(JSON.parse(savedDebugMode));
+    } else {
+      // Enable debug mode by default on mobile devices
+      setDebugMode(isTouch);
+    }
   }, []);
   useEffect(() => {
     localStorage.setItem('wordseer-debug-mode', JSON.stringify(debugMode));
