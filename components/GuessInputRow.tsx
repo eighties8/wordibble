@@ -329,10 +329,11 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             
             // For end-of-game reveal, show green styling for solution letters
             const isEndGameReveal = gameStatus === 'won' || gameStatus === 'lost';
+            
             // Show green styling for locked letters, revealed letters that are locked, or end-game reveal
             const stateClasses = isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
               ? `bg-green-500 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
-              : 'bg-white text-red-500';
+              : 'bg-white';
             
             // Debug: Log the styling decision
             if (i === 0) { // Debug first input cell
@@ -360,18 +361,24 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-revealed={isRevealed}
                     className={`w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl ${
                       isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                        ? 'text-white !bg-red-500' 
+                        ? 'text-white' 
                         : 'text-gray-900'
                     }`}
+                    // TEMPORARY: Add obvious visual debugging
+                    placeholder="?"
                     style={{
+                      // AGGRESSIVE DEBUG: Force text to be visible with bright colors
+                      WebkitTextFillColor: '#ff0000', // Bright red
+                      color: '#ff0000', // Bright red
+                      backgroundColor: '#ffff00', // Bright yellow background
                       // Ensure text is visible on mobile
-                      WebkitTextFillColor: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                        ? '#ffffff' 
-                        : '#111827',
+                      // WebkitTextFillColor: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
+                      //   ? '#ffffff' 
+                      //   : '#111827',
                       // Force text color on mobile
-                      color: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                        ? '#ffffff' 
-                        : '#111827'
+                      // color: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
+                      //   ? '#ffffff' 
+                      //   : '#111827'
                     }}
                     value={cells[i] ?? ''}
                     readOnly={(() => {
