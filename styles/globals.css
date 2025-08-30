@@ -77,24 +77,7 @@ input[type="radio"]:focus {
 
 body { background: #fff; }
 
-/* DEBUG: Force input text visibility */
-input[data-debug="true"] {
-  color: #ff0000 !important;
-  background-color: #ffff00 !important;
-  -webkit-text-fill-color: #ff0000 !important;
-  text-fill-color: #ff0000 !important;
-}
-
-/* Mobile-specific input text visibility fix */
-@media (max-width: 768px) {
-  input[type="text"], 
-  input[inputmode="text"] {
-    color: #000000 !important;
-    -webkit-text-fill-color: #000000 !important;
-    text-fill-color: #000000 !important;
-    background-color: #ffffff !important;
-  }
-}
+/* DEBUG: Temporarily removed to isolate the issue */
 
 /* ------------------------------------------------------------
    Flip system (frame + panel) — Wordle-like, no pre-flash

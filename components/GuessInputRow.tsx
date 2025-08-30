@@ -69,28 +69,29 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     // DEBUG: Temporarily disabled to restore virtual keyboard functionality
 
     // Force reset cells when revealedLetters changes (to handle post-submit unlock)
-    useEffect(() => {
-      if (revealedLetters && revealedLetters.size === 0) {
-        isUpdatingFromParent.current = true;
+    // TEMPORARILY DISABLED: This effect was clearing cells after first guess
+    // useEffect(() => {
+    //   if (revealedLetters && revealedLetters.size === 0) {
+    //     isUpdatingFromParent.current = true;
         
-        // Only reset cells that were previously revealed, preserve user input
-        setCells(prev => {
-          const next = prev.slice();
-          for (let i = 0; i < wordLength; i++) {
-            // If this position was previously revealed, clear it
-            if (wasRevealedPositions && wasRevealedPositions.has(i)) {
-              next[i] = '';
-            }
-            // Otherwise, keep the current value (preserve user input)
-          }
-          return next;
-        });
+    //     // Only reset cells that were previously revealed, preserve user input
+    //     setCells(prev => {
+    //       const next = prev.slice();
+    //       for (let i = 0; i < wordLength; i++) {
+    //         // If this position was previously revealed, clear it
+    //         if (wasRevealedPositions && wasRevealedPositions.has(i)) {
+    //           next[i] = '';
+    //         }
+    //         // Otherwise, keep the current value (preserve user input)
+    //       }
+    //       return next;
+    //     });
         
-        setTimeout(() => {
-          isUpdatingFromParent.current = false;
-        }, 0);
-      }
-    }, [revealedLetters, initialCells, wordLength, wasRevealedPositions]);
+    //     setTimeout(() => {
+    //       isUpdatingFromParent.current = false;
+    //     }, 0);
+    //   }
+    // }, [revealedLetters, initialCells, wordLength, wasRevealedPositions]);
 
     // Handle force clear (for shake animation)
     useEffect(() => {
@@ -366,25 +367,13 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-index={i}
                     data-locked={isLocked}
                     data-revealed={isRevealed}
-                    className={`w-full h-full text-center bg-white border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl ${
-                      isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                        ? 'text-white' 
-                        : 'text-gray-900'
-                    }`}
-                    // DEBUG: Removed to restore virtual keyboard functionality
+                    className="w-full h-full text-center bg-white border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl"
                     style={{
-                      // AGGRESSIVE DEBUG: Force text to be visible with bright colors
-                      WebkitTextFillColor: '#ff0000 !important', // Bright red
-                      color: '#ff0000 !important', // Bright red
-                      backgroundColor: '#ffff00 !important', // Bright yellow background
-                      // Ensure text is visible on mobile
-                      // WebkitTextFillColor: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                      //   ? '#ffffff' 
-                      //   : '#111827',
-                      // Force text color on mobile
-                      // color: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                      //   ? '#ffffff' 
-                      //   : '#111827'
+                      // Consistent styling - no conflicts
+                      color: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
+                        ? '#ffffff' 
+                        : '#000000',
+                      backgroundColor: '#ffffff'
                     }}
                     value={cells[i] ?? ''}
                     readOnly={(() => {
