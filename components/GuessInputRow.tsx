@@ -367,7 +367,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-index={i}
                     data-locked={isLocked}
                     data-revealed={isRevealed}
-                    className="w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl"
+                    className="w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 focus:rounded"
                     value={cells[i] ?? ''}
                     readOnly={(() => {
                       const finalReadOnly = readOnly || isLocked;

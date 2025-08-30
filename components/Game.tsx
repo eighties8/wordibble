@@ -1221,6 +1221,29 @@ export default function Game({ openSettings, resetSettings }: {
     // STEP 1: Simple input clearing - clear the input row immediately after submission
     setCurrentGuess(new Array(gameState.wordLength).fill(''));
 
+    // STEP 2: Basic focus management - focus the first unlocked input position
+    setTimeout(() => {
+      // Find the first unlocked position (not locked and not revealed)
+      let firstUnlockedIndex = -1;
+      for (let i = 0; i < gameState.wordLength; i++) {
+        const isLocked = gameState.lockedLetters[i];
+        const isRevealed = isPositionRevealed(i);
+        
+        if (!isLocked && !isRevealed) {
+          firstUnlockedIndex = i;
+          break;
+        }
+      }
+      
+      // Focus the first unlocked position (or first position if all are locked)
+      if (firstUnlockedIndex >= 0) {
+        queueFocusSpecificIndex(firstUnlockedIndex);
+      } else {
+        // Fallback: focus first position if somehow all are locked
+        queueFocusFirstEmpty();
+      }
+    }, 100); // Small delay to ensure state updates are processed
+
     // Mark this row for flip animation
     const newRowIndex = gameState.attempts.length;
     setFlippingRows(prev => new Set([...Array.from(prev), newRowIndex]));
