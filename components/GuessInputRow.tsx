@@ -34,14 +34,6 @@ type Props = {
   gameStatus?: string;        // game status to check if we're in won state
 };
 
-// Helper function to detect mobile devices
-const isMobileDevice = () => {
-  if (typeof window === 'undefined') return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-         ('ontouchstart' in window) ||
-         (navigator.maxTouchPoints > 0);
-};
-
 const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
   ({ wordLength, locked, initialCells, onChange, isShaking, forceClear, fadeOutClear, onFadeOutComplete, revealedLetters, wasRevealedPositions, readOnly, showFadeIn, gameStatus }, ref) => {
 
@@ -57,9 +49,6 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     
     // ref to track when cells are being updated from parent
     const isUpdatingFromParent = useRef(false);
-
-    // Mobile device detection
-    const isMobile = useMemo(() => isMobileDevice(), []);
 
     // keep cells in sync if parent sends new initialCells (e.g., new greens)
     useEffect(() => {
@@ -219,23 +208,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       focusFirstEditable() {
         const i = firstEditableIndex >= 0 ? firstEditableIndex : 0;
         if (i >= 0 && !locked[i]) {
-          // On mobile, we don't want to actually focus the input to prevent keyboard
-          if (isMobile) {
-            // Just highlight the cell visually without focusing
-            const input = inputsRef.current[i];
-            if (input) {
-              input.classList.add('mobile-focus-highlight');
-              // Remove highlight after a short delay
-              setTimeout(() => {
-                if (input) {
-                  input.classList.remove('mobile-focus-highlight');
-                }
-              }, 1000);
-            }
-          } else {
-            inputsRef.current[i]?.focus();
-            inputsRef.current[i]?.select?.();
-          }
+          inputsRef.current[i]?.focus();
+          inputsRef.current[i]?.select?.();
         }
       },
       focusFirstEmptyEditable() {
@@ -246,23 +220,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             ? firstEmptyEditableIndex
             : 0;
         if (i >= 0 && !locked[i]) {
-          // On mobile, we don't want to actually focus the input to prevent keyboard
-          if (isMobile) {
-            // Just highlight the cell visually without focusing
-            const input = inputsRef.current[i];
-            if (input) {
-              input.classList.add('mobile-focus-highlight');
-              // Remove highlight after a short delay
-              setTimeout(() => {
-                if (input) {
-                  input.classList.remove('mobile-focus-highlight');
-                }
-              }, 1000);
-            }
-          } else {
-            inputsRef.current[i]?.focus();
-            inputsRef.current[i]?.select?.();
-          }
+          inputsRef.current[i]?.focus();
+          inputsRef.current[i]?.select?.();
         }
       },
       clearInputs() {
@@ -273,7 +232,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
           return next;
         });
       },
-    }), [firstEditableIndex, firstEmptyEditableIndex, locked, isMobile]);
+    }), [firstEditableIndex, firstEmptyEditableIndex, locked]);
 
     // handle typing *only* in editable cells; jump over locked ones
     function handleChangeAt(i: number, val: string) {
@@ -294,21 +253,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       if (!wasRevealed) {
         for (let j = i + 1; j < wordLength; j++) {
           if (!locked[j]) {
-            if (isMobile) {
-              // On mobile, just highlight the next cell visually
-              const input = inputsRef.current[j];
-              if (input) {
-                input.classList.add('mobile-focus-highlight');
-                setTimeout(() => {
-                  if (input) {
-                    input.classList.remove('mobile-focus-highlight');
-                  }
-                }, 1000);
-              }
-            } else {
-              inputsRef.current[j]?.focus();
-              inputsRef.current[j]?.select?.();
-            }
+            inputsRef.current[j]?.focus();
+            inputsRef.current[j]?.select?.();
             break;
           }
         }
@@ -326,21 +272,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
           });
           // stay on this input
           requestAnimationFrame(() => {
-            if (isMobile) {
-              // On mobile, just highlight the current cell visually
-              const input = inputsRef.current[i];
-              if (input) {
-                input.classList.add('mobile-focus-highlight');
-                setTimeout(() => {
-                  if (input) {
-                    input.classList.remove('mobile-focus-highlight');
-                  }
-                }, 1000);
-              }
-            } else {
-              inputsRef.current[i]?.focus();
-              inputsRef.current[i]?.select?.();
-            }
+            inputsRef.current[i]?.focus();
+            inputsRef.current[i]?.select?.();
           });
         } else {
           // jump backward to previous editable with a value
@@ -353,21 +286,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                 return next;
               });
               requestAnimationFrame(() => {
-                if (isMobile) {
-                  // On mobile, just highlight the previous cell visually
-                  const input = inputsRef.current[j];
-                  if (input) {
-                    input.classList.add('mobile-focus-highlight');
-                    setTimeout(() => {
-                      if (input) {
-                        input.classList.remove('mobile-focus-highlight');
-                      }
-                    }, 1000);
-                  }
-                } else {
-                  inputsRef.current[j]?.focus();
-                  inputsRef.current[j]?.select?.();
-                }
+                inputsRef.current[j]?.focus();
+                inputsRef.current[j]?.select?.();
               });
               break;
             }
@@ -377,21 +297,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       if (e.key === 'ArrowLeft') {
         for (let j = i - 1; j >= 0; j--) {
           if (!locked[j]) {
-            if (isMobile) {
-              // On mobile, just highlight the previous cell visually
-              const input = inputsRef.current[j];
-              if (input) {
-                input.classList.add('mobile-focus-highlight');
-                setTimeout(() => {
-                  if (input) {
-                    input.classList.remove('mobile-focus-highlight');
-                  }
-                }, 1000);
-              }
-            } else {
-              inputsRef.current[j]?.focus();
-              inputsRef.current[j]?.select?.();
-            }
+            inputsRef.current[j]?.focus();
+            inputsRef.current[j]?.select?.();
             break;
           }
         }
@@ -399,36 +306,13 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       if (e.key === 'ArrowRight') {
         for (let j = i + 1; j < wordLength; j++) {
           if (!locked[j]) {
-            if (isMobile) {
-              // On mobile, just highlight the next cell visually
-              const input = inputsRef.current[j];
-              if (input) {
-                input.classList.add('mobile-focus-highlight');
-                setTimeout(() => {
-                  if (input) {
-                    input.classList.remove('mobile-focus-highlight');
-                  }
-                }, 1000);
-              }
-            } else {
-              inputsRef.current[j]?.focus();
-              inputsRef.current[j]?.select?.();
-            }
+            inputsRef.current[j]?.focus();
+            inputsRef.current[j]?.select?.();
             break;
           }
         }
       }
     }
-
-    // Prevent device keyboard from opening on mobile
-    const handleInputTouch = (e: React.TouchEvent<HTMLInputElement>) => {
-      if (isMobile) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Don't focus the input on mobile to prevent device keyboard
-        return false;
-      }
-    };
 
     return (
       <div className={`flex justify-center ${isShaking ? 'animate-shake' : ''}`}>
@@ -480,7 +364,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-index={i}
                     data-locked={isLocked}
                     data-revealed={isRevealed}
-                    className="w-full h-full text-center bg-transparent border-none outline-none font-semibold tracking-wider text-lg md:text-lg lg:text-xl"
+                    className="w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl"
                     value={cells[i] ?? ''}
                     readOnly={(() => {
                       const finalReadOnly = readOnly || isLocked;
@@ -491,8 +375,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                       handleChangeAt(i, e.target.value);
                     }}
                     onKeyDown={e => handleKeyDownAt(i, e)}
-                    onTouchStart={handleInputTouch}
-                    inputMode={isMobile ? "none" : "text"}
+                    inputMode="text"
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
