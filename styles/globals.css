@@ -77,6 +77,14 @@ input[type="radio"]:focus {
 
 body { background: #fff; }
 
+/* DEBUG: Force input text visibility */
+input[data-debug="true"] {
+  color: #ff0000 !important;
+  background-color: #ffff00 !important;
+  -webkit-text-fill-color: #ff0000 !important;
+  text-fill-color: #ff0000 !important;
+}
+
 /* ------------------------------------------------------------
    Flip system (frame + panel) — Wordle-like, no pre-flash
 ------------------------------------------------------------ */

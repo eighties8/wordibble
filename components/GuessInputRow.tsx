@@ -73,9 +73,9 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
         inputsRef.current.forEach((input, index) => {
           if (input && !locked[index]) {
             // Re-apply our aggressive debugging styles
-            (input.style as any).webkitTextFillColor = '#ff0000';
-            input.style.color = '#ff0000';
-            input.style.backgroundColor = '#ffff00';
+            (input.style as any).webkitTextFillColor = '#ff0000 !important';
+            input.style.color = '#ff0000 !important';
+            input.style.backgroundColor = '#ffff00 !important';
           }
         });
       }, 100); // Small delay to ensure parent update is complete
@@ -89,9 +89,9 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
         inputsRef.current.forEach((input, index) => {
           if (input && !locked[index]) {
             // Continuously re-apply our aggressive debugging styles
-            (input.style as any).webkitTextFillColor = '#ff0000';
-            input.style.color = '#ff0000';
-            input.style.backgroundColor = '#ffff00';
+            (input.style as any).webkitTextFillColor = '#ff0000 !important';
+            input.style.color = '#ff0000 !important';
+            input.style.backgroundColor = '#ffff00 !important';
           }
         });
       }, 50); // Check every 50ms
@@ -404,11 +404,12 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     }`}
                     // TEMPORARY: Add obvious visual debugging
                     placeholder="?"
+                    data-debug="true"
                     style={{
                       // AGGRESSIVE DEBUG: Force text to be visible with bright colors
-                      WebkitTextFillColor: '#ff0000', // Bright red
-                      color: '#ff0000', // Bright red
-                      backgroundColor: '#ffff00', // Bright yellow background
+                      WebkitTextFillColor: '#ff0000 !important', // Bright red
+                      color: '#ff0000 !important', // Bright red
+                      backgroundColor: '#ffff00 !important', // Bright yellow background
                       // Ensure text is visible on mobile
                       // WebkitTextFillColor: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
                       //   ? '#ffffff' 
