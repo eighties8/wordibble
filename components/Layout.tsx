@@ -105,8 +105,14 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
             className="no-underline focus:outline-none flex items-center gap-2"
           >
             {/* Logo container */}
-            <div className="flex items-center justify-center p-1 w-10 h-10 border-4 border-gray-500 bg-green-500 rounded-lg">
-              <Eye className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-center p-0 w-10 h-10">
+              {/* <Eye size={40} className="text-white" /> */}
+              <svg viewBox="0 0 256 256">
+              <rect x="16" y="16" width="224" height="224" rx="40" fill="#22C55E"/>
+              <path d="M32 128c36-54 88-82 96-82s60 28 96 82c-36 54-88 82-96 82s-60-28-96-82Z" fill="#F8FAFC"/>
+              <circle cx="128" cy="128" r="36" fill="#22C55E"/>
+              <circle cx="128" cy="128" r="14" fill="#0B4D2A"/>
+            </svg>
             </div>
 
             {/* Title */}

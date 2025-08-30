@@ -26,17 +26,21 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
     // removed min-h-screen to avoid stacking overflow with layout header/footer
     <div className="splashscreen flex flex-col items-center justify-center p-6">
       <div className="text-center max-w-md mx-auto">
+        
         {/* Logo */}
-        <div className="mb-6">
-          {/* <div className="grid grid-cols-2 gap-1.5 p-2 w-20 h-20 border-4 border-gray-500 rounded-lg mx-auto mb-4">
-            <div className="bg-green-500 rounded-sm" />
-            <div className="bg-amber-500 rounded-sm" />
-            <div className="bg-green-500 rounded-sm" />
-            <div className="bg-green-500 rounded-sm" />
-          </div> */}
-          <div className="p-0 w-20 h-20 border-8 border-gray-500 bg-green-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-            <Eye className="w-20 h-20 text-gray-200" />
+        <div className="mb-6">         
+          <div className="p-0 w-28 h-28 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            
+            <svg viewBox="0 0 256 256">
+              <rect x="16" y="16" width="224" height="224" rx="40" fill="#22C55E"/>
+              <path d="M32 128c36-54 88-82 96-82s60 28 96 82c-36 54-88 82-96 82s-60-28-96-82Z" fill="#F8FAFC"/>
+              <circle cx="128" cy="128" r="36" fill="#22C55E"/>
+              <circle cx="128" cy="128" r="14" fill="#0B4D2A"/>
+            </svg>
+
           </div>
+
+
         </div>
 
         <h1 className="text-5xl mb-4">Wordseer</h1>
@@ -50,13 +54,13 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
           {/* inline, green button */}
           <button
             onClick={onStartGame}
-            className="inline-flex items-center justify-center px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-green-500 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-gray-900 transition-colors"
           >
-            Play
+            PLAY
           </button>
 
           {/* Puzzle number */}
-          <div className="text-sm title">Wordseer #{puzzleNumber}</div>
+          <div className="text-sm title">Puzzle #{puzzleNumber}</div>
         </div>
 
         {/* Links */}
