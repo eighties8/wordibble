@@ -52,13 +52,18 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     // keep cells in sync if parent sends new initialCells (e.g., new greens)
     useEffect(() => {
-      isUpdatingFromParent.current = true;
-      setCells(initialCells.slice(0, wordLength));
+      // DEBUG: Temporarily disable parent updates to preserve our debugging styles
+      console.log('DEBUG: Parent trying to update cells with:', initialCells);
+      console.log('DEBUG: Current cells state:', cells);
+      
+      // TEMPORARILY DISABLED: Don't let parent override our cells
+      // isUpdatingFromParent.current = true;
+      // setCells(initialCells.slice(0, wordLength));
       
       // Clear flag after state update
-      setTimeout(() => {
-        isUpdatingFromParent.current = false;
-      }, 0);
+      // setTimeout(() => {
+      //   isUpdatingFromParent.current = false;
+      // }, 0);
     }, [initialCells, wordLength]);
 
     // DEBUG: Preserve our aggressive styling after parent updates
@@ -77,6 +82,22 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       
       return () => clearTimeout(timer);
     }, [cells, locked]);
+
+    // AGGRESSIVE DEBUG: Continuously preserve styles
+    useEffect(() => {
+      const interval = setInterval(() => {
+        inputsRef.current.forEach((input, index) => {
+          if (input && !locked[index]) {
+            // Continuously re-apply our aggressive debugging styles
+            (input.style as any).webkitTextFillColor = '#ff0000';
+            input.style.color = '#ff0000';
+            input.style.backgroundColor = '#ffff00';
+          }
+        });
+      }, 50); // Check every 50ms
+      
+      return () => clearInterval(interval);
+    }, [locked]);
 
     // Force reset cells when revealedLetters changes (to handle post-submit unlock)
     useEffect(() => {
