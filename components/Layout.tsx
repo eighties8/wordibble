@@ -169,9 +169,9 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
       <main className={`flex-1 ${title === undefined ? "flex items-center justify-center" : ""}`}>
         <div
           className={[
-            "mx-auto",
+            "mx-auto  w-full",
             // game wants a bit wider than stats/archive; toggle with `narrow`
-            narrow ? "max-w-3xl" : "max-w-4xl",
+            narrow ? "max-w-3xl" : "md:max-w-4xl",
           ].join(" ")}
         >
           {childrenWithProps}

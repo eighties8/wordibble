@@ -1618,7 +1618,7 @@ export default function Game({ openSettings, resetSettings }: {
 
   return (
     <div className="flex flex-col game-container">
-      <main className="flex-1 py-4 md:py-8 px-2">
+      <main className="flex-1 py-4 md:py-8">
         <div className="max-w-md mx-auto">
         {/* Clue Ribbon - Handles all message types */}
         <ClueRibbon 
