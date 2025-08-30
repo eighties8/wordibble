@@ -140,7 +140,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
         
         // After fade-out completes, clear the cells and notify parent
         setTimeout(() => {
-          // Clear all non-locked cells
+          // Clear cells first
           setCells(prev => {
             const next = prev.map((cell, index) => {
               if (locked[index]) {
@@ -152,21 +152,12 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             return next;
           });
           
-          // Notify parent of the cleared cells
-          setTimeout(() => {
-            const clearedCells = Array.from({ length: wordLength }, (_, i) => 
-              locked[i] ? cells[i] : ''
-            );
-            onChange(clearedCells);
-          }, 0);
+          // Notify parent immediately
+          onChange(Array.from({ length: wordLength }, (_, i) => 
+            locked[i] ? cells[i] : ''
+          ));
           
-          // Prevent initialCells from overriding our clear operation
-          isUpdatingFromParent.current = true;
-          setTimeout(() => {
-            isUpdatingFromParent.current = false;
-          }, 100);
-          
-          // Reset opacity, transform, and transition styles
+          // Reset styles
           tilePanels.forEach((tilePanel, index) => {
             if (tilePanel && !locked[index]) {
               tilePanel.style.opacity = '1';
@@ -175,8 +166,10 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             }
           });
           
-          // Notify parent that fade-out is complete
-          onFadeOutComplete?.();
+          // Call onFadeOutComplete with a small delay to ensure state is stable
+          setTimeout(() => {
+            onFadeOutComplete?.();
+          }, 50);
         }, 300); // 300ms fade duration
       }
     }, [fadeOutClear, wordLength, locked, onFadeOutComplete, onChange, cells]);

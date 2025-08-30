@@ -28,13 +28,13 @@ import {
 
 
 import Settings from './Settings';
-import GuessInputRow from './GuessInputRow';
 import RowHistory from './RowHistory';
 import ClueRibbon from './ClueRibbon';
 import ToastComponent from './Toast';
 import Keyboard from './Keyboard';
 import SplashScreen from './SplashScreen';
-import type { GuessInputRowHandle } from './GuessInputRow';
+// ⬇️ add this (paths as in your project)
+import GuessInputRow, { type GuessInputRowHandle } from './GuessInputRow';
 
 type InputRowHandle = {
   /** Move focus to the first editable (non-locked, empty) cell */
@@ -50,6 +50,12 @@ interface GameSettings {
   randomPuzzle: boolean;
   lockGreenMatchedLetters: boolean;
 }
+
+// utils/isTouch.ts
+export const isTouch =
+  typeof window !== 'undefined' &&
+  ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  
 
 export default function Game({ openSettings, resetSettings }: { 
   openSettings?: (openedFromClue?: boolean, puzzleInProgress?: boolean) => void;
@@ -1474,34 +1480,50 @@ export default function Game({ openSettings, resetSettings }: {
 
   // ===== Focus helpers =====
   function queueFocusFirstEmpty() {
-    // Wait a tick for the input row to mount/update
-    requestAnimationFrame(() => {
-      if (inputRowRef.current?.focusFirstEmptyEditable) {
-        inputRowRef.current.focusFirstEmptyEditable();
-      } else {
-        // DOM fallback: focus first input with data-role="active-cell" that is not [data-locked="true"] or [data-revealed="true"] and empty
-        const el = document.querySelector<HTMLInputElement>(
-          'input[data-role="active-cell"][data-locked="false"][data-revealed="false"][value=""]'
-        ) || document.querySelector<HTMLInputElement>('input[data-role="active-cell"][data-locked="false"][data-revealed="false"]');
-        el?.focus();
-        el?.select?.();
-      }
-    });
+    // Use longer delay for mobile devices
+    const delay = isTouch ? 100 : 0;
+    
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        if (inputRowRef.current?.focusFirstEmptyEditable) {
+          inputRowRef.current.focusFirstEmptyEditable();
+        } else {
+          // DOM fallback with mobile-friendly focus
+          const el = document.querySelector<HTMLInputElement>(
+            'input[data-role="active-cell"][data-locked="false"][data-revealed="false"][value=""]'
+          ) || document.querySelector<HTMLInputElement>('input[data-role="active-cell"][data-locked="false"][data-revealed="false"]');
+          
+          if (el) {
+            // Force focus with mobile-friendly approach
+            el.focus();
+            el.click(); // Additional mobile focus trigger
+            el.select?.();
+          }
+        }
+      });
+    }, delay);
   }
   function queueFocusSpecificIndex(i: number) {
-    requestAnimationFrame(() => {
-      // Only focus if the cell is not locked or revealed
-      if (gameState.lockedLetters[i] || isPositionRevealed(i)) return;
-      
-      // Try a convention: inputs annotated with data-index
-      const el = document.querySelector<HTMLInputElement>(
-        `input[data-role="active-cell"][data-index="${i}"]`
-      );
-      if (el && el.getAttribute('data-locked') !== 'true' && el.getAttribute('data-revealed') !== 'true') {
-        el.focus();
-        el.select?.();
-      }
-    });
+    // Use longer delay for mobile devices
+    const delay = isTouch ? 100 : 0;
+    
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        // Only focus if the cell is not locked or revealed
+        if (gameState.lockedLetters[i] || isPositionRevealed(i)) return;
+        
+        // Try a convention: inputs annotated with data-index
+        const el = document.querySelector<HTMLInputElement>(
+          `input[data-role="active-cell"][data-index="${i}"]`
+        );
+        if (el && el.getAttribute('data-locked') !== 'true' && el.getAttribute('data-revealed') !== 'true') {
+          // Force focus with mobile-friendly approach
+          el.focus();
+          el.click(); // Additional mobile focus trigger
+          el.select?.();
+        }
+      });
+    }, delay);
   }
 
   // Focus at game start (when loading finishes)
