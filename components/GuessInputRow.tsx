@@ -61,6 +61,23 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       }, 0);
     }, [initialCells, wordLength]);
 
+    // DEBUG: Preserve our aggressive styling after parent updates
+    useEffect(() => {
+      // After cells are updated, re-apply our debugging styles
+      const timer = setTimeout(() => {
+        inputsRef.current.forEach((input, index) => {
+          if (input && !locked[index]) {
+            // Re-apply our aggressive debugging styles
+            (input.style as any).webkitTextFillColor = '#ff0000';
+            input.style.color = '#ff0000';
+            input.style.backgroundColor = '#ffff00';
+          }
+        });
+      }, 100); // Small delay to ensure parent update is complete
+      
+      return () => clearTimeout(timer);
+    }, [cells, locked]);
+
     // Force reset cells when revealedLetters changes (to handle post-submit unlock)
     useEffect(() => {
       if (revealedLetters && revealedLetters.size === 0) {
