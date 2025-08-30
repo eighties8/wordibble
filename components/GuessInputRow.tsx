@@ -317,6 +317,16 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     return (
       <div className={`flex justify-center ${isShaking ? 'animate-shake' : ''}`}>
+        {/* DEBUG: Simple test input */}
+        <div className="mb-4 p-2 bg-red-200 border-2 border-red-500">
+          <input 
+            type="text" 
+            className="w-full p-2 border border-black"
+            placeholder="DEBUG: Type here to test input"
+            style={{ color: '#000000', backgroundColor: '#ffffff' }}
+          />
+        </div>
+        
         <div className={`grid gap-2 md:gap-1 grid-cols-${wordLength}`}>
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
