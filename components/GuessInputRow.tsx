@@ -66,38 +66,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
       // }, 0);
     }, [initialCells, wordLength]);
 
-    // DEBUG: Preserve our aggressive styling after parent updates
-    useEffect(() => {
-      // After cells are updated, re-apply our debugging styles
-      const timer = setTimeout(() => {
-        inputsRef.current.forEach((input, index) => {
-          if (input && !locked[index]) {
-            // Re-apply our aggressive debugging styles
-            (input.style as any).webkitTextFillColor = '#ff0000 !important';
-            input.style.color = '#ff0000 !important';
-            input.style.backgroundColor = '#ffff00 !important';
-          }
-        });
-      }, 100); // Small delay to ensure parent update is complete
-      
-      return () => clearTimeout(timer);
-    }, [cells, locked]);
-
-    // AGGRESSIVE DEBUG: Continuously preserve styles
-    useEffect(() => {
-      const interval = setInterval(() => {
-        inputsRef.current.forEach((input, index) => {
-          if (input && !locked[index]) {
-            // Continuously re-apply our aggressive debugging styles
-            (input.style as any).webkitTextFillColor = '#ff0000 !important';
-            input.style.color = '#ff0000 !important';
-            input.style.backgroundColor = '#ffff00 !important';
-          }
-        });
-      }, 50); // Check every 50ms
-      
-      return () => clearInterval(interval);
-    }, [locked]);
+    // DEBUG: Temporarily disabled to restore virtual keyboard functionality
 
     // Force reset cells when revealedLetters changes (to handle post-submit unlock)
     useEffect(() => {
@@ -397,14 +366,12 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-index={i}
                     data-locked={isLocked}
                     data-revealed={isRevealed}
-                    className={`w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl ${
+                    className={`w-full h-full text-center bg-white border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl ${
                       isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
                         ? 'text-white' 
                         : 'text-gray-900'
                     }`}
-                    // TEMPORARY: Add obvious visual debugging
-                    placeholder="?"
-                    data-debug="true"
+                    // DEBUG: Removed to restore virtual keyboard functionality
                     style={{
                       // AGGRESSIVE DEBUG: Force text to be visible with bright colors
                       WebkitTextFillColor: '#ff0000 !important', // Bright red

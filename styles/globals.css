@@ -85,6 +85,17 @@ input[data-debug="true"] {
   text-fill-color: #ff0000 !important;
 }
 
+/* Mobile-specific input text visibility fix */
+@media (max-width: 768px) {
+  input[type="text"], 
+  input[inputmode="text"] {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    text-fill-color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+}
+
 /* ------------------------------------------------------------
    Flip system (frame + panel) — Wordle-like, no pre-flash
 ------------------------------------------------------------ */

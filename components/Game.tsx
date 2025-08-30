@@ -1760,10 +1760,7 @@ export default function Game({ openSettings, resetSettings }: {
                     
                     // Priority 2: Show revealed letters (always visible initially, keep content after submission when letter locking disabled)
                     if (isPositionRevealed(i)) {
-                      // If letter locking is disabled AND we've made at least one guess, keep the letter content but styling will be removed
-                      if (!settings.lockGreenMatchedLetters && gameState.attemptIndex > 0) {
-                        return gameState.secretWord[i]; // Keep the letter content
-                      }
+                      // Always show revealed letters, regardless of attempt count
                       return gameState.secretWord[i];
                     }
                     
@@ -1780,11 +1777,7 @@ export default function Game({ openSettings, resetSettings }: {
                 fadeOutClear={fadeOutClearInput}
                 onFadeOutComplete={handleFadeOutComplete}
                 revealedLetters={(() => {
-                  // If letter locking is disabled and we've made at least one guess, 
-                  // completely remove revealed letters from being treated as revealed
-                  if (!settings.lockGreenMatchedLetters && gameState.attemptIndex > 0) {
-                    return new Set<number>(); // Empty set = no revealed letters
-                  }
+                  // Always treat revealed letters as revealed, regardless of attempt count
                   return gameState.revealedLetters;
                 })()}
                 wasRevealedPositions={(() => {
