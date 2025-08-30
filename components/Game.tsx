@@ -1218,6 +1218,9 @@ export default function Game({ openSettings, resetSettings }: {
       setIsPlaying();
     }
 
+    // STEP 1: Simple input clearing - clear the input row immediately after submission
+    setCurrentGuess(new Array(gameState.wordLength).fill(''));
+
     // Mark this row for flip animation
     const newRowIndex = gameState.attempts.length;
     setFlippingRows(prev => new Set([...Array.from(prev), newRowIndex]));
