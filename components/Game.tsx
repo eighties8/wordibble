@@ -459,12 +459,7 @@ export default function Game({ openSettings, resetSettings }: {
   // ===== Debug flag (persisted) =====
   useEffect(() => {
     const savedDebugMode = localStorage.getItem('wordseer-debug-mode');
-    if (savedDebugMode) {
-      setDebugMode(JSON.parse(savedDebugMode));
-    } else {
-      // Enable debug mode by default on mobile devices
-      setDebugMode(isTouch);
-    }
+    if (savedDebugMode) setDebugMode(JSON.parse(savedDebugMode));
   }, []);
   useEffect(() => {
     localStorage.setItem('wordseer-debug-mode', JSON.stringify(debugMode));
@@ -1485,50 +1480,34 @@ export default function Game({ openSettings, resetSettings }: {
 
   // ===== Focus helpers =====
   function queueFocusFirstEmpty() {
-    // Use longer delay for mobile devices
-    const delay = isTouch ? 100 : 0;
-    
-    setTimeout(() => {
-      requestAnimationFrame(() => {
-        if (inputRowRef.current?.focusFirstEmptyEditable) {
-          inputRowRef.current.focusFirstEmptyEditable();
-        } else {
-          // DOM fallback with mobile-friendly focus
-          const el = document.querySelector<HTMLInputElement>(
-            'input[data-role="active-cell"][data-locked="false"][data-revealed="false"][value=""]'
-          ) || document.querySelector<HTMLInputElement>('input[data-role="active-cell"][data-locked="false"][data-revealed="false"]');
-          
-          if (el) {
-            // Force focus with mobile-friendly approach
-            el.focus();
-            el.click(); // Additional mobile focus trigger
-            el.select?.();
-          }
-        }
-      });
-    }, delay);
+    // Wait a tick for the input row to mount/update
+    requestAnimationFrame(() => {
+      if (inputRowRef.current?.focusFirstEmptyEditable) {
+        inputRowRef.current.focusFirstEmptyEditable();
+      } else {
+        // DOM fallback: focus first input with data-role="active-cell" that is not [data-locked="true"] or [data-revealed="true"] and empty
+        const el = document.querySelector<HTMLInputElement>(
+          'input[data-role="active-cell"][data-locked="false"][data-revealed="false"][value=""]'
+        ) || document.querySelector<HTMLInputElement>('input[data-role="active-cell"][data-locked="false"][data-revealed="false"]');
+        el?.focus();
+        el?.select?.();
+      }
+    });
   }
   function queueFocusSpecificIndex(i: number) {
-    // Use longer delay for mobile devices
-    const delay = isTouch ? 100 : 0;
-    
-    setTimeout(() => {
-      requestAnimationFrame(() => {
-        // Only focus if the cell is not locked or revealed
-        if (gameState.lockedLetters[i] || isPositionRevealed(i)) return;
-        
-        // Try a convention: inputs annotated with data-index
-        const el = document.querySelector<HTMLInputElement>(
-          `input[data-role="active-cell"][data-index="${i}"]`
-        );
-        if (el && el.getAttribute('data-locked') !== 'true' && el.getAttribute('data-revealed') !== 'true') {
-          // Force focus with mobile-friendly approach
-          el.focus();
-          el.click(); // Additional mobile focus trigger
-          el.select?.();
-        }
-      });
-    }, delay);
+    requestAnimationFrame(() => {
+      // Only focus if the cell is not locked or revealed
+      if (gameState.lockedLetters[i] || isPositionRevealed(i)) return;
+      
+      // Try a convention: inputs annotated with data-index
+      const el = document.querySelector<HTMLInputElement>(
+        `input[data-role="active-cell"][data-index="${i}"]`
+      );
+      if (el && el.getAttribute('data-locked') !== 'true' && el.getAttribute('data-revealed') !== 'true') {
+        el.focus();
+        el.select?.();
+      }
+    });
   }
 
   // Focus at game start (when loading finishes)
@@ -1618,7 +1597,7 @@ export default function Game({ openSettings, resetSettings }: {
 
   return (
     <div className="flex flex-col game-container">
-      <main className="flex-1 py-4 md:py-8">
+      <main className="flex-1 py-4 md:py-8 px-2">
         <div className="max-w-md mx-auto">
         {/* Clue Ribbon - Handles all message types */}
         <ClueRibbon 
@@ -1760,7 +1739,10 @@ export default function Game({ openSettings, resetSettings }: {
                     
                     // Priority 2: Show revealed letters (always visible initially, keep content after submission when letter locking disabled)
                     if (isPositionRevealed(i)) {
-                      // Always show revealed letters, regardless of attempt count
+                      // If letter locking is disabled AND we've made at least one guess, keep the letter content but styling will be removed
+                      if (!settings.lockGreenMatchedLetters && gameState.attemptIndex > 0) {
+                        return gameState.secretWord[i]; // Keep the letter content
+                      }
                       return gameState.secretWord[i];
                     }
                     
@@ -1777,7 +1759,11 @@ export default function Game({ openSettings, resetSettings }: {
                 fadeOutClear={fadeOutClearInput}
                 onFadeOutComplete={handleFadeOutComplete}
                 revealedLetters={(() => {
-                  // Always treat revealed letters as revealed, regardless of attempt count
+                  // If letter locking is disabled and we've made at least one guess, 
+                  // completely remove revealed letters from being treated as revealed
+                  if (!settings.lockGreenMatchedLetters && gameState.attemptIndex > 0) {
+                    return new Set<number>(); // Empty set = no revealed letters
+                  }
                   return gameState.revealedLetters;
                 })()}
                 wasRevealedPositions={(() => {

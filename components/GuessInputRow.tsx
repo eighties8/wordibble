@@ -52,46 +52,38 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     // keep cells in sync if parent sends new initialCells (e.g., new greens)
     useEffect(() => {
-      // DEBUG: Temporarily disable parent updates to preserve our debugging styles
-      console.log('DEBUG: Parent trying to update cells with:', initialCells);
-      console.log('DEBUG: Current cells state:', cells);
-      
-      // TEMPORARILY DISABLED: Don't let parent override our cells
-      // isUpdatingFromParent.current = true;
-      // setCells(initialCells.slice(0, wordLength));
+      isUpdatingFromParent.current = true;
+      setCells(initialCells.slice(0, wordLength));
       
       // Clear flag after state update
-      // setTimeout(() => {
-      //   isUpdatingFromParent.current = false;
-      // }, 0);
+      setTimeout(() => {
+        isUpdatingFromParent.current = false;
+      }, 0);
     }, [initialCells, wordLength]);
 
-    // DEBUG: Temporarily disabled to restore virtual keyboard functionality
-
     // Force reset cells when revealedLetters changes (to handle post-submit unlock)
-    // TEMPORARILY DISABLED: This effect was clearing cells after first guess
-    // useEffect(() => {
-    //   if (revealedLetters && revealedLetters.size === 0) {
-    //     isUpdatingFromParent.current = true;
+    useEffect(() => {
+      if (revealedLetters && revealedLetters.size === 0) {
+        isUpdatingFromParent.current = true;
         
-    //     // Only reset cells that were previously revealed, preserve user input
-    //     setCells(prev => {
-    //       const next = prev.slice();
-    //       for (let i = 0; i < wordLength; i++) {
-    //         // If this position was previously revealed, clear it
-    //         if (wasRevealedPositions && wasRevealedPositions.has(i)) {
-    //           next[i] = '';
-    //         }
-    //         // Otherwise, keep the current value (preserve user input)
-    //       }
-    //       return next;
-    //     });
+        // Only reset cells that were previously revealed, preserve user input
+        setCells(prev => {
+          const next = prev.slice();
+          for (let i = 0; i < wordLength; i++) {
+            // If this position was previously revealed, clear it
+            if (wasRevealedPositions && wasRevealedPositions.has(i)) {
+              next[i] = '';
+            }
+            // Otherwise, keep the current value (preserve user input)
+          }
+          return next;
+        });
         
-    //     setTimeout(() => {
-    //       isUpdatingFromParent.current = false;
-    //     }, 0);
-    //   }
-    // }, [revealedLetters, initialCells, wordLength, wasRevealedPositions]);
+        setTimeout(() => {
+          isUpdatingFromParent.current = false;
+        }, 0);
+      }
+    }, [revealedLetters, initialCells, wordLength, wasRevealedPositions]);
 
     // Handle force clear (for shake animation)
     useEffect(() => {
@@ -148,7 +140,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
         
         // After fade-out completes, clear the cells and notify parent
         setTimeout(() => {
-          // Clear cells first
+          // Clear all non-locked cells
           setCells(prev => {
             const next = prev.map((cell, index) => {
               if (locked[index]) {
@@ -160,12 +152,21 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             return next;
           });
           
-          // Notify parent immediately
-          onChange(Array.from({ length: wordLength }, (_, i) => 
-            locked[i] ? cells[i] : ''
-          ));
+          // Notify parent of the cleared cells
+          setTimeout(() => {
+            const clearedCells = Array.from({ length: wordLength }, (_, i) => 
+              locked[i] ? cells[i] : ''
+            );
+            onChange(clearedCells);
+          }, 0);
           
-          // Reset styles
+          // Prevent initialCells from overriding our clear operation
+          isUpdatingFromParent.current = true;
+          setTimeout(() => {
+            isUpdatingFromParent.current = false;
+          }, 100);
+          
+          // Reset opacity, transform, and transition styles
           tilePanels.forEach((tilePanel, index) => {
             if (tilePanel && !locked[index]) {
               tilePanel.style.opacity = '1';
@@ -174,10 +175,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             }
           });
           
-          // Call onFadeOutComplete with a small delay to ensure state is stable
-          setTimeout(() => {
-            onFadeOutComplete?.();
-          }, 50);
+          // Notify parent that fade-out is complete
+          onFadeOutComplete?.();
         }, 300); // 300ms fade duration
       }
     }, [fadeOutClear, wordLength, locked, onFadeOutComplete, onChange, cells]);
@@ -317,16 +316,6 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     return (
       <div className={`flex justify-center ${isShaking ? 'animate-shake' : ''}`}>
-        {/* DEBUG: Simple test input */}
-        <div className="mb-4 p-2 bg-red-200 border-2 border-red-500">
-          <input 
-            type="text" 
-            className="w-full p-2 border border-black"
-            placeholder="DEBUG: Type here to test input"
-            style={{ color: '#000000', backgroundColor: '#ffffff' }}
-          />
-        </div>
-        
         <div className={`grid gap-2 md:gap-1 grid-cols-${wordLength}`}>
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
@@ -347,23 +336,21 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             
             // For end-of-game reveal, show green styling for solution letters
             const isEndGameReveal = gameStatus === 'won' || gameStatus === 'lost';
-            
             // Show green styling for locked letters, revealed letters that are locked, or end-game reveal
             const stateClasses = isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
               ? `bg-green-500 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
-              : 'bg-white';
+              : 'bg-white text-gray-900';
             
             // Debug: Log the styling decision
-            if (i === 0) { // Debug first input cell
-              console.log(`DEBUG Input ${i} styling:`, {
-                isLocked,
-                isRevealed,
-                hasCells: !!cells[i],
-                isEndGameReveal,
-                stateClasses,
-                textColor: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i]) ? 'WHITE' : 'DARK'
-              });
-            }
+            // if (i === 2) {
+            //   console.log(`DEBUG Input ${i} styling:`, {
+            //     isLocked,
+            //     isRevealed,
+            //     hasCells: !!cells[i],
+            //     isEndGameReveal,
+            //     stateClasses
+            //   });
+            // }
             
             return (
               <div key={i} className="tile-frame w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg transform-gpu">
@@ -377,14 +364,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-index={i}
                     data-locked={isLocked}
                     data-revealed={isRevealed}
-                    className="w-full h-full text-center bg-white border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl"
-                    style={{
-                      // Consistent styling - no conflicts
-                      color: isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
-                        ? '#ffffff' 
-                        : '#000000',
-                      backgroundColor: '#ffffff'
-                    }}
+                    className="w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl"
                     value={cells[i] ?? ''}
                     readOnly={(() => {
                       const finalReadOnly = readOnly || isLocked;
@@ -395,20 +375,6 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                       handleChangeAt(i, e.target.value);
                     }}
                     onKeyDown={e => handleKeyDownAt(i, e)}
-                    onFocus={() => {
-                      // Add visual focus indicator for mobile
-                      if (inputsRef.current[i]) {
-                        inputsRef.current[i]!.style.outline = '2px solid #3b82f6';
-                        inputsRef.current[i]!.style.outlineOffset = '2px';
-                      }
-                    }}
-                    onBlur={() => {
-                      // Remove focus indicator
-                      if (inputsRef.current[i]) {
-                        inputsRef.current[i]!.style.outline = '';
-                        inputsRef.current[i]!.style.outlineOffset = '';
-                      }
-                    }}
                     inputMode="text"
                     autoComplete="off"
                     autoCorrect="off"

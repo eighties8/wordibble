@@ -77,8 +77,6 @@ input[type="radio"]:focus {
 
 body { background: #fff; }
 
-/* DEBUG: Temporarily removed to isolate the issue */
-
 /* ------------------------------------------------------------
    Flip system (frame + panel) — Wordle-like, no pre-flash
 ------------------------------------------------------------ */
