@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { GAME_CONFIG, ANIMATION_CONFIG } from '../lib/config';
@@ -1485,8 +1483,26 @@ export default function Game({ openSettings, resetSettings }: {
         const el = document.querySelector<HTMLInputElement>(
           'input[data-role="active-cell"][data-locked="false"][data-revealed="false"][value=""]'
         ) || document.querySelector<HTMLInputElement>('input[data-role="active-cell"][data-locked="false"][data-revealed="false"]');
-        el?.focus();
-        el?.select?.();
+        
+        // Check if we're on mobile to prevent device keyboard
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                        ('ontouchstart' in window) ||
+                        (navigator.maxTouchPoints > 0);
+        
+        if (isMobile) {
+          // On mobile, just highlight the cell visually without focusing
+          if (el) {
+            el.classList.add('mobile-focus-highlight');
+            setTimeout(() => {
+              if (el) {
+                el.classList.remove('mobile-focus-highlight');
+              }
+            }, 1000);
+          }
+        } else {
+          el?.focus();
+          el?.select?.();
+        }
       }
     });
   }
@@ -1500,8 +1516,21 @@ export default function Game({ openSettings, resetSettings }: {
         `input[data-role="active-cell"][data-index="${i}"]`
       );
       if (el && el.getAttribute('data-locked') !== 'true' && el.getAttribute('data-revealed') !== 'true') {
-        el.focus();
-        el.select?.();
+        // Check if we're on mobile to prevent device keyboard
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                        ('ontouchstart' in window) ||
+                        (navigator.maxTouchPoints > 0);
+        
+        if (isMobile) {
+          // On mobile, just highlight the cell visually without focusing
+          el.classList.add('mobile-focus-highlight');
+          setTimeout(() => {
+            el.classList.remove('mobile-focus-highlight');
+          }, 1000);
+        } else {
+          el.focus();
+          el.select?.();
+        }
       }
     });
   }

@@ -54,7 +54,7 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
           {/* inline, green button */}
           <button
             onClick={onStartGame}
-            className="inline-flex items-center justify-center px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-gray-900 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
           >
             PLAY
           </button>

@@ -42,6 +42,13 @@ h1.header-title {
 }
 .animate-shake { animation: shake 0.5s ease-in-out; }
 
+/* Mobile focus highlighting - prevents device keyboard while providing visual feedback */
+.mobile-focus-highlight {
+  outline: 2px solid #10b981 !important;
+  outline-offset: 2px !important;
+  transition: outline 0.2s ease-in-out;
+}
+
 /* .line-through-custom {
   text-decoration: line-through;
   text-decoration-thickness: 0.08em;
