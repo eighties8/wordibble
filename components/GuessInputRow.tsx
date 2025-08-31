@@ -336,7 +336,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
 
     return (
       <div className={`flex justify-center ${isShaking ? 'animate-shake' : ''}`}>
-        <div className={`grid gap-2 md:gap-1 grid-cols-${wordLength}`}>
+        <div className={`grid gap-1 md:gap-1 grid-cols-${wordLength}`}>
           {Array.from({ length: wordLength }).map((_, i) => {
             const isLocked = !!locked[i];
             const isRevealed = revealedLetters?.has(i);

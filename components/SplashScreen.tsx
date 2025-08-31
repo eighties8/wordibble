@@ -32,9 +32,9 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
           <div className="p-0 w-28 h-28 rounded-2xl mx-auto mb-6 flex items-center justify-center">
             
             {/* <svg viewBox="0 0 256 256">
-              <rect x="16" y="16" width="224" height="224" rx="40" fill="#22C55E"/>
+              <rect x="16" y="16" width="224" height="224" rx="40" fill="#16a34a"/>
               <path d="M32 128c36-54 88-82 96-82s60 28 96 82c-36 54-88 82-96 82s-60-28-96-82Z" fill="#F8FAFC"/>
-              <circle cx="128" cy="128" r="36" fill="#22C55E"/>
+              <circle cx="128" cy="128" r="36" fill="#16a34a"/>
               <circle cx="128" cy="128" r="14" fill="#0B4D2A"/>
             </svg> */}
 

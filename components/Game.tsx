@@ -1784,7 +1784,7 @@ export default function Game({ openSettings, resetSettings }: {
           )} */}
 
           {/* Game Grid */}
-          <div className="space-y-3 md:space-y-1 mb-4 md:mb-8">
+          <div className="space-y-1 md:space-y-1 mb-4 md:mb-8">
             {/* Active Input Row - Show when playing, won, or lost */}
             {(gameState.gameStatus === 'not_started' || gameState.gameStatus === 'playing' || gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
               <GuessInputRow

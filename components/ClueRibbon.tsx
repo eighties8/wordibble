@@ -156,7 +156,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
           variant === 'error' ? '!border-r-gray-800' : variant === 'success' ? '!border-r-green-500' : '!border-r-gray-300'
         }`} 
         style={{
-          borderRightColor: variant === 'error' ? '#ef4444' : variant === 'success' ? '#22c55e' : '#6b7280'
+          borderRightColor: variant === 'error' ? '#ef4444' : variant === 'success' ? '#16a34a' : '#6b7280'
         }}
         ></div>
       </div>

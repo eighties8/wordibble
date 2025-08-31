@@ -49,7 +49,7 @@ export default function RowHistory({
   const finalColorsFor = (state: LetterState) => {
     switch (state) {
       case 'correct':
-        return { bg: '#22c55e', fg: '#ffffff' }; // green-500
+        return { bg: '#16a34a', fg: '#ffffff' }; // green-500
       case 'present':
         return { bg: '#f59e0b', fg: '#ffffff' }; // amber-500
       case 'absent':
@@ -84,7 +84,7 @@ export default function RowHistory({
 
   return (
     <div className="flex justify-center">
-      <div className={`grid gap-2 md:gap-1 perspective-1000 ${getGridCols(wordLength)}`}>
+      <div className={`grid gap-1 md:gap-1 perspective-1000 ${getGridCols(wordLength)}`}>
         {Array.from({ length: wordLength }).map((_, i) => {
           // DEFENSIVE FIX: If this is a winning row, force all tiles to be 'correct'
           const state = isWinningRow ? 'correct' : (evaluation[i] || 'absent');
@@ -107,11 +107,11 @@ export default function RowHistory({
                 style={isRevealing ? {
                   animationDelay: `${flipDelay}ms`,
                   ...(isWinningRow && !isRevealing ? {
-                    backgroundColor: '#22c55e', // Force green for winning rows
+                    backgroundColor: '#16a34a', // Force green for winning rows
                     color: '#ffffff'
                   } : {})
                 } : (isWinningRow ? {
-                  backgroundColor: '#22c55e', // Force green for winning rows
+                  backgroundColor: '#16a34a', // Force green for winning rows
                   color: '#ffffff'
                 } : undefined)}
               >
