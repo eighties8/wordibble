@@ -51,7 +51,7 @@ export default function RowHistory({
       case 'correct':
         return { bg: '#16a34a', fg: '#ffffff' }; // green-500
       case 'present':
-        return { bg: '#f59e0b', fg: '#ffffff' }; // amber-500
+        return { bg: '#eab308', fg: '#ffffff' }; // amber-500
       case 'absent':
         return { bg: '#d1d5db', fg: 'rgb(17, 24, 39)' }; // gray-300 / gray-500-ish text
       default:

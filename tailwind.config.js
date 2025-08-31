@@ -83,12 +83,12 @@ module.exports = {
           },
           '55%': { 
             transform: 'rotateX(-90deg)',
-            backgroundColor: '#f59e0b',
+            backgroundColor: '#eab308',
             color: '#ffffff'
           },
           '100%': { 
             transform: 'rotateX(0deg)',
-            backgroundColor: '#f59e0b',
+            backgroundColor: '#eab308',
             color: '#ffffff'
           }
         }
