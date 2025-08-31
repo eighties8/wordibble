@@ -38,7 +38,7 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
               <circle cx="128" cy="128" r="14" fill="#0B4D2A"/>
             </svg> */}
 
-            <img src="/logo.webp" alt="Wordseer" />
+            <img src="/logo-alt6.webp" alt="Wordseer" />
 
           </div>
 
