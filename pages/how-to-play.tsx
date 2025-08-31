@@ -18,7 +18,7 @@ export default function HowToPlayPage() {
         <div className="space-y-3">
           <div className="flex justify-center gap-2">
             <div className="tile-frame w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg transform-gpu">
-              <div className="tile-panel flex items-center justify-center text-center font-semibold uppercase text-lg md:text-lg lg:text-xl transform-gpu origin-center preserve-3d bg-green-500 text-white">
+              <div className="tile-panel flex items-center justify-center text-center font-semibold uppercase text-lg md:text-lg lg:text-xl transform-gpu origin-center preserve-3d bg-green-600 text-white">
                 A
               </div>
             </div>
@@ -62,7 +62,7 @@ export default function HowToPlayPage() {
               </div>
             </div>
             <div className="tile-frame w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg transform-gpu">
-              <div className="tile-panel flex items-center justify-center text-center font-semibold uppercase text-lg md:text-lg lg:text-xl transform-gpu origin-center preserve-3d bg-amber-500 text-white">
+              <div className="tile-panel flex items-center justify-center text-center font-semibold uppercase text-lg md:text-lg lg:text-xl transform-gpu origin-center preserve-3d bg-yellow-500 text-white">
                 O
               </div>
             </div>

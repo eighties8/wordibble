@@ -106,8 +106,8 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
             className="no-underline focus:outline-none flex items-center gap-2"
           >
             {/* Logo container */}
-            <div className="flex items-center justify-center w-10 h-10">
-              <svg
+            <div className="flex items-center justify-center w-8 h-8">
+              {/* <svg
                 viewBox="0 0 256 256"
                 className="block w-full h-full"           // <- fill the 40×40 wrapper
                 aria-hidden="true"
@@ -118,7 +118,8 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
                 <path d="M32 128c36-54 88-82 96-82s60 28 96 82c-36 54-88 82-96 82s-60-28-96-82Z" fill="#F8FAFC" />
                 <circle cx="128" cy="128" r="36" fill="#22C55E" />
                 <circle cx="128" cy="128" r="14" fill="#0B4D2A" />
-              </svg>
+              </svg> */}
+              <img src="/logo.webp" alt="Wordseer" className="w-8 h-8" />
             </div>
 
             {/* Title */}

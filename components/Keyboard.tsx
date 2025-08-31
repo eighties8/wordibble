@@ -28,9 +28,9 @@ export default function Keyboard({
     const state = letterStates[key];
     switch (state) {
       case 'correct':
-        return 'bg-green-500 hover:bg-green-600 active:bg-green-700 !text-white';
+        return 'bg-green-600 hover:bg-green-600 active:bg-green-700 !text-white';
       case 'present':
-        return 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 !text-white';
+        return 'bg-yellow-500 hover:bg-amber-600 active:bg-amber-700 !text-white';
       case 'absent':
         return 'bg-gray-300 hover:bg-gray-400 active:bg-gray-500 !text-gray-500';
       default:
@@ -108,7 +108,7 @@ export default function Keyboard({
               </button>
 
               {revealedLetters?.has(key) && (
-                <div className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 transform bg-green-500 rounded-full p-0.5">
+                <div className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 transform bg-green-600 rounded-full p-0.5">
                   <AArrowDown className="w-4 h-4 text-white" />
                 </div>
               )}

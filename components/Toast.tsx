@@ -18,9 +18,9 @@ export default function Toast({ toast, onDismiss }: Props) {
   const getToastStyles = (type: ToastType['type']) => {
     switch (type) {
       case 'success':
-        return 'bg-green-500 text-white';
+        return 'bg-green-600 text-white';
       case 'error':
-        return 'bg-amber-500 text-white';
+        return 'bg-yellow-500 text-white';
       default:
         return 'bg-gray-500 text-white';
     }

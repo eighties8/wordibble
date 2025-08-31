@@ -174,7 +174,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
 
 
           {/* Reveal Clue Toggle */}
-          <div className={`flex items-center justify-between ${openedFromClue ? 'rounded bg-green-500 p-4 text-white' : ''}`}>
+          <div className={`flex items-center justify-between ${openedFromClue ? 'rounded bg-green-600 p-4 text-white' : ''}`}>
             <div>
               <label className={`block text-sm font-medium mb-1 ${puzzleInProgress ? 'text-gray-400' : ''}`}>
                 Show Word Clue (Current: {settings.revealClue ? 'ON' : 'OFF'})

@@ -29,14 +29,16 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
         
         {/* Logo */}
         <div className="mb-6">         
-          <div className="p-0 w-28 h-28 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <div className="p-0 w-28 h-28 rounded-2xl mx-auto mb-6 flex items-center justify-center">
             
-            <svg viewBox="0 0 256 256">
+            {/* <svg viewBox="0 0 256 256">
               <rect x="16" y="16" width="224" height="224" rx="40" fill="#22C55E"/>
               <path d="M32 128c36-54 88-82 96-82s60 28 96 82c-36 54-88 82-96 82s-60-28-96-82Z" fill="#F8FAFC"/>
               <circle cx="128" cy="128" r="36" fill="#22C55E"/>
               <circle cx="128" cy="128" r="14" fill="#0B4D2A"/>
-            </svg>
+            </svg> */}
+
+            <img src="/logo.webp" alt="Wordseer" />
 
           </div>
 
@@ -54,7 +56,7 @@ export default function SplashScreen({ onStartGame, onOpenSettings }: SplashScre
           {/* inline, green button */}
           <button
             onClick={onStartGame}
-            className="inline-flex items-center justify-center px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-500 transition-colors"
           >
             PLAY
           </button>

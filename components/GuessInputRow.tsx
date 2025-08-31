@@ -347,7 +347,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             const isEndGameReveal = gameStatus === 'won' || gameStatus === 'lost';
             // Show green styling for locked letters, revealed letters, or end-game reveal
             const stateClasses = isLocked || isRevealed || (isEndGameReveal && cells[i])
-              ? `bg-green-500 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
+              ? `bg-green-600 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
               : 'bg-white text-gray-900';
             
 
@@ -386,7 +386,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                   />
                 </div>
                 {isRevealed && isLocked && cells[i] && (
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-green-500 rounded-full p-0.5">
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-green-600 rounded-full p-0.5">
                     <AArrowDown className="w-4 h-4 text-white" />
                   </div>
                 )}

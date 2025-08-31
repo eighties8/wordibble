@@ -335,7 +335,7 @@ export default function ArchivePage() {
                   : 'text-gray-300 cursor-not-allowed'
                 }
                 ${day && selectedDate && formatDateKey(day) === formatDateKey(selectedDate) 
-                  ? 'bg-green-500 text-white hover:bg-green-600' 
+                  ? 'bg-green-600 text-white hover:bg-green-600' 
                   : 'text-gray-800'
                 }
                 ${day && formatDateKey(day) === getESTDateString() && !selectedDate 
@@ -351,7 +351,7 @@ export default function ArchivePage() {
                     <div className={`
                       absolute -top-1 left-1/2 transform -translate-x-1/2
                       w-3 h-3 rounded-sm
-                      ${hasPlayedPuzzle(day) ? 'bg-green-500' : 'bg-gray-300'}
+                      ${hasPlayedPuzzle(day) ? 'bg-green-600' : 'bg-gray-300'}
                     `} />
                   ) : (
                     <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-sm bg-gray-200 animate-pulse" />
@@ -384,19 +384,19 @@ export default function ArchivePage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=5`}
-                className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
               >
                 Wordseer 5
               </Link>
               <Link
                 href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=6`}
-                className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
               >
                 Wordseer 6
               </Link>
               <Link
                 href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=7`}
-                className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
               >
                 Wordseer 7
               </Link>

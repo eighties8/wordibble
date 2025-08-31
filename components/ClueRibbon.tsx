@@ -72,7 +72,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
        <LifeBuoy className="w-6 h-6 mr-1 text-gray-400 mr-2" />
       {/* Speech Bubble - Use passed variant for background */}
       <div className={`clue-ribbon !min-h-[30px] flex items-center shadow-md rounded-lg pl-3 transition-all duration-500 ease-in-out relative ${
-          variant === 'error' ? 'bg-gray-800 !text-gray-200' : variant === 'success' ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'
+          variant === 'error' ? 'bg-gray-800 !text-gray-200' : variant === 'success' ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-500'
         } text-gray-900 `}>
         <div className="text-sm flex items-center justify-between gap-2 pr-3">
           <span className="transition-all duration-500 ease-in-out flex items-center gap-2 pl-1">
@@ -126,7 +126,7 @@ export default function ClueRibbon({ clue, targetWord, onRevealLetter, letterRev
               onClick={onRevealLetter}
               className={`clue-letter shadow-[inset_4px_0_6px_-2px_rgba(0,0,0,0.2)] px-1.5 !-mr-3 rounded-tr-lg rounded-br-lg flex-shrink-0 p-1 transition-colors duration-200 group relative ${
                 letterRevealsAllowed && letterRevealsRemaining && letterRevealsRemaining > 0
-                  ? 'bg-green-500 hover:text-white'
+                  ? 'bg-green-600 hover:text-white'
                   : 'bg-gray-200 cursor-not-allowed'
               }`}
               title={getTooltipMessage()}
