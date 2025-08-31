@@ -11,7 +11,7 @@ export interface PuzzleStateV2 {
   lockedLetters: Record<number, string>;
   revealedLetters: Record<number, string>;
   letterRevealsRemaining: number;
-  gameStatus: 'playing' | 'won' | 'lost';
+  gameStatus: 'not_started' | 'playing' | 'won' | 'lost';
   attemptIndex: number;
   currentGuess: string[];
   completedAt?: string;
@@ -73,7 +73,7 @@ type LegacyV1 = {
   secretWord: string;
   attempts: string[];
   lockedLetters: Record<string, string> | Record<number, string>;
-  gameStatus: 'playing' | 'won' | 'lost';
+  gameStatus: 'not_started' | 'playing' | 'won' | 'lost';
   attemptIndex: number;
   revealedLetters?: Record<string, string> | Record<number, string>;
   letterRevealsRemaining?: number;

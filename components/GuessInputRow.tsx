@@ -40,7 +40,13 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     
     // keep a local controlled buffer to emit via onChange
     const [cells, setCells] = useState<string[]>(
-      () => initialCells.slice(0, wordLength)
+      () => {
+        // For won/lost games, ensure we show the complete solution
+        if (gameStatus === 'won' || gameStatus === 'lost') {
+          return initialCells.slice(0, wordLength);
+        }
+        return initialCells.slice(0, wordLength);
+      }
     );
 
     // refs for each input
@@ -53,7 +59,8 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     // keep cells in sync if parent sends new initialCells (e.g., new greens)
     useEffect(() => {
       isUpdatingFromParent.current = true;
-      setCells(initialCells.slice(0, wordLength));
+      const newCells = initialCells.slice(0, wordLength);
+      setCells(newCells);
       
       // Clear flag after state update
       setTimeout(() => {
@@ -209,6 +216,11 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     // expose focus API to parent
     useImperativeHandle(ref, () => ({
       focusFirstEditable() {
+        // Don't focus for won/lost games
+        if (gameStatus === 'won' || gameStatus === 'lost') {
+          return;
+        }
+        
         const i = firstEditableIndex >= 0 ? firstEditableIndex : 0;
         if (i >= 0 && !locked[i]) {
           inputsRef.current[i]?.focus();
@@ -216,6 +228,11 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
         }
       },
       focusFirstEmptyEditable() {
+        // Don't focus for won/lost games
+        if (gameStatus === 'won' || gameStatus === 'lost') {
+          return;
+        }
+        
         const i =
           firstEmptyEditableIndex >= 0
             ? firstEmptyEditableIndex
@@ -235,7 +252,7 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
           return next;
         });
       },
-    }), [firstEditableIndex, firstEmptyEditableIndex, locked]);
+    }), [firstEditableIndex, firstEmptyEditableIndex, locked, gameStatus]);
 
     // handle typing *only* in editable cells; jump over locked ones
     function handleChangeAt(i: number, val: string) {
@@ -324,36 +341,16 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
             const isLocked = !!locked[i];
             const isRevealed = revealedLetters?.has(i);
             
-            // Debug: Log the exact values being used
-            // if (i === 2) { // Focus on the revealed letter position
-            //   console.log(`DEBUG Input ${i}:`, {
-            //     locked: locked[i],
-            //     isLocked,
-            //     revealedLetters: Array.from(revealedLetters || []),
-            //     isRevealed,
-            //     cells: cells[i],
-            //     readOnly: readOnly,
-            //     finalReadOnly: readOnly || isLocked
-            //   });
-            // }
+
             
             // For end-of-game reveal, show green styling for solution letters
             const isEndGameReveal = gameStatus === 'won' || gameStatus === 'lost';
-            // Show green styling for locked letters, revealed letters that are locked, or end-game reveal
-            const stateClasses = isLocked || (isRevealed && isLocked && cells[i]) || (isEndGameReveal && cells[i])
+            // Show green styling for locked letters, revealed letters, or end-game reveal
+            const stateClasses = isLocked || isRevealed || (isEndGameReveal && cells[i])
               ? `bg-green-500 text-white cursor-default ${showFadeIn ? 'animate-fade-in-green' : ''}` 
               : 'bg-white text-gray-900';
             
-            // Debug: Log the styling decision
-            // if (i === 2) {
-            //   console.log(`DEBUG Input ${i} styling:`, {
-            //     isLocked,
-            //     isRevealed,
-            //     hasCells: !!cells[i],
-            //     isEndGameReveal,
-            //     stateClasses
-            //   });
-            // }
+
             
             return (
               <div key={i} className="tile-frame w-12 h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg transform-gpu">
@@ -367,13 +364,17 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
                     data-index={i}
                     data-locked={isLocked}
                     data-revealed={isRevealed}
-                    className="w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 focus:rounded"
+                    className={`w-full h-full text-center bg-transparent border-none outline-none font-semibold uppercase text-lg md:text-lg lg:text-xl ${
+                      gameStatus === 'won' || gameStatus === 'lost' 
+                        ? '' 
+                        : 'focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 focus:rounded'
+                    }`}
                     value={cells[i] ?? ''}
                     readOnly={(() => {
                       const finalReadOnly = readOnly || isLocked;
                       return finalReadOnly;
                     })()}
-                    tabIndex={readOnly || isLocked ? -1 : 0}
+                    tabIndex={readOnly || isLocked || gameStatus === 'won' || gameStatus === 'lost' ? -1 : 0}
                     onChange={e => {
                       handleChangeAt(i, e.target.value);
                     }}

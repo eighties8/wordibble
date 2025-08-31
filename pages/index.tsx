@@ -16,7 +16,7 @@ export default function Home() {
       const todayId = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
       const today = store[todayId];
 
-      if (today && (today.gameStatus === 'playing' || today.attempts?.length > 0)) {
+      if (today && (today.gameStatus === 'playing' || today.gameStatus === 'not_started' || today.attempts?.length > 0)) {
         setView('game');
       } else {
         setView('splash');
@@ -40,7 +40,7 @@ export default function Home() {
         const raw = localStorage.getItem('wordseer:puzzles:v2');
         const store = raw ? JSON.parse(raw) : {};
         if (!store[todayId]) {
-          store[todayId] = { attempts: [], gameStatus: 'playing', won: false };
+          store[todayId] = { attempts: [], gameStatus: 'not_started', won: false };
           localStorage.setItem('wordseer:puzzles:v2', JSON.stringify(store));
         }
         setView('game'); // single click → straight into Game

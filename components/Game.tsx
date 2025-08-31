@@ -17,7 +17,7 @@ import {
   ensurePuzzle,
   upsertPuzzle,
   getPuzzle,
-  makeId as makePuzzleId,
+  makeId,
   toDateISO,
   loadAll,
   saveAll,
@@ -81,7 +81,7 @@ export default function Game({ openSettings, resetSettings }: {
     clue: undefined,
     attempts: [],
     lockedLetters: {},
-    gameStatus: 'playing',
+    gameStatus: 'not_started',
     attemptIndex: 0,
     revealedLetters: new Set<number>(),
     letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[settings.wordLength as 5 | 6 | 7],
@@ -108,6 +108,8 @@ export default function Game({ openSettings, resetSettings }: {
   
   // ===== Post-submission unlocked positions =====
   const [postSubmitUnlockedPositions, setPostSubmitUnlockedPositions] = useState<Set<number>>(new Set());
+  
+
   
   // Callback when fade-out clear animation completes
   const handleFadeOutComplete = useCallback(() => {
@@ -142,7 +144,7 @@ export default function Game({ openSettings, resetSettings }: {
 
   // Handle letter reveal - only allowed on initial submission
   const handleRevealLetter = useCallback(() => {
-    if (gameState.letterRevealsRemaining <= 0 || gameState.gameStatus !== 'playing') {
+    if (gameState.letterRevealsRemaining <= 0 || (gameState.gameStatus !== 'playing' && gameState.gameStatus !== 'not_started')) {
       return;
     }
     
@@ -225,7 +227,7 @@ export default function Game({ openSettings, resetSettings }: {
         clue: undefined,
         attempts: [],
         lockedLetters: {},
-        gameStatus: 'playing',
+        gameStatus: 'not_started',
         attemptIndex: 0,
         revealedLetters: new Set<number>(),
         letterRevealsRemaining: 3,
@@ -332,9 +334,7 @@ export default function Game({ openSettings, resetSettings }: {
           return next;
         });
         
-        // Always trigger fade-in animations for the win state input row
-        // This ensures the nice animation effect regardless of the lockGreenMatchedLetters setting
-        setShowFadeInForInput(true);
+
         
         // Wait 2 seconds after the win animation completes, then redirect to stats with fade transition
         // Only redirect for fresh wins, not restored wins
@@ -646,11 +646,11 @@ export default function Game({ openSettings, resetSettings }: {
           wordLength = settings.wordLength as WordLength;
         }
         
-        const puzzleId = makePuzzleId(dateISO, wordLength);
+        const puzzleId = makeId(dateISO, wordLength);
         const savedState = getPuzzle(puzzleId);
         
         // Only restore if we have meaningful saved state AND it's for the same puzzle
-        if (savedState && (savedState.attempts.length > 0 || savedState.gameStatus !== 'playing')) {
+        if (savedState && (savedState.attempts.length > 0 || savedState.gameStatus !== 'playing' && savedState.gameStatus !== 'not_started')) {
           // CRITICAL: Only restore if the saved state matches the current puzzle
           if (savedState.secretWord !== puzzle.word) {
             console.warn('⚠️ Saved state mismatch - not restoring:', {
@@ -831,12 +831,12 @@ export default function Game({ openSettings, resetSettings }: {
       const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
       const dateISO = toDateISO(archiveDate);
       const wl = Number(router.query.length) || (settings.wordLength as number);
-      return { id: makePuzzleId(dateISO, wl as WordLength), dateISO, wordLength: wl as WordLength, isArchive: true as const };
+              return { id: makeId(dateISO, wl as WordLength), dateISO, wordLength: wl as WordLength, isArchive: true as const };
     }
 
     const todayISO = toDateISO(new Date());
     const wl = settings.wordLength as number;
-    return { id: makePuzzleId(todayISO, wl as WordLength), dateISO: todayISO, wordLength: wl as WordLength, isArchive: false as const };
+            return { id: makeId(todayISO, wl as WordLength), dateISO: todayISO, wordLength: wl as WordLength, isArchive: false as const };
   }, [router.isReady, router.query.archive, router.query.date, router.query.length, settings.wordLength]);
 
   // Ref that says: "the in-memory gameState belongs to THIS puzzle id"
@@ -926,7 +926,7 @@ export default function Game({ openSettings, resetSettings }: {
       gameStatus: gameState.gameStatus,
       attemptIndex: gameState.attemptIndex,
       currentGuess,
-      completedAt: gameState.gameStatus !== 'playing' ? new Date().toISOString() : undefined,
+      completedAt: (gameState.gameStatus !== 'playing' && gameState.gameStatus !== 'not_started') ? new Date().toISOString() : undefined,
 
       // animation flags you already store:
       showWinAnimation,
@@ -1007,7 +1007,7 @@ export default function Game({ openSettings, resetSettings }: {
         wordLength = settings.wordLength as WordLength;
       }
       
-      const puzzleId = makePuzzleId(dateISO, wordLength);
+              const puzzleId = makeId(dateISO, wordLength);
       const all = loadAll();
       delete all[puzzleId];
       saveAll(all);
@@ -1033,7 +1033,7 @@ export default function Game({ openSettings, resetSettings }: {
         ...prev,
         attempts: [],
         attemptIndex: 0,
-        gameStatus: 'playing',
+        gameStatus: 'not_started',
         lockedLetters: {},
         revealedLetters: new Set()
       }));
@@ -1084,15 +1084,15 @@ export default function Game({ openSettings, resetSettings }: {
       localStorage.removeItem('wordseer-puzzle-completed');
       localStorage.removeItem('wordseer-debug-mode');
       
-      // Reset to factory defaults instead of reloading
-      setGameState(prev => ({
-        ...prev,
-        attempts: [],
-        attemptIndex: 0,
-        gameStatus: 'playing',
-        lockedLetters: {},
-        revealedLetters: new Set()
-      }));
+              // Reset to factory defaults instead of reloading
+        setGameState(prev => ({
+          ...prev,
+          attempts: [],
+          attemptIndex: 0,
+          gameStatus: 'not_started',
+          lockedLetters: {},
+          revealedLetters: new Set()
+        }));
       
       // Reset other state variables
       setCurrentGuess(new Array(gameState.wordLength).fill(''));
@@ -1140,7 +1140,7 @@ export default function Game({ openSettings, resetSettings }: {
 
   // ===== Submit guess =====
   const handleSubmit = useCallback(() => {
-    if (gameState.gameStatus !== 'playing') return;
+    if (gameState.gameStatus !== 'playing' && gameState.gameStatus !== 'not_started') return;
 
     // Build the complete guess mixing locked + current
     const completeGuess = Array.from({ length: gameState.wordLength }, (_, i) =>
@@ -1191,18 +1191,26 @@ export default function Game({ openSettings, resetSettings }: {
       if (evaluation[i] === 'correct') newLocked[i] = completeGuess[i];
     }
 
-    // Update state
+    // Update state (but delay gameStatus change for won/lost until after flip animation)
     setGameState((prev) => {
       const newAttempts = prev.attempts.length
         ? [...prev.attempts, completeGuess]
         : [completeGuess];
       const nextAttemptIndex = prev.attemptIndex + 1;
 
-      let newStatus: GameState['gameStatus'] = 'playing';
+      // Only set status to 'playing' after first guess submission
+      // For won/lost games, keep current status until flip animation completes
+      let newStatus: GameState['gameStatus'];
       if (isWin) {
-        newStatus = 'won';
+        newStatus = prev.gameStatus; // Keep current status, will update after animation
       } else if (nextAttemptIndex >= settings.maxGuesses) {
-        newStatus = 'lost';
+        newStatus = prev.gameStatus; // Keep current status, will update after animation
+      } else if (prev.gameStatus === 'not_started') {
+        // First guess submitted - now we're actively playing
+        newStatus = 'playing';
+      } else {
+        // Continue with current status (should be 'playing')
+        newStatus = prev.gameStatus;
       }
 
       return {
@@ -1212,6 +1220,8 @@ export default function Game({ openSettings, resetSettings }: {
         gameStatus: newStatus,
       };
     });
+    
+
 
     // Set playing flag on first guess to hide splash screen
     if (gameState.attempts.length === 0) {
@@ -1251,6 +1261,41 @@ export default function Game({ openSettings, resetSettings }: {
         lockedLetters: finalLockedLetters,
       }));
       
+      // Now update game status to won/lost and save to localStorage (after flip animation)
+      if (isWin || gameState.attemptIndex + 1 >= settings.maxGuesses) {
+        setGameState(prev => ({
+          ...prev,
+          gameStatus: isWin ? 'won' : 'lost',
+        }));
+        
+        // Save puzzle state to localStorage
+        const puzzleId = makeId(router.query.date as string || getESTDateString(), gameState.wordLength as 5 | 6 | 7);
+        const puzzleState: PuzzleStateV2 = {
+          id: puzzleId,
+          dateISO: router.query.date as string || getESTDateString(),
+          wordLength: gameState.wordLength as 5 | 6 | 7,
+          secretWord: gameState.secretWord,
+          attempts: [...gameState.attempts, completeGuess],
+          lockedLetters: Object.fromEntries(
+            Object.entries(finalLockedLetters).map(([pos, letter]) => [Number(pos), letter || ''])
+          ),
+          revealedLetters: {},
+          letterRevealsRemaining: gameState.letterRevealsRemaining,
+          gameStatus: isWin ? 'won' : 'lost',
+          attemptIndex: gameState.attemptIndex + 1,
+          currentGuess: [],
+          showWinAnimation: isWin,
+          winAnimationComplete: false,
+          showLossAnimation: !isWin,
+          lossAnimationComplete: false,
+          showFadeInForInput: false,
+          fadeOutClearInput: false,
+          previouslyRevealedPositions: [],
+        };
+        
+        upsertPuzzle(puzzleState);
+      }
+      
       // Only trigger fade-in for NEWLY revealed positions (and only if locking is enabled)
       const newlyRevealedPositions = new Set<number>();
       if (settings.lockGreenMatchedLetters) {
@@ -1265,8 +1310,8 @@ export default function Game({ openSettings, resetSettings }: {
       // Update previously revealed positions
       setPreviouslyRevealedPositions(prev => new Set([...Array.from(prev), ...Array.from(newlyRevealedPositions)]));
       
-      // Only show fade-in if there are newly revealed letters
-      if (newlyRevealedPositions.size > 0) {
+      // Show fade-in for newly revealed letters OR for won games
+      if (newlyRevealedPositions.size > 0 || isWin) {
         setShowFadeInForInput(true);
         
         // Reset fade-in trigger after animation completes
@@ -1277,13 +1322,18 @@ export default function Game({ openSettings, resetSettings }: {
       
       // STEP 2: Basic focus management - moved here after flip animation completes
       setTimeout(() => {
-        // Find the first unlocked position (not locked and not revealed)
+        // Don't focus for won/lost games
+        if (gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') {
+          return;
+        }
+        
+        // Find the first unlocked position (only skip locked letters for focus)
         let firstUnlockedIndex = -1;
         for (let i = 0; i < gameState.wordLength; i++) {
           const isLocked = gameState.lockedLetters[i];
-          const isRevealed = isPositionRevealed(i);
           
-          if (!isLocked && !isRevealed) {
+          // Only skip locked letters for focus - revealed letters are editable
+          if (!isLocked) {
             firstUnlockedIndex = i;
             break;
           }
@@ -1346,7 +1396,7 @@ export default function Game({ openSettings, resetSettings }: {
   // ===== Global Enter handler =====
   const handleEnterKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && gameState.gameStatus === 'playing') handleSubmit();
+      if (e.key === 'Enter' && (gameState.gameStatus === 'playing' || gameState.gameStatus === 'not_started')) handleSubmit();
     },
     [handleSubmit, gameState.gameStatus]
   );
@@ -1359,7 +1409,10 @@ export default function Game({ openSettings, resetSettings }: {
   const findNextEditableIndex = useCallback((fromIndex: number) => {
     // Find next editable cell starting from fromIndex + 1
     for (let i = fromIndex + 1; i < gameState.wordLength; i++) {
-      if (!gameState.lockedLetters[i]) {
+      const isLocked = gameState.lockedLetters[i];
+      
+      // Only skip locked letters for focus - revealed letters are editable
+      if (!isLocked) {
         return i;
       }
     }
@@ -1369,7 +1422,10 @@ export default function Game({ openSettings, resetSettings }: {
   const findFirstEditableIndex = useCallback(() => {
     // Find first editable cell
     for (let i = 0; i < gameState.wordLength; i++) {
-      if (!gameState.lockedLetters[i]) {
+      const isLocked = gameState.lockedLetters[i];
+      
+      // Only skip locked letters for focus - revealed letters are editable
+      if (!isLocked) {
         return i;
       }
     }
@@ -1379,7 +1435,10 @@ export default function Game({ openSettings, resetSettings }: {
   const findFirstEmptyEditableIndex = useCallback(() => {
     // Find first editable cell that is empty
     for (let i = 0; i < gameState.wordLength; i++) {
-      if (!gameState.lockedLetters[i] && !currentGuess[i]) {
+      const isLocked = gameState.lockedLetters[i];
+      
+      // Only skip locked letters for focus - revealed letters are editable
+      if (!isLocked && !currentGuess[i]) {
         return i;
       }
     }
@@ -1390,7 +1449,7 @@ export default function Game({ openSettings, resetSettings }: {
   const handleKeyboardKeyPress = useCallback(
     (key: string) => {
       
-      if (gameState.gameStatus !== 'playing') return;
+      if (gameState.gameStatus !== 'playing' && gameState.gameStatus !== 'not_started') return;
       
       const i = findFirstEmptyEditableIndex();
       
@@ -1424,17 +1483,16 @@ export default function Game({ openSettings, resetSettings }: {
   );
 
   const handleKeyboardBackspace = useCallback(() => {
-    if (gameState.gameStatus !== 'playing') return;
+    if (gameState.gameStatus !== 'playing' && gameState.gameStatus !== 'not_started') return;
     
-    // Find last filled editable cell, skipping over locked/revealed letters
+    // Find last filled editable cell, skipping over locked letters only
     let i = -1;
     for (let j = currentGuess.length - 1; j >= 0; j--) {
       const isLocked = gameState.lockedLetters[j];
-      const isRevealed = isPositionRevealed(j);
       const hasContent = currentGuess[j];
       
-      // Skip over locked or revealed letters (these can't be edited)
-      if (isLocked || isRevealed) {
+      // Only skip locked letters for backspace - revealed letters are editable
+      if (isLocked) {
         continue; // Skip to next position
       }
       
@@ -1465,7 +1523,7 @@ export default function Game({ openSettings, resetSettings }: {
         queueFocusSpecificIndex(i);
       }, 50);
     }
-  }, [gameState.gameStatus, currentGuess, gameState.lockedLetters, gameState.revealedLetters, isPositionRevealed]);
+  }, [gameState.gameStatus, currentGuess, gameState.lockedLetters]);
 
   // ===== Memoized keyboard letter states =====
   const keyboardLetterStates = useMemo(() => {
@@ -1517,6 +1575,11 @@ export default function Game({ openSettings, resetSettings }: {
 
   // ===== Focus helpers =====
   function queueFocusFirstEmpty() {
+    // Don't focus for won/lost games
+    if (gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') {
+      return;
+    }
+    
     // Wait a tick for the input row to mount/update
     requestAnimationFrame(() => {
       if (inputRowRef.current?.focusFirstEmptyEditable) {
@@ -1532,6 +1595,11 @@ export default function Game({ openSettings, resetSettings }: {
     });
   }
   function queueFocusSpecificIndex(i: number) {
+    // Don't focus for won/lost games
+    if (gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') {
+      return;
+    }
+    
     requestAnimationFrame(() => {
       // Only focus if the cell is not locked or revealed
       if (gameState.lockedLetters[i] || isPositionRevealed(i)) return;
@@ -1549,9 +1617,12 @@ export default function Game({ openSettings, resetSettings }: {
 
   // Focus at game start (when loading finishes)
   useEffect(() => {
-    if (!isLoading && gameState.secretWord) queueFocusFirstEmpty();
+    // Don't focus for won/lost games
+    if (!isLoading && gameState.secretWord && gameState.gameStatus !== 'won' && gameState.gameStatus !== 'lost') {
+      queueFocusFirstEmpty();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, gameState.secretWord, gameState.lockedLetters]);
+  }, [isLoading, gameState.secretWord, gameState.lockedLetters, gameState.gameStatus]);
 
   // Error boundary effect
   useEffect(() => {
@@ -1679,6 +1750,7 @@ export default function Game({ openSettings, resetSettings }: {
               if (currentPuzzleId) {
                 try {
                   const currentPuzzle = getPuzzle(currentPuzzleId as any);
+                  // Only consider it in progress if actually playing, not just started
                   currentPuzzleInProgress = currentPuzzle?.gameStatus === 'playing';
                 } catch (error) {
                   currentPuzzleInProgress = false;
@@ -1694,7 +1766,7 @@ export default function Game({ openSettings, resetSettings }: {
             if (clueError) return 'error'; // Return 'error' variant for different styling
             return 'clue';
           })()}
-          guessesText={gameState.gameStatus === 'playing' ? (
+          guessesText={(gameState.gameStatus === 'playing' || gameState.gameStatus === 'not_started') ? (
             gameState.attemptIndex === 0 
               ? `Guess the word in ${attemptsLeft} tries`
               : `${attemptsLeft} guesses left`
@@ -1714,7 +1786,7 @@ export default function Game({ openSettings, resetSettings }: {
           {/* Game Grid */}
           <div className="space-y-3 md:space-y-1 mb-4 md:mb-8">
             {/* Active Input Row - Show when playing, won, or lost */}
-            {(gameState.gameStatus === 'playing' || gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
+            {(gameState.gameStatus === 'not_started' || gameState.gameStatus === 'playing' || gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
               <GuessInputRow
                 ref={inputRowRef as any}
                 key={`input-${gameState.gameStatus}-${gameState.attemptIndex}`}
@@ -1727,34 +1799,35 @@ export default function Game({ openSettings, resetSettings }: {
                   }
                   
                   // Otherwise, use normal locked logic
-                  return Array.from({ length: gameState.wordLength }, (_, i) => {
+                  const lockedArray = Array.from({ length: gameState.wordLength }, (_, i) => {
                     
                     // If game is won or lost, don't lock anything
                     if (gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') {
                       return false;
                     }
                     
-                    // Only lock when actively playing
-                    if (gameState.gameStatus === 'playing') {
+                    // Handle locking logic for both not_started and playing states
+                    if (gameState.gameStatus === 'playing' || gameState.gameStatus === 'not_started') {
                       // lockedLetters now have numeric keys, so direct access works
                       const isLocked = !!gameState.lockedLetters[i];
                       
-                      // For revealed letters: check if they should be unlocked after submission
+                      // For revealed letters: always lock them to prevent focus
                       if (isPositionRevealed(i)) {
-                        // If this position should be unlocked after submission, unlock it
-                        if (postSubmitUnlockedPositions.has(i)) {
-                          return false; // Unlocked
-                        }
-                        // Otherwise, keep it locked initially (for Point 1)
-                        return true; // Always lock revealed letters initially
+                        return true; // Always lock revealed letters
                       }
                       
-                      return isLocked;
+                      // For hard mode: lock correct letters from previous guesses
+                      if (isLocked) {
+                        return true; // Lock hard mode letters
+                      }
+                      
+                      return false;
                     }
                     
                     // Default: don't lock anything
                     return false;
                   });
+                  return lockedArray;
                 })()}
                 initialCells={Array.from({ length: gameState.wordLength }, (_, i) => {
                   // If game is won, show the solution in input row for end-of-game reveal
@@ -1768,7 +1841,7 @@ export default function Game({ openSettings, resetSettings }: {
                   }
                   
                   // Only show content when game is actively being played
-                  if (gameState.gameStatus === 'playing') {
+                  if (gameState.gameStatus === 'playing' || gameState.gameStatus === 'not_started') {
                     // Priority 1: Show locked letters (correct guesses when playing)
                     if (gameState.lockedLetters[i]) {
                       return gameState.lockedLetters[i];
@@ -1818,7 +1891,7 @@ export default function Game({ openSettings, resetSettings }: {
                     return false; // Force all inputs to be editable
                   }
                   // Otherwise, use normal readOnly logic
-                  const normalReadOnly = gameState.gameStatus !== 'playing';
+                  const normalReadOnly = gameState.gameStatus !== 'playing' && gameState.gameStatus !== 'not_started';
                   return normalReadOnly;
                 })()}
                 showFadeIn={showFadeInForInput}
@@ -1910,12 +1983,12 @@ export default function Game({ openSettings, resetSettings }: {
           )} */}
 
           {/* Virtual Keyboard */}
-          {(gameState.gameStatus === 'playing' || gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
+          {(gameState.gameStatus === 'not_started' || gameState.gameStatus === 'playing' || gameState.gameStatus === 'won' || gameState.gameStatus === 'lost') && (
             <div className="mt-4 md:mt-8">
               <Keyboard
-                onKeyPress={gameState.gameStatus === 'playing' ? handleKeyboardKeyPress : () => {}}
-                onEnter={gameState.gameStatus === 'playing' ? handleSubmit : () => {}}
-                onBackspace={gameState.gameStatus === 'playing' ? handleKeyboardBackspace : () => {}}
+                onKeyPress={(gameState.gameStatus === 'playing' || gameState.gameStatus === 'not_started') ? handleKeyboardKeyPress : () => {}}
+                onEnter={(gameState.gameStatus === 'playing' || gameState.gameStatus === 'not_started') ? handleSubmit : () => {}}
+                onBackspace={(gameState.gameStatus === 'playing' || gameState.gameStatus === 'not_started') ? handleKeyboardBackspace : () => {}}
                 letterStates={keyboardLetterStates}
                 revealedLetters={new Set(
                   gameState.revealedLetters && typeof gameState.revealedLetters.has === 'function' 

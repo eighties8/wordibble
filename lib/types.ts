@@ -23,7 +23,7 @@ export interface GameState {
   clue?: string;
   attempts: string[];
   lockedLetters: Record<number | string, string | null>;
-  gameStatus: 'playing' | 'won' | 'lost';
+  gameStatus: 'not_started' | 'playing' | 'won' | 'lost';
   attemptIndex: number;
   revealedLetters: Set<number>;
   letterRevealsRemaining: number;

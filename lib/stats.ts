@@ -57,7 +57,7 @@ export function loadStats(): StatsSnapshot {
   // Compute stats from all stored puzzles
   const allPuzzles = loadAll();
   const completedPuzzles = Object.values(allPuzzles).filter(
-    p => p.gameStatus !== 'playing' && p.attempts.length > 0
+    p => p.gameStatus !== 'playing' && p.gameStatus !== 'not_started' && p.attempts.length > 0
   );
   
   if (completedPuzzles.length === 0) {

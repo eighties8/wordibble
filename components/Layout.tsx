@@ -34,6 +34,7 @@ export default function Layout({ children, title, narrow, onSettingsChange, curr
         if (puzzleIds.length > 0) {
           const currentPuzzleId = puzzleIds[0]; // Most recent puzzle
           const currentPuzzle = puzzlesData[currentPuzzleId];
+          // Only consider it an active puzzle if it's actually being played, not just started
           const hasActivePuzzle = currentPuzzle.gameStatus === 'playing';
           setPuzzleInProgress(hasActivePuzzle);
         } else {
