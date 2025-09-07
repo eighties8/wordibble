@@ -135,7 +135,6 @@ const GuessInputRow = forwardRef<GuessInputRowHandle, Props>(
     useEffect(() => {
       if (fadeOutClear) {
         // TEMPORARILY DISABLED: All fade-out and clearing logic
-        console.log('FADE-OUT CLEAR DISABLED - keeping input row intact');
         
         // TEMPORARILY DISABLED: Add fade-out effect to all non-locked cells
         // const tilePanels = tilePanelRefs.current;

@@ -3,6 +3,15 @@ import { Share2 } from "lucide-react";
 import { loadStats, winRate, StatsSnapshot, GameResult } from "../lib/stats";
 import { loadAll, makeId, toDateISO } from "../lib/storage";
 
+// Calculate puzzle number based on days since start date
+function getPuzzleNumber(dateISO: string): number {
+  const startDate = new Date('2025-08-25'); // Puzzle start date
+  const puzzleDate = new Date(dateISO);
+  const diffTime = puzzleDate.getTime() - startDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays + 1; // Start from puzzle #1
+}
+
 export default function StatsPage() {
   const [stats, setStats] = useState<StatsSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +49,7 @@ export default function StatsPage() {
       
       if (latestResult.won) {
         // Try to get the actual game state from new storage system for accurate emoji grid
-        let emojiGrid = `Wordseer #${puzzleNumber} ${latestResult.guesses}/6\nhttps://wordseer.com\n`;
+        let emojiGrid = `Wordibble #${puzzleNumber} ${latestResult.guesses}/3\nhttps://wordibble.com\n`;
         
         try {
           // Get the puzzle state from new storage using the completed date
@@ -167,26 +176,34 @@ export default function StatsPage() {
       {/* Header */}
       <div className="text-center mt-4">
         <h1 className="text-3xl mb-2">Statistics</h1>
-        <p className="text-gray-600">Your Wordseer performance</p>
+        <p className="text-gray-600">Your Wordibble performance</p>
       </div>
 
       {/* Overall Stats */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-          <div className="text-2xl font-bold text-blue-600">{stats.played}</div>
+          <div className="text-2xl font-bold text-gray-800">{stats.played}</div>
           <div className="text-sm text-gray-600">Played</div>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-          <div className="text-2xl font-bold text-green-600">{winRate(stats)}%</div>
+          <div className="text-2xl font-bold text-gray-800">{winRate(stats)}%</div>
           <div className="text-sm text-gray-600">Win Rate</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+          <div className="text-2xl font-bold text-gray-800">{stats.currentStreak}</div>
+          <div className="text-sm text-gray-600">Current Streak</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+          <div className="text-2xl font-bold text-gray-800">{stats.maxStreak}</div>
+          <div className="text-sm text-gray-600">Max Streak</div>
         </div>
       </div>
 
       {/* Guess Distribution */}
       <div className="bg-white p-4 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Guess Distribution</h3>
+        <h3 className="text-lg text-gray-900 mb-4">Guess Distribution</h3>
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5, 6].map((guesses) => {
+          {[1, 2, 3].map((guesses) => {
             const count = stats.guessDistribution[guesses] || 0;
             const maxCount = Math.max(...Object.values(stats.guessDistribution));
             const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
@@ -210,7 +227,7 @@ export default function StatsPage() {
       {/* Recent Results */}
       <div className="bg-white p-4 rounded-lg border border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Results</h3>
+          <h3 className="text-lg text-gray-900">Recent Results</h3>
           {stats.results && stats.results.length > 0 && (
             <button
               onClick={() => generateAndShareEmojiGrid(stats)}
@@ -236,17 +253,9 @@ export default function StatsPage() {
                   }`}>
                     {result.won ? '✓' : '✗'}
                   </div>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {result.won ? `${result.guesses}/6` : 'X/6'}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(result.dateISO).toLocaleDateString()}
-                    </div>
+                  <div className="flex-1 text-sm text-gray-600">
+                    Puzzle #{getPuzzleNumber(result.dateISO)} • {new Date(result.dateISO).toLocaleDateString()} • <span className="font-mono text-gray-500">{result.solution || 'Unknown'}</span> • {result.won ? 'Won:' : 'Lost:'} {result.won ? `${result.guesses - 1}/3` : 'X/3'}
                   </div>
-                </div>
-                <div className="text-sm text-gray-500">
-                  {result.wordLength} letters
                 </div>
               </div>
             ))}
@@ -261,7 +270,7 @@ export default function StatsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900">Puzzle Snapshot</h3>
+              <h3 className="text-xl text-gray-900">Puzzle Snapshot</h3>
               <button
                 onClick={closePuzzleSnapshot}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -300,5 +309,5 @@ export default function StatsPage() {
   );
 }
 
-StatsPage.title = "Stats";  // header shows "Wordseer · Stats"
+StatsPage.title = "Stats";  // header shows "Wordibble · Stats"
 StatsPage.narrow = true;     // stats uses narrower container

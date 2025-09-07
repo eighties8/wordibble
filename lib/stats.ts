@@ -1,6 +1,6 @@
 import { loadAll, PuzzleStateV2 } from "./storage";
 
-export const STATS_KEY = "wordseer:stats:v1";
+export const STATS_KEY = "wordibble:stats:v1";
 
 export type GameResult = {
   dateISO: string;          // e.g. "2025-08-24"
@@ -9,7 +9,7 @@ export type GameResult = {
   guesses: number;          // 1..MAX_GUESSES (or MAX_GUESSES if lost)
   solution?: string;        // optional, useful for debugging
   mode?: {
-    revealClue: boolean;
+    hideClue: boolean;
     randomPuzzle: boolean;
   };
 };
@@ -48,7 +48,7 @@ function puzzleToGameResult(puzzle: PuzzleStateV2): GameResult {
     dateISO: puzzle.dateISO,
     wordLength: puzzle.wordLength,
     won: puzzle.gameStatus === 'won',
-    guesses: puzzle.gameStatus === 'won' ? puzzle.attemptIndex : puzzle.attempts.length,
+    guesses: puzzle.gameStatus === 'won' ? puzzle.attemptIndex + 1 : puzzle.attempts.length,
     solution: puzzle.secretWord,
   };
 }

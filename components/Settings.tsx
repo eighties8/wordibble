@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 interface SettingsConfig {
-  wordLength: 5 | 6 | 7;
   maxGuesses: number;
-  revealClue: boolean;
+  hideClue: boolean;
   randomPuzzle: boolean;
   lockGreenMatchedLetters: boolean;
 }
@@ -22,8 +21,8 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
   const [settings, setSettings] = useState<SettingsConfig>({
     ...currentSettings,
     randomPuzzle: currentSettings.randomPuzzle ?? false,
-    // Auto-enable Show Clue if opened from clue link
-    revealClue: openedFromClue ? true : currentSettings.revealClue,
+    // Auto-disable Hide Clue if opened from clue link
+    hideClue: openedFromClue ? false : currentSettings.hideClue,
     lockGreenMatchedLetters: currentSettings.lockGreenMatchedLetters ?? true,
   });
   
@@ -36,13 +35,9 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
   useEffect(() => {
     if (isOpen && currentSettings) {
       // Ensure all required properties exist with defaults
-      // Use current puzzle's word length, fallback to stored settings, then default to 6
-      const currentWordLength = currentSettings.wordLength || 6;
-      
       const settingsWithDefaults: SettingsConfig = {
-        wordLength: currentWordLength,
         maxGuesses: currentSettings.maxGuesses,
-        revealClue: openedFromClue ? true : currentSettings.revealClue,
+        hideClue: openedFromClue ? false : currentSettings.hideClue,
         randomPuzzle: currentSettings.randomPuzzle ?? false,
         lockGreenMatchedLetters: currentSettings.lockGreenMatchedLetters ?? true,
       };
@@ -61,7 +56,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
       const hasUserChange = JSON.stringify(settings) !== JSON.stringify(prevSettingsRef.current);
       if (hasUserChange) {
         // Save to localStorage
-        localStorage.setItem('wordseer-settings', JSON.stringify(settings));
+        localStorage.setItem('wordibble-settings', JSON.stringify(settings));
         onSettingsChange(settings);
       }
     }
@@ -94,7 +89,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
       <div ref={modalRef} className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
+          <h2 className="text-xl">Settings</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -128,33 +123,7 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
             </div>
           )}
 
-          {/* Word Length */}
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${puzzleInProgress ? 'text-gray-400' : 'text-gray-700'}`}>
-              Default Daily Puzzle Word Length
-            </label>
-            {/* <p className="text-xs opacity-90 mb-1">Specify the default word length for your daily puzzle.</p> */}
-            <div className="flex space-x-4">
-              {([5, 6, 7] as const).map((length) => (
-                <label key={length} className={`flex items-center ${puzzleInProgress ? 'cursor-not-allowed opacity-50' : ''}`}>
-                  <input
-                    type="radio"
-                    name="wordLength"
-                    value={length}
-                    checked={settings.wordLength === length}
-                    onChange={(e) => setSettings(prev => ({ ...prev, wordLength: Number(e.target.value) as 5 | 6 | 7 }))}
-                    disabled={puzzleInProgress}
-                    className={`mr-2 text-green-600 focus:ring-green-500 focus:ring-2 focus:ring-offset-2 focus:border-green-500 [&:focus]:ring-green-500 [&:focus]:ring-2 [&:focus]:ring-offset-2 [&:focus]:border-green-500 ${puzzleInProgress ? 'cursor-not-allowed opacity-50' : ''}`}
-                    style={{
-                      accentColor: '#10b981', // green-500
-                      outline: 'none'
-                    }}
-                  />
-                  <span className={`text-sm ${puzzleInProgress ? 'text-gray-400' : 'text-gray-700'}`}>{length} letters</span>
-                </label>
-              ))}
-            </div>
-          </div>
+
 
           {/* Max Guesses */}
           {/* <div>
@@ -177,20 +146,22 @@ export default function Settings({ isOpen, onClose, onSettingsChange, currentSet
           <div className={`flex items-center justify-between ${openedFromClue ? 'rounded bg-green-600 p-4 text-white' : ''}`}>
             <div>
               <label className={`block text-sm font-medium mb-1 ${puzzleInProgress ? 'text-gray-400' : ''}`}>
-                Show Word Clue (Current: {settings.revealClue ? 'ON' : 'OFF'})
+                Disable Clues (Current: {settings.hideClue ? 'ON' : 'OFF'})
               </label>
-              <p className={`text-xs ${puzzleInProgress ? 'text-gray-400' : 'opacity-90'}`}>Display a hint for each puzzle</p>
+              <p className={`text-xs ${puzzleInProgress ? 'text-gray-400' : 'opacity-90'}`}>
+                {settings.hideClue ? 'Hide clues for a harder challenge' : 'Display a hint for each puzzle'}
+              </p>
             </div>
             <button
-              onClick={() => setSettings(prev => ({ ...prev, revealClue: !prev.revealClue }))}
+              onClick={() => setSettings(prev => ({ ...prev, hideClue: !prev.hideClue }))}
               disabled={puzzleInProgress}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.revealClue ? 'bg-green-600' : 'bg-gray-200'
+                settings.hideClue ? 'bg-green-600' : 'bg-gray-200'
               } ${puzzleInProgress ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.revealClue ? 'translate-x-6' : 'translate-x-1'
+                  settings.hideClue ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>

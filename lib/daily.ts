@@ -1,21 +1,24 @@
 import { DailyPuzzle, PuzzleData, CluesData } from './types';
 import { getESTDateString } from './timezone';
 
-export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false): Promise<DailyPuzzle> {
+// Helper function for case-agnostic clue lookup
+function findClue(clues: CluesData, word: string): string {
+  const normalizedWord = word.toUpperCase();
+  const matchingKey = Object.keys(clues).find(key => key.toUpperCase() === normalizedWord);
+  return matchingKey ? clues[matchingKey] : "I literally have no clue";
+}
+
+export async function loadDailyPuzzle(randomMode = false): Promise<DailyPuzzle> {
   try {
     
-    // Load puzzles and clues based on word length from lib directory
-    const [puzzlesResponse, cluesResponse] = await Promise.all([
-      fetch(`/api/puzzles?length=${wordLength}${randomMode ? '&random=true' : ''}`),
-      fetch(`/api/clues?length=${wordLength}`)
-    ]);
+    // Load puzzles from unified file
+    const puzzlesResponse = await fetch(`/api/puzzles${randomMode ? '?random=true' : ''}`);
 
-    if (!puzzlesResponse.ok || !cluesResponse.ok) {
+    if (!puzzlesResponse.ok) {
       throw new Error('Failed to load puzzle data');
     }
 
     const puzzles: PuzzleData[] = await puzzlesResponse.json();
-    const clues: CluesData = await cluesResponse.json();
 
     let puzzle: PuzzleData | undefined;
     
@@ -29,7 +32,6 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false)
       const today = getESTDateString();
       puzzle = puzzles.find(p => p.date === today);
       if (!puzzle && puzzles.length > 0) {
-
         puzzle = puzzles[0];
       }
       
@@ -39,50 +41,56 @@ export async function loadDailyPuzzle(wordLength: 5 | 6 | 7, randomMode = false)
       throw new Error('No puzzle data available');
     }
 
-    const clue = clues[puzzle.word.toLowerCase()] || "I literally have no clue";
+    // Prefer embedded clue from puzzles; fallback to separate clues if missing
+    let clue: string | undefined = puzzle.clue;
+    if (!clue) {
+      try {
+        const year = puzzle.date.split('-')[0];
+        const cluesResponse = await fetch(`/api/clues?year=${year}`);
+        if (cluesResponse.ok) {
+          const clues: CluesData = await cluesResponse.json();
+          clue = findClue(clues, puzzle.word);
+        }
+      } catch (_) {
+        // ignore and use default below
+      }
+    }
     
     // Use EST timezone for isToday calculation to be consistent
     const todayEST = getESTDateString();
     
     return {
       word: puzzle.word.toUpperCase(),
-      clue: clue,
+      clue: clue ?? 'I literally have no clue',
       isToday: !randomMode && puzzle.date === todayEST
     };
   } catch (error) {
     console.error('Error loading daily puzzle:', error);
     // Fallback to a default puzzle
     return {
-      word: 'HELLO'.slice(0, wordLength),
+      word: 'HELLO',
       clue: 'A friendly greeting',
       isToday: false
     };
   }
 }
 
-export async function loadPuzzle(date: Date, wordLength: 5 | 6 | 7 = 6): Promise<DailyPuzzle> {
+export async function loadPuzzle(date: Date): Promise<DailyPuzzle> {
   try {
-
     
-    // Load puzzles and clues based on word length from lib directory
-    const [puzzlesResponse, cluesResponse] = await Promise.all([
-      fetch(`/api/puzzles?length=${wordLength}`),
-      fetch(`/api/clues?length=${wordLength}`)
-    ]);
+    // Load puzzles from unified file
+    const puzzlesResponse = await fetch(`/api/puzzles`);
 
-    if (!puzzlesResponse.ok || !cluesResponse.ok) {
+    if (!puzzlesResponse.ok) {
       throw new Error('Failed to load puzzle data');
     }
 
     const puzzles: PuzzleData[] = await puzzlesResponse.json();
-    const clues: CluesData = await cluesResponse.json();
 
     // Format the target date - use the date as-is since it's already in the correct format from the URL
     const targetDate = date.getFullYear() + '-' + 
                       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
                       String(date.getDate()).padStart(2, '0');
-    
-
     
     const puzzle = puzzles.find(p => p.date === targetDate);
     
@@ -90,15 +98,27 @@ export async function loadPuzzle(date: Date, wordLength: 5 | 6 | 7 = 6): Promise
       throw new Error(`No puzzle available for date ${targetDate}`);
     }
 
-    const clue = clues[puzzle.word.toLowerCase()] || "I literally have no clue";
+    // Prefer embedded clue; fallback to separate clues
+    let clue: string | undefined = puzzle.clue;
+    if (!clue) {
+      try {
+        const year = puzzle.date.split('-')[0];
+        const cluesResponse = await fetch(`/api/clues?year=${year}`);
+        if (cluesResponse.ok) {
+          const clues: CluesData = await cluesResponse.json();
+          clue = findClue(clues, puzzle.word);
+        }
+      } catch (_) {
+        // ignore
+      }
+    }
 
-    
     // Check if this is today's puzzle using EST timezone
     const todayEST = getESTDateString();
     
     return {
       word: puzzle.word.toUpperCase(),
-      clue: clue,
+      clue: clue ?? 'I literally have no clue',
       isToday: puzzle.date === todayEST
     };
   } catch (error) {

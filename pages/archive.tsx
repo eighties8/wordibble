@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Calendar, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, BookOpenText } from "lucide-react";
 import { getESTDateString } from "../lib/timezone";
 
 export default function ArchivePage() {
@@ -16,6 +16,9 @@ export default function ArchivePage() {
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
   const [isClient, setIsClient] = useState(false);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [hasDefinitions, setHasDefinitions] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   
   // Cache for puzzle completion status by month
   const [puzzleCache, setPuzzleCache] = useState<Map<string, Set<string>>>(new Map());
@@ -53,7 +56,7 @@ export default function ArchivePage() {
       const completedDates = new Set<string>();
       
       // Check the new puzzle storage system first
-      const puzzles = localStorage.getItem('wordseer:puzzles:v2');
+      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
       if (puzzles) {
         const puzzlesData = JSON.parse(puzzles);
         
@@ -70,7 +73,7 @@ export default function ArchivePage() {
       }
       
       // Fallback to old stats system for backward compatibility
-      const stats = localStorage.getItem('wordseer:stats:v1');
+      const stats = localStorage.getItem('wordibble:stats:v1');
       if (stats) {
         const statsData = JSON.parse(stats);
         if (statsData.results) {
@@ -125,6 +128,33 @@ export default function ArchivePage() {
     return date.toISOString().slice(0, 10);
   };
 
+  // Determine if the puzzle for the given date is completed (won or lost)
+  const isPuzzleCompleted = useCallback((date: Date) => {
+    try {
+      const dateString = formatDateKey(date);
+      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
+      if (puzzles) {
+        const puzzlesData = JSON.parse(puzzles);
+        const completed = Object.values(puzzlesData).some((p: any) =>
+          p?.dateISO === dateString && (p?.gameStatus === 'won' || p?.gameStatus === 'lost')
+        );
+        if (completed) return true;
+      }
+
+      // Fallback to old stats - any entry for the date counts as completed
+      const stats = localStorage.getItem('wordibble:stats:v1');
+      if (stats) {
+        const statsData = JSON.parse(stats);
+        if (Array.isArray(statsData?.results)) {
+          return statsData.results.some((r: any) => r?.dateISO === dateString);
+        }
+      }
+    } catch (_) {
+      // ignore
+    }
+    return false;
+  }, []);
+
   const hasPlayedPuzzle = (date: Date) => {
     const monthKey = getMonthKey(date);
     const dateString = formatDateKey(date);
@@ -138,7 +168,7 @@ export default function ArchivePage() {
     // If not cached, fallback to old method
     try {
       // Check the new puzzle storage system first
-      const puzzles = localStorage.getItem('wordseer:puzzles:v2');
+      const puzzles = localStorage.getItem('wordibble:puzzles:v2');
       if (puzzles) {
         const puzzlesData = JSON.parse(puzzles);
         
@@ -149,7 +179,7 @@ export default function ArchivePage() {
       }
       
       // Fallback to old stats system for backward compatibility
-      const stats = localStorage.getItem('wordseer:stats:v1');
+      const stats = localStorage.getItem('wordibble:stats:v1');
       if (!stats) return false;
       
       const statsData = JSON.parse(stats);
@@ -167,6 +197,45 @@ export default function ArchivePage() {
     if (!isDateSelectable(date)) return;
     setSelectedDate(date);
   };
+
+  // When selectedDate changes, resolve the word, completion status, and whether definitions exist
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!selectedDate) return;
+      const dateKey = formatDateKey(selectedDate);
+
+      // Determine completion
+      const completed = isPuzzleCompleted(selectedDate);
+      if (!cancelled) setIsCompleted(completed);
+
+      try {
+        // Load puzzles list to find the word for that date
+        const resp = await fetch('/api/puzzles');
+        if (!resp.ok) throw new Error('Failed to load puzzles');
+        const puzzles: Array<{ date: string; word: string }>= await resp.json();
+        const entry = puzzles.find(p => p.date === dateKey);
+        const word = entry?.word?.toUpperCase() || null;
+        if (!cancelled) setSelectedWord(word);
+
+        // If completed and a word is known, check if definitions exist
+        if (completed && word) {
+          const defResp = await fetch(`/api/word-definitions?word=${encodeURIComponent(word)}`);
+          const ok = defResp.ok;
+          if (!cancelled) setHasDefinitions(ok);
+        } else {
+          if (!cancelled) setHasDefinitions(false);
+        }
+      } catch (_) {
+        if (!cancelled) {
+          setSelectedWord(null);
+          setHasDefinitions(false);
+        }
+      }
+    }
+    run();
+    return () => { cancelled = true; };
+  }, [selectedDate, isPuzzleCompleted]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
@@ -364,43 +433,31 @@ export default function ArchivePage() {
         </div>
       </div>
 
-      {/* Wordseer Length Selection */}
+      {/* Wordibble Puzzle Selection */}
       {selectedDate && isDateSelectable(selectedDate) && (
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 rounded-lg border border-green-200">
-            <Calendar className="w-5 h-5 text-green-600" />
-            <span className="text-green-900 font-medium">
-              Wordseer #{(() => {
+          <div className="flex items-center justify-center gap-3">
+            <Link
+              href={`/?date=${formatDateKey(selectedDate)}&archive=true`}
+              className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Wordibble #{(() => {
                 // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
                 const startDate = new Date('2025-08-25');
                 const daysDiff = Math.floor((selectedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
                 return daysDiff + 1;
               })()}
-            </span>
-          </div>
-          
-          <div className="mt-6 space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Choose Puzzle:</h3>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            </Link>
+
+            {isCompleted && hasDefinitions && selectedWord && (
               <Link
-                href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=5`}
-                className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                href={`/stats`}
+                className="inline-flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-800 rounded-lg font-medium hover:bg-gray-200 border border-gray-300 transition-colors"
               >
-                Wordseer 5
+                <BookOpenText className="w-5 h-5" />
+                <span className="truncate max-w-[160px]">{selectedWord}</span>
               </Link>
-              <Link
-                href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=6`}
-                className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
-              >
-                Wordseer 6
-              </Link>
-              <Link
-                href={`/?date=${formatDateKey(selectedDate)}&archive=true&length=7`}
-                className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
-              >
-                Wordseer 7
-              </Link>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -408,5 +465,5 @@ export default function ArchivePage() {
   );
 }
 
-ArchivePage.title = "Archive";  // header shows "Wordseer · Archive"
+ArchivePage.title = "Archive";  // header shows "Wordibble · Archive"
 ArchivePage.narrow = true;      // archive uses narrower container

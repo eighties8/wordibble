@@ -27,9 +27,9 @@ export interface PuzzleStateV2 {
 
 export type PuzzlesById = Record<PuzzleId, PuzzleStateV2>;
 
-const V2_KEY = 'wordseer:puzzles:v2';
-const LAST_KEY = 'wordseer:lastPlayed:v2';
-const IS_PLAYING_KEY = 'wordseer:isPlaying';
+const V2_KEY = 'wordibble:puzzles:v2';
+const LAST_KEY = 'wordibble:lastPlayed:v2';
+const IS_PLAYING_KEY = 'wordibble:isPlaying';
 
 // ---- utils ----
 export const toDateISO = (d: Date) => {
@@ -67,7 +67,7 @@ const writeJSON = (k: string, v: unknown) => {
 };
 
 // ---- migration from v1 ----
-// v1 key: 'wordseer-puzzle-state' (single object)
+// v1 key: 'wordibble-puzzle-state' (single object)
 type LegacyV1 = {
   wordLength: number;
   secretWord: string;
@@ -81,7 +81,7 @@ type LegacyV1 = {
   currentGuess?: string[];
 };
 
-const V1_KEY = 'wordseer-puzzle-state';
+const V1_KEY = 'wordibble-puzzle-state';
 
 function coerceNumKeys<T>(obj: Record<string, T> | Record<number, T> | undefined): Record<number, T> {
   const out: Record<number, T> = {};
@@ -138,7 +138,7 @@ export function migrateIfNeeded(): void {
   // localStorage.removeItem(V1_KEY);
 }
 
-// ---- v2 – public API ----
+// ---- v2 - public API ----
 export function loadAll(): PuzzlesById {
   migrateIfNeeded();
   return readJSON<PuzzlesById>(V2_KEY) ?? {};

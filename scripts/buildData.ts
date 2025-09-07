@@ -10,7 +10,7 @@
  * 1. Filter words by length and ASCII letters
  * 2. Generate dictionary5.json and dictionary6.json in lib/data
  * 3. Build dated puzzles{len}-2025.json in lib/data
- * 4. Generate clues5.json and clues6.json in lib
+ * 4. Generate clues-{year}.json files in lib/data
  */
 
 import * as fs from 'fs';
@@ -84,7 +84,6 @@ function buildClues(words: string[]): CluesData {
 
 async function main() {
   try {
-    console.log('Building game data files...');
     
     // This is a placeholder - you would load your actual frequency list here
     // const frequencyList = await loadFrequencyList('path/to/frequency-list.txt');
@@ -119,18 +118,13 @@ async function main() {
     fs.writeFileSync(path.join(dataDir, 'dictionary5.json'), JSON.stringify(dict5, null, 2));
     fs.writeFileSync(path.join(dataDir, 'dictionary6.json'), JSON.stringify(dict6, null, 2));
     
-    // Write clues files to lib/data directory
-    fs.writeFileSync(path.join(dataDir, 'clues5.json'), JSON.stringify(clues5, null, 2));
-    fs.writeFileSync(path.join(dataDir, 'clues6.json'), JSON.stringify(clues6, null, 2));
+    // Write clues files to lib/data directory (using current year)
+    const currentYear = new Date().getFullYear();
+    fs.writeFileSync(path.join(dataDir, `clues-${currentYear}.json`), JSON.stringify({...clues5, ...clues6}, null, 2));
     
     // Note: Puzzle files for multiple years (2025-2030) should be created separately
     // This script now focuses on dictionaries and clues only
-    
-    console.log('✅ Data files built successfully!');
-    console.log(`📁 5-letter: ${dict5.length} words, ${clues5.length} clues`);
-    console.log(`📁 6-letter: ${dict6.length} words, ${clues6.length} clues`);
-    console.log('📝 Note: Puzzle files for multiple years (2025-2030) should be created separately');
-    
+        
   } catch (error) {
     console.error('❌ Error building data files:', error);
     process.exit(1);

@@ -2,16 +2,27 @@
 import { useEffect, useState } from 'react';
 import Game from '@/components/Game';
 import SplashScreen from '@/components/SplashScreen';
+import { useRouter } from 'next/router';
 
 type View = 'loading' | 'game' | 'splash';
 
 export default function Home() {
   const [view, setView] = useState<View>('loading');
+  const router = useRouter();
 
   useEffect(() => {
-    // Decide what to show based on localStorage
+    if (!router.isReady) return;
+
+    // If navigating from Archive (e.g., /?date=YYYY-MM-DD&archive=true), skip splash
+    const isArchiveRoute = router.query.archive === 'true' && typeof router.query.date === 'string';
+    if (isArchiveRoute) {
+      setView('game');
+      return;
+    }
+
+    // Otherwise decide what to show based on localStorage
     try {
-      const raw = localStorage.getItem('wordseer:puzzles:v2'); // update key if yours differs
+      const raw = localStorage.getItem('wordibble:puzzles:v2');
       const store = raw ? JSON.parse(raw) : {};
       const todayId = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
       const today = store[todayId];
@@ -24,7 +35,7 @@ export default function Home() {
     } catch {
       setView('splash');
     }
-  }, []);
+  }, [router.isReady, router.query.archive, router.query.date]);
 
   if (view === 'loading') {
     // This prevents flashing the game before decision is made
@@ -37,11 +48,11 @@ export default function Home() {
     <SplashScreen
       onStartGame={() => {
         const todayId = new Date().toISOString().slice(0, 10);
-        const raw = localStorage.getItem('wordseer:puzzles:v2');
+        const raw = localStorage.getItem('wordibble:puzzles:v2');
         const store = raw ? JSON.parse(raw) : {};
         if (!store[todayId]) {
           store[todayId] = { attempts: [], gameStatus: 'not_started', won: false };
-          localStorage.setItem('wordseer:puzzles:v2', JSON.stringify(store));
+          localStorage.setItem('wordibble:puzzles:v2', JSON.stringify(store));
         }
         setView('game'); // single click → straight into Game
       }}

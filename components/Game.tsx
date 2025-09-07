@@ -4,6 +4,7 @@ import { GAME_CONFIG, ANIMATION_CONFIG } from '../lib/config';
 import { GameState, Toast } from '../lib/types';
 import { loadDailyPuzzle, loadPuzzle } from '../lib/daily';
 import { getESTDateString } from '../lib/timezone';
+import { Cross } from 'lucide-react';
 import {
   loadDictionary,
   evaluateGuess,
@@ -44,9 +45,8 @@ type InputRowHandle = {
 };
 
 interface GameSettings {
-  wordLength: 5 | 6 | 7;
   maxGuesses: number;
-  revealClue: boolean;
+  hideClue: boolean;
   randomPuzzle: boolean;
   lockGreenMatchedLetters: boolean;
 }
@@ -57,9 +57,10 @@ export const isTouch =
   ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   
 
-export default function Game({ openSettings, resetSettings }: { 
+export default function Game({ openSettings, resetSettings, refreshScriptureLink }: { 
   openSettings?: (openedFromClue?: boolean, puzzleInProgress?: boolean) => void;
   resetSettings?: () => void;
+  refreshScriptureLink?: () => void;
 }) {
   const router = useRouter();
   
@@ -68,9 +69,8 @@ export default function Game({ openSettings, resetSettings }: {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const [settings, setSettings] = useState<GameSettings>({
-    wordLength: GAME_CONFIG.WORD_LENGTH,
     maxGuesses: GAME_CONFIG.MAX_GUESSES,
-    revealClue: GAME_CONFIG.REVEAL_CLUE,
+    hideClue: GAME_CONFIG.HIDE_CLUE,
     randomPuzzle: GAME_CONFIG.RANDOM_PUZZLE,
     lockGreenMatchedLetters: GAME_CONFIG.LOCK_GREEN_MATCHED_LETTERS,
   });
@@ -84,7 +84,7 @@ export default function Game({ openSettings, resetSettings }: {
     gameStatus: 'not_started',
     attemptIndex: 0,
     revealedLetters: new Set<number>(),
-    letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[settings.wordLength as 5 | 6 | 7],
+    letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[GAME_CONFIG.WORD_LENGTH],
   });
 
   const [currentGuess, setCurrentGuess] = useState<string[]>([]);
@@ -108,6 +108,26 @@ export default function Game({ openSettings, resetSettings }: {
   
   // ===== Post-submission unlocked positions =====
   const [postSubmitUnlockedPositions, setPostSubmitUnlockedPositions] = useState<Set<number>>(new Set());
+  
+  // State for clue ribbon visibility. Start hidden; we'll reveal after initial focus with a delay
+  const [showClueByDefault, setShowClueByDefault] = useState(false);
+  // Track scheduling of the initial clue reveal per puzzle id
+  const initialClueDelayScheduledRef = useRef<string | null>(null);
+  const initialClueDelayTimerRef = useRef<number | null>(null);
+  
+  // State for scripture link
+  const [wordExistsInDefinitions, setWordExistsInDefinitions] = useState(false);
+  
+  // Function to check if word exists in definitions
+  const checkWordInDefinitions = useCallback(async (word: string) => {
+    try {
+      const response = await fetch(`/api/word-definitions?word=${encodeURIComponent(word)}`);
+      setWordExistsInDefinitions(response.ok);
+    } catch (error) {
+      console.error('Error checking word in definitions:', error);
+      setWordExistsInDefinitions(false);
+    }
+  }, []);
   
 
   
@@ -217,12 +237,19 @@ export default function Game({ openSettings, resetSettings }: {
   const handleNewGame = useCallback(async () => {
     try {
       // Clear saved puzzle state
-      localStorage.removeItem('wordseer-puzzle-state');
-      localStorage.removeItem('wordseer-puzzle-completed');
+      localStorage.removeItem('wordibble-puzzle-state');
+      localStorage.removeItem('wordibble-puzzle-completed');
       
-      // Reset game state
+      // Set loading state
+      setIsLoading(true);
+      
+      // Load new puzzle and dictionary
+      const puzzle = await loadDailyPuzzle(settings.randomPuzzle);
+      const dict = await loadDictionary(puzzle.word.length as 5 | 6 | 7);
+      
+      // Reset game state with puzzle-determined word length
       setGameState({
-        wordLength: settings.wordLength,
+        wordLength: puzzle.word.length as 5 | 6 | 7,
         secretWord: '',
         clue: undefined,
         attempts: [],
@@ -230,25 +257,17 @@ export default function Game({ openSettings, resetSettings }: {
         gameStatus: 'not_started',
         attemptIndex: 0,
         revealedLetters: new Set<number>(),
-        letterRevealsRemaining: 3,
+        letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[puzzle.word.length as 5 | 6 | 7],
       });
       
       // Reset current guess
-      setCurrentGuess(new Array(settings.wordLength).fill(''));
+      setCurrentGuess(new Array(puzzle.word.length).fill(''));
       
       // Reset UI states
       setIsShaking(false);
       setForceClear(false);
+      setShowClueByDefault(false); // Delay reveal until after initial focus
       setToasts([]);
-      
-      // Set loading state
-      setIsLoading(true);
-      
-      // Load new puzzle and dictionary
-      const [puzzle, dict] = await Promise.all([
-        loadDailyPuzzle(settings.wordLength, settings.randomPuzzle),
-        loadDictionary(settings.wordLength),
-      ]);
 
       // No more automatic vowel reveal - all letters start hidden
       const lockedLetters: Record<number, string | null> = {};
@@ -257,10 +276,10 @@ export default function Game({ openSettings, resetSettings }: {
       setGameState(prev => ({
         ...prev,
         secretWord: puzzle.word,
-        clue: settings.revealClue ? puzzle.clue : undefined,
+        clue: !settings.hideClue ? puzzle.clue : undefined,
         lockedLetters,
         revealedLetters: new Set<number>(),
-        letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[settings.wordLength as 5 | 6 | 7],
+        letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[puzzle.word.length as 5 | 6 | 7],
       }));
       
       setDictionary(dict);
@@ -276,19 +295,17 @@ export default function Game({ openSettings, resetSettings }: {
       addToast('Failed to start new game', 'error');
       setIsLoading(false);
     }
-  }, [settings.wordLength, settings.randomPuzzle, settings.revealClue]);
+  }, [settings.randomPuzzle, settings.hideClue]);
 
   // Handle win animation and letter flip
   useEffect(() => {
-    // Don't redirect for archive puzzles or random puzzles
-    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-    
+    // Don't redirect for random puzzles
     // Check if this is a fresh win (not restored from localStorage)
     // Use a puzzle-specific completion key to avoid conflicts
-    const puzzleCompletionKey = `wordseer-puzzle-completed-${gameState.secretWord}-${router.query.date || 'today'}`;
+    const puzzleCompletionKey = `wordibble-puzzle-completed-${gameState.secretWord}-${router.query.date || 'today'}`;
     const isFreshWin = !localStorage.getItem(puzzleCompletionKey);
     
-    if (gameState.gameStatus === 'won' && !showWinAnimation && !settings.randomPuzzle && !isArchivePuzzle) {
+    if (gameState.gameStatus === 'won' && !showWinAnimation && !settings.randomPuzzle) {
       setShowWinAnimation(true);
       
       // Only mark as completed for fresh wins to prevent redirect loops
@@ -339,35 +356,53 @@ export default function Game({ openSettings, resetSettings }: {
         // Wait 2 seconds after the win animation completes, then redirect to stats with fade transition
         // Only redirect for fresh wins, not restored wins
         if (isFreshWin) {
-          // console.log('🎯 Fresh win detected - will redirect to stats in 2 seconds');
-          setTimeout(() => {
-            // console.log('🔄 Starting fade transition to stats...');
+          setTimeout(async () => {
+            // Determine scripture destination: try current word first, else default to JESUS
+            const targetWord = gameState.secretWord || 'JESUS';
+            let resolvedWord = targetWord;
+            try {
+              const resp = await fetch(`/api/word-definitions?word=${encodeURIComponent(targetWord)}`);
+              if (!resp.ok) {
+                // fallback to JESUS if not found
+                const fallbackResp = await fetch(`/api/word-definitions?word=JESUS`);
+                if (fallbackResp.ok) {
+                  resolvedWord = 'JESUS';
+                }
+              }
+            } catch (_) {
+              resolvedWord = 'JESUS';
+            }
+
             // Add fade out effect before redirecting
             const gameContainer = document.querySelector('.game-container');
             if (gameContainer) {
               gameContainer.classList.add('opacity-0', 'transition-opacity', 'duration-500');
               setTimeout(() => {
-                // console.log('🚀 Redirecting to stats page');
-                router.push('/stats');
-              }, 500);
+                router.push(`/stats`);
+              }, 100);
             } else {
-              // console.log('⚠️ Game container not found, redirecting immediately');
-              router.push('/stats');
+              router.push(`/stats`);
             }
-          }, 2000);
+          }, 0);
         } else {
           // console.log('📋 Restored win - no redirect to stats');
         }
-      }, totalAnimationTime);
+      }, totalAnimationTime-2500);
     }
   }, [gameState.gameStatus, showWinAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
 
   // Handle loss animation and letter flip
   useEffect(() => {
-    // Don't redirect for archive puzzles or random puzzles
-    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-    if (gameState.gameStatus === 'lost' && !showLossAnimation && !settings.randomPuzzle && !isArchivePuzzle) {
+    // Don't redirect for random puzzles
+    if (gameState.gameStatus === 'lost' && !showLossAnimation && !settings.randomPuzzle) {
       setShowLossAnimation(true);
+      
+      // Prevent redirect loops by tracking completion per puzzle
+      const puzzleCompletionKey = `wordibble-puzzle-completed-${gameState.secretWord}-${router.query.date || 'today'}`;
+      const isFreshLoss = !localStorage.getItem(puzzleCompletionKey);
+      if (isFreshLoss) {
+        localStorage.setItem(puzzleCompletionKey, 'true');
+      }
       
       // Wait for the flip animation to complete (same timing as row flips)
       // Use the same duration as the tile flip animations
@@ -375,6 +410,35 @@ export default function Game({ openSettings, resetSettings }: {
       
       setTimeout(() => {
         setLossAnimationComplete(true);
+        
+        // After a brief pause, fade out and redirect to scripture page (fresh losses only)
+        if (isFreshLoss) {
+          setTimeout(async () => {
+            const targetWord = gameState.secretWord || 'JESUS';
+            let resolvedWord = targetWord;
+            try {
+              const resp = await fetch(`/api/word-definitions?word=${encodeURIComponent(targetWord)}`);
+              if (!resp.ok) {
+                const fallbackResp = await fetch(`/api/word-definitions?word=JESUS`);
+                if (fallbackResp.ok) {
+                  resolvedWord = 'JESUS';
+                }
+              }
+            } catch (_) {
+              resolvedWord = 'JESUS';
+            }
+
+            const gameContainer = document.querySelector('.game-container');
+            if (gameContainer) {
+              gameContainer.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+              setTimeout(() => {
+                router.push(`/stats`);
+              }, 100);
+            } else {
+              router.push(`/stats`);
+            }
+          }, 100);
+        }
       }, totalAnimationTime);
     }
   }, [gameState.gameStatus, showLossAnimation, settings.randomPuzzle, router.query.date, router.query.archive, gameState.wordLength]);
@@ -410,24 +474,18 @@ export default function Game({ openSettings, resetSettings }: {
     const puzzleNumber = daysDiff + 1;
 
     // Generate emoji grid from game state
-    let emojiGrid = `Wordseer #${puzzleNumber} ${gameState.attemptIndex}/${settings.maxGuesses}\nhttps://wordseer.com\n`;
+    const attemptsUsed = gameState.attempts.length;
+    let emojiGrid = `Wordibble #${puzzleNumber} ${attemptsUsed}/${settings.maxGuesses}\nhttps://wordibble.com\n`;
     
     // Add each submitted attempt as emoji rows (exclude the top input row)
     gameState.attempts.forEach((attempt, attemptIndex) => {
+      const evaluations = (historyEvaluations && historyEvaluations[attemptIndex])
+        ? historyEvaluations[attemptIndex]
+        : evaluateGuess(attempt, gameState.secretWord);
       let row = '';
-      const evaluations = evaluateGuess(attempt, gameState.secretWord);
-            
-      for (let i = 0; i < gameState.wordLength; i++) {
-        const letter = attempt[i];
+      for (let i = 0; i < attempt.length; i++) {
         const evaluation = evaluations[i];
-        
-        if (evaluation === 'correct') {
-          row += '🟩';
-        } else if (evaluation === 'present') {
-          row += '🟨';
-        } else {
-          row += '⬛';
-        }
+        row += evaluation === 'correct' ? '🟩' : evaluation === 'present' ? '🟨' : '⬛';
       }
       emojiGrid += row + '\n';
     });
@@ -458,16 +516,16 @@ export default function Game({ openSettings, resetSettings }: {
 
   // ===== Debug flag (persisted) =====
   useEffect(() => {
-    const savedDebugMode = localStorage.getItem('wordseer-debug-mode');
+    const savedDebugMode = localStorage.getItem('wordibble-debug-mode');
     if (savedDebugMode) setDebugMode(JSON.parse(savedDebugMode));
   }, []);
   useEffect(() => {
-    localStorage.setItem('wordseer-debug-mode', JSON.stringify(debugMode));
+    localStorage.setItem('wordibble-debug-mode', JSON.stringify(debugMode));
   }, [debugMode]);
 
   // ===== Settings (persisted) =====
   useEffect(() => {
-    const savedSettings = localStorage.getItem('wordseer-settings');
+    const savedSettings = localStorage.getItem('wordibble-settings');
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
@@ -491,28 +549,14 @@ export default function Game({ openSettings, resetSettings }: {
     }
   }, []);
 
-  // Update game state when settings change (but not during archive puzzle loading)
-  useEffect(() => {
-    const isArchivePuzzle = router.query.date && router.query.archive === 'true';
-    if (!isArchivePuzzle && settings.wordLength !== gameState.wordLength) {
-      
-      setGameState(prev => ({ ...prev, wordLength: settings.wordLength }));
-    }
-  }, [settings.wordLength, gameState.wordLength, router.query.date, router.query.archive]);
+
 
   const handleSettingsChange = useCallback((newSettings: GameSettings) => {
     setSettings(newSettings);
     
-    // Update game state if word length changed
-    if (newSettings.wordLength !== gameState.wordLength) {
-      setGameState(prev => ({ ...prev, wordLength: newSettings.wordLength }));
-      // Reset current guess to match new word length
-      setCurrentGuess(new Array(newSettings.wordLength).fill(''));
-    }
-    
     // If random puzzle setting changed, clear saved state
     if (newSettings.randomPuzzle !== settings.randomPuzzle) {
-      localStorage.removeItem('wordseer-puzzle-state');
+      localStorage.removeItem('wordibble-puzzle-state');
     }
     
 
@@ -601,34 +645,30 @@ export default function Game({ openSettings, resetSettings }: {
           const dateString = router.query.date as string;
           const [year, month, day] = dateString.split('-').map(Number);
           const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
-          const archiveLength = router.query.length ? parseInt(router.query.length as string) as 5 | 6 | 7 : settings.wordLength;
-          
-          puzzle = await loadPuzzle(archiveDate, archiveLength);
-          
-          // Update word length setting for archive puzzles (only if different)
-          if (archiveLength !== settings.wordLength) {
 
-            setSettings(prev => ({ ...prev, wordLength: archiveLength }));
-          }
           
-          // Load dictionary for the archive puzzle length, not the settings length
-          dict = await loadDictionary(archiveLength);
+          puzzle = await loadPuzzle(archiveDate);
+          
+          // Load dictionary for the puzzle's word length
+          dict = await loadDictionary(puzzle.word.length as 5 | 6 | 7);
         } else {
-          puzzle = await loadDailyPuzzle(settings.wordLength, settings.randomPuzzle);
+          puzzle = await loadDailyPuzzle(settings.randomPuzzle);
           
-          // Load dictionary for the daily puzzle length
-          dict = await loadDictionary(settings.wordLength);
+          // Load dictionary for the puzzle's word length
+          dict = await loadDictionary(puzzle.word.length as 5 | 6 | 7);
         }
+        
+        // Debug: Log the hidden word and clue
+        console.log('🎯 Hidden word:', puzzle.word);
+        console.log('💡 Clue:', puzzle.clue);
         
         // No more automatic vowel reveal - all letters start hidden
         const lockedLetters: Record<number, string | null> = {};
 
         if (!alive) return;
 
-        // For archive puzzles, ensure we use the correct word length
-        const puzzleWordLength = router.query.date && router.query.archive === 'true' 
-          ? (router.query.length ? parseInt(router.query.length as string) as 5 | 6 | 7 : settings.wordLength)
-          : settings.wordLength;
+        // Use the puzzle's actual word length
+        const puzzleWordLength = puzzle.word.length as 5 | 6 | 7;
 
         // After loading puzzle, check if we have saved state to restore
         let dateISO: string;
@@ -640,10 +680,10 @@ export default function Game({ openSettings, resetSettings }: {
           const [year, month, day] = dateString.split('-').map(Number);
           const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
           dateISO = toDateISO(archiveDate);
-          wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
+          wordLength = puzzleWordLength;
         } else {
           dateISO = toDateISO(new Date());
-          wordLength = settings.wordLength as WordLength;
+          wordLength = puzzleWordLength;
         }
         
         const puzzleId = makeId(dateISO, wordLength);
@@ -664,10 +704,10 @@ export default function Game({ openSettings, resetSettings }: {
               ...prev,
               wordLength: puzzleWordLength,
               secretWord: puzzle.word,
-              clue: settings.revealClue ? puzzle.clue : undefined,
+              clue: !settings.hideClue ? puzzle.clue : undefined,
                           lockedLetters,
             revealedLetters: new Set<number>(),
-            letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[settings.wordLength as 5 | 6 | 7],
+            letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[puzzleWordLength],
             }));
             
             // Mark this route as hydrated and track which puzzle the state belongs to
@@ -693,7 +733,7 @@ export default function Game({ openSettings, resetSettings }: {
           const restoredGameState: GameState = {
             wordLength: savedState.wordLength,
             secretWord: puzzle.word, // Use the actual puzzle word, not saved word
-            clue: settings.revealClue ? puzzle.clue : undefined,
+            clue: !settings.hideClue ? puzzle.clue : undefined,
             attempts: savedState.attempts,
             lockedLetters: savedState.lockedLetters,
             gameStatus: savedState.gameStatus,
@@ -736,10 +776,10 @@ export default function Game({ openSettings, resetSettings }: {
             ...prev,
             wordLength: puzzleWordLength,
             secretWord: puzzle.word,
-            clue: settings.revealClue ? puzzle.clue : undefined,
+            clue: !settings.hideClue ? puzzle.clue : undefined,
             lockedLetters,
             revealedLetters: new Set<number>(),
-            letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[settings.wordLength as 5 | 6 | 7],
+            letterRevealsRemaining: GAME_CONFIG.LETTER_REVEALS[puzzleWordLength],
           }));
           
           // Mark this route as hydrated and track which puzzle the state belongs to
@@ -755,6 +795,7 @@ export default function Game({ openSettings, resetSettings }: {
           setShowFadeInForInput(false);
           setFadeOutClearInput(false);
           setPreviouslyRevealedPositions(new Set());
+          setShowClueByDefault(false); // Delay reveal until after initial focus
           
           hasRestoredFromStorage.current = false;
         }
@@ -777,7 +818,7 @@ export default function Game({ openSettings, resetSettings }: {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.wordLength, settings.randomPuzzle, settings.revealClue, router.query.date, router.query.archive]);
+  }, [settings.randomPuzzle, settings.hideClue, router.query.date, router.query.archive]);
 
   // ===== Keep currentGuess aligned when locked letters change =====
   useEffect(() => {
@@ -830,14 +871,20 @@ export default function Game({ openSettings, resetSettings }: {
       const [year, month, day] = dateString.split('-').map(Number);
       const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
       const dateISO = toDateISO(archiveDate);
-      const wl = Number(router.query.length) || (settings.wordLength as number);
-              return { id: makeId(dateISO, wl as WordLength), dateISO, wordLength: wl as WordLength, isArchive: true as const };
+      // For archived puzzles, use the word length from the loaded puzzle data
+      // This will be set by the puzzle loading useEffect
+      const wl = gameState.wordLength || Number(router.query.length) || 5; // Use game state first, then query param, then default
+      const result = { id: makeId(dateISO, wl as WordLength), dateISO, wordLength: wl as WordLength, isArchive: true as const };
+      return result;
     }
 
     const todayISO = toDateISO(new Date());
-    const wl = settings.wordLength as number;
-            return { id: makeId(todayISO, wl as WordLength), dateISO: todayISO, wordLength: wl as WordLength, isArchive: false as const };
-  }, [router.isReady, router.query.archive, router.query.date, router.query.length, settings.wordLength]);
+    // For daily puzzles, use the word length from the loaded puzzle data
+    // This will be set by the puzzle loading useEffect
+    const wl = gameState.wordLength || 5; // Use current game state or default to 5
+    const result = { id: makeId(todayISO, wl as WordLength), dateISO: todayISO, wordLength: wl as WordLength, isArchive: false as const };
+    return result;
+  }, [router.isReady, router.query.archive, router.query.date, router.query.length, gameState.wordLength]);
 
   // Ref that says: "the in-memory gameState belongs to THIS puzzle id"
   const activePuzzleIdRef = useRef<string>('');
@@ -846,8 +893,19 @@ export default function Game({ openSettings, resetSettings }: {
   const hydratedForRouteRef = useRef(false);
 
   // When route changes, block saving until we hydrate for that route
+  // But don't reset if it's just a word length change for the same date
   useEffect(() => {
-    hydratedForRouteRef.current = false;
+    if (routePuzzle?.id && activePuzzleIdRef.current) {
+      const currentDate = activePuzzleIdRef.current.split(':')[0];
+      const newDate = routePuzzle.id.split(':')[0];
+      
+      // Only reset hydration if the date actually changed, not just the word length
+      if (currentDate !== newDate) {
+        hydratedForRouteRef.current = false;
+      } 
+    } else {
+      hydratedForRouteRef.current = false;
+    }
   }, [routePuzzle?.id]);
 
   // Also add this tiny effect so route changes don't leave stale refs
@@ -859,16 +917,6 @@ export default function Game({ openSettings, resetSettings }: {
   // Save puzzle state to localStorage
   useEffect(() => {
     if (!router.isReady || !routePuzzle) return;
-
-    // Quick debug to confirm values line up while pressing Enter on archive puzzle
-    // console.log('[SAVE GUARDS]', {
-    //   isReady: router.isReady,
-    //   routePuzzle,
-    //   activeId: activePuzzleIdRef.current,
-    //   hydrated: hydratedForRouteRef.current,
-    //   secret: gameState.secretWord,
-    //   status: gameState.gameStatus,
-    // });
 
     // Must be hydrated for this route and state must belong to this route
     if (!hydratedForRouteRef.current) return;
@@ -1001,10 +1049,10 @@ export default function Game({ openSettings, resetSettings }: {
         const [year, month, day] = dateString.split('-').map(Number);
         const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
         dateISO = toDateISO(archiveDate);
-        wordLength = (router.query.length ? parseInt(router.query.length as string) : settings.wordLength) as WordLength;
+        wordLength = (router.query.length ? parseInt(router.query.length as string) : gameState.wordLength) as WordLength;
       } else {
         dateISO = toDateISO(new Date());
-        wordLength = settings.wordLength as WordLength;
+        wordLength = gameState.wordLength;
       }
       
               const puzzleId = makeId(dateISO, wordLength);
@@ -1013,17 +1061,17 @@ export default function Game({ openSettings, resetSettings }: {
       saveAll(all);
       
       // Clear dynamic puzzle completion keys for this specific puzzle
-      const puzzleCompletionKey = `wordseer-puzzle-completed-${gameState.secretWord}-${dateISO}`;
+      const puzzleCompletionKey = `wordibble-puzzle-completed-${gameState.secretWord}-${dateISO}`;
       localStorage.removeItem(puzzleCompletionKey);
       
       // If this is the current puzzle, also clear the last played reference
       if (puzzleId === getLastPlayed()) {
-        localStorage.removeItem('wordseer:lastPlayed:v2');
+        localStorage.removeItem('wordibble:lastPlayed:v2');
       }
       
       // Also clear old localStorage for backward compatibility
-      localStorage.removeItem('wordseer-puzzle-state');
-      localStorage.removeItem('wordseer-puzzle-completed');
+      localStorage.removeItem('wordibble-puzzle-state');
+      localStorage.removeItem('wordibble-puzzle-completed');
       
       // Reset the restoration flag so we can start fresh
       hasRestoredFromStorage.current = false;
@@ -1053,36 +1101,36 @@ export default function Game({ openSettings, resetSettings }: {
         queueFocusFirstEmpty();
       }, 100);
     }
-  }, [gameState.wordLength, gameState.secretWord, queueFocusFirstEmpty, router.query.date, router.query.archive, router.query.length, settings.wordLength]);
+  }, [gameState.wordLength, gameState.secretWord, queueFocusFirstEmpty, router.query.date, router.query.archive, router.query.length]);
 
-  // Clear ALL Wordseer data and reset to factory defaults
-  const clearAllWordseerData = useCallback(() => {
-    if (confirm('This will clear ALL Wordseer data including stats, settings, and puzzle state. Are you sure?')) {
+  // Clear ALL Wordibble data and reset to factory defaults
+  const clearAllWordibbleData = useCallback(() => {
+    if (confirm('This will clear ALL Wordibble data including stats, settings, and puzzle state. Are you sure?')) {
       // Clear from new storage system
       saveAll({});
-      localStorage.removeItem('wordseer:lastPlayed:v2');
+      localStorage.removeItem('wordibble:lastPlayed:v2');
       
       // Clear current stats
-      localStorage.removeItem('wordseer:stats:v1');
+      localStorage.removeItem('wordibble:stats:v1');
       
       // Clear current settings
-      localStorage.removeItem('wordseer-settings');
+      localStorage.removeItem('wordibble-settings');
       
       // Clear dynamic puzzle completion keys (these are puzzle-specific)
-      // We need to clear all keys that match the pattern wordseer-puzzle-completed-*
+      // We need to clear all keys that match the pattern wordibble-puzzle-completed-*
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('wordseer-puzzle-completed-')) {
+        if (key && key.startsWith('wordibble-puzzle-completed-')) {
           keysToRemove.push(key);
         }
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
       
       // Also clear old localStorage for backward compatibility
-      localStorage.removeItem('wordseer-puzzle-state');
-      localStorage.removeItem('wordseer-puzzle-completed');
-      localStorage.removeItem('wordseer-debug-mode');
+      localStorage.removeItem('wordibble-puzzle-state');
+      localStorage.removeItem('wordibble-puzzle-completed');
+      localStorage.removeItem('wordibble-debug-mode');
       
               // Reset to factory defaults instead of reloading
         setGameState(prev => ({
@@ -1106,9 +1154,8 @@ export default function Game({ openSettings, resetSettings }: {
       
       // Reset settings to defaults
       setSettings({
-        wordLength: GAME_CONFIG.WORD_LENGTH,
         maxGuesses: GAME_CONFIG.MAX_GUESSES,
-        revealClue: GAME_CONFIG.REVEAL_CLUE,
+        hideClue: GAME_CONFIG.HIDE_CLUE,
         randomPuzzle: GAME_CONFIG.RANDOM_PUZZLE,
         lockGreenMatchedLetters: GAME_CONFIG.LOCK_GREEN_MATCHED_LETTERS,
       });
@@ -1168,10 +1215,13 @@ export default function Game({ openSettings, resetSettings }: {
     // Clear any previous error
     setClueError(null);
 
+    // Fade out clue to show guesses remaining during flip animation
+    if (!settings.hideClue) {
+      setShowClueByDefault(false);
+    }
+
     // Only undo reveal behavior for VALID submissions if letter locking is disabled
     if (!settings.lockGreenMatchedLetters) {
-      // console.log('UNDO: Remove from revealedLetters, unlock positions, clear postSubmitUnlockedPositions');
-      // UNDO: Remove from revealedLetters, unlock positions, clear postSubmitUnlockedPositions
       setGameState(prev => ({
         ...prev,
         revealedLetters: new Set<number>(), // Clear revealed letters
@@ -1261,12 +1311,29 @@ export default function Game({ openSettings, resetSettings }: {
         lockedLetters: finalLockedLetters,
       }));
       
+      // Fade clue back in after flip animation completes (only if game is still playing)
+      if (!settings.hideClue && !isWin && gameState.attemptIndex + 1 < settings.maxGuesses) {
+        setShowClueByDefault(true);
+      }
+      
       // Now update game status to won/lost and save to localStorage (after flip animation)
       if (isWin || gameState.attemptIndex + 1 >= settings.maxGuesses) {
         setGameState(prev => ({
           ...prev,
           gameStatus: isWin ? 'won' : 'lost',
         }));
+        
+        // Check if word exists in definitions for scripture link (only for daily puzzles)
+        const isArchivePuzzle = router.query.date && router.query.archive === 'true';
+        if (!isArchivePuzzle && !settings.randomPuzzle) {
+          checkWordInDefinitions(gameState.secretWord);
+          // Refresh scripture link in header
+          if (refreshScriptureLink) {
+            setTimeout(() => {
+              refreshScriptureLink();
+            }, 500); // Longer delay to ensure localStorage is updated
+          }
+        }
         
         // Save puzzle state to localStorage
         const puzzleId = makeId(router.query.date as string || getESTDateString(), gameState.wordLength as 5 | 6 | 7);
@@ -1367,7 +1434,7 @@ export default function Game({ openSettings, resetSettings }: {
           guesses: isWin ? (gameState.attemptIndex + 1) : settings.maxGuesses,
           solution: gameState.secretWord,
           mode: {
-            revealClue: GAME_CONFIG.REVEAL_CLUE,
+            hideClue: GAME_CONFIG.HIDE_CLUE,
             randomPuzzle: settings.randomPuzzle,
           },
         },
@@ -1592,6 +1659,26 @@ export default function Game({ openSettings, resetSettings }: {
         el?.focus();
         el?.select?.();
       }
+
+      // After we autofocus on the first input for a new puzzle, delay clue reveal by 2.5s
+      try {
+        const currentId = activePuzzleIdRef.current;
+        // Only schedule once per puzzle id
+        if (currentId && initialClueDelayScheduledRef.current !== currentId) {
+          initialClueDelayScheduledRef.current = currentId;
+          if (initialClueDelayTimerRef.current) {
+            window.clearTimeout(initialClueDelayTimerRef.current);
+          }
+          initialClueDelayTimerRef.current = window.setTimeout(() => {
+            // Do not reveal if the user has disabled clues or game already progressed beyond start
+            if (!settings.hideClue && (gameState.gameStatus === 'not_started' || gameState.attemptIndex === 0)) {
+              setShowClueByDefault(true);
+            }
+          }, 1500);
+        }
+      } catch {
+        // noop
+      }
     });
   }
   function queueFocusSpecificIndex(i: number) {
@@ -1730,7 +1817,7 @@ export default function Game({ openSettings, resetSettings }: {
               
               const daysDiff = Math.floor((puzzleDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
               const puzzleNumber = daysDiff + 1;
-              return `Solved! Wordseer #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
+              return `Solved! Wordibble #${puzzleNumber} ${gameState.attempts.length}/${settings.maxGuesses}`;
             } else if (clueError) {
               return clueError;
             } else {
@@ -1771,14 +1858,15 @@ export default function Game({ openSettings, resetSettings }: {
               ? `Guess the word in ${attemptsLeft} tries`
               : `${attemptsLeft} guesses left`
           ) : undefined}
-          revealClueEnabled={settings.revealClue}
+          revealClueEnabled={!settings.hideClue}
           wordLength={gameState.wordLength}
+          showClueByDefault={showClueByDefault}
         />
           {/* Debug: Show clue info */}
           {/* {debugMode && (
             <div className="text-center mb-4 text-xs text-gray-500">
               <div>Clue: {gameState.clue || 'undefined'}</div>
-              <div>Reveal Clue: {settings.revealClue ? 'true' : 'false'}</div>
+              <div>Hide Clue: {settings.hideClue ? 'true' : 'false'}</div>
               <div>Secret Word: {gameState.secretWord}</div>
             </div>
           )} */}
@@ -1961,9 +2049,9 @@ export default function Game({ openSettings, resetSettings }: {
                 Reset Puzzle
               </button>
               <button
-                onClick={clearAllWordseerData}
+                onClick={clearAllWordibbleData}
                 className="px-4 py-2 bg-red-700 text-white rounded-lg text-sm hover:bg-red-800 transition-colors"
-                title="Clear ALL Wordseer data including stats, settings, and puzzle state"
+                title="Clear ALL Wordibble data including stats, settings, and puzzle state"
               >
                 Clear All Data
               </button>
