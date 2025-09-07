@@ -39,8 +39,10 @@ export default function StatsPage() {
   const generateAndShareEmojiGrid = (stats: StatsSnapshot) => {
     // Calculate puzzle number (starting from 8/25/25 as puzzle #1)
     const startDate = new Date('2025-08-25');
-    const today = new Date();
-    const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    // Use latest result's date to compute puzzle number for accuracy
+    const latest = stats.results && stats.results.length > 0 ? stats.results[stats.results.length - 1] : null;
+    const referenceDate = latest ? new Date(latest.dateISO) : new Date();
+    const daysDiff = Math.floor((referenceDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const puzzleNumber = daysDiff + 1;
 
     // Get the most recent result
@@ -49,7 +51,8 @@ export default function StatsPage() {
       
       if (latestResult.won) {
         // Try to get the actual game state from new storage system for accurate emoji grid
-        let emojiGrid = `Wordibble #${puzzleNumber} ${latestResult.guesses}/3\nhttps://wordibble.com\n`;
+        let guessesUsed = latestResult.guesses;
+        let emojiGrid = '';
         
         try {
           // Get the puzzle state from new storage using the completed date
@@ -57,47 +60,56 @@ export default function StatsPage() {
           const allPuzzles = loadAll();
           let puzzleState = null;
           
-          // Look for a puzzle with matching attempts and word length
+          // Look for a puzzle with matching date and word length
           for (const [puzzleId, state] of Object.entries(allPuzzles)) {
-            if (state.attempts && state.attempts.length === latestResult.guesses && 
-                state.wordLength === latestResult.wordLength) {
+            if (state.dateISO === latestResult.dateISO && state.wordLength === latestResult.wordLength) {
               puzzleState = state;
               break;
             }
           }
           
           if (puzzleState && puzzleState.attempts && puzzleState.secretWord) {
+            guessesUsed = puzzleState.attempts.length;
+            emojiGrid = `Wordibble #${puzzleNumber} ${guessesUsed}/3\nhttps://wordibble.com\n`;
             // Generate accurate emoji grid from actual game state
             puzzleState.attempts.forEach((attempt: string, attemptIndex: number) => {
               let row = '';
-              for (let i = 0; i < attempt.length; i++) {
-                const letter = attempt[i];
-                const secretLetter = puzzleState.secretWord[i];
-                
-                if (letter === secretLetter) {
-                  row += '🟩'; // Correct position
-                } else if (puzzleState.secretWord.includes(letter)) {
-                  row += '🟨'; // Correct letter, wrong position
-                } else {
-                  row += '⬛'; // Letter not in word
+              const wl = puzzleState.wordLength;
+              const counts: Record<string, number> = {};
+              for (let i = 0; i < wl; i++) {
+                const ch = puzzleState.secretWord[i];
+                counts[ch] = (counts[ch] || 0) + 1;
+              }
+              const marks: ('correct'|'present'|'absent')[] = new Array(wl).fill('absent');
+              for (let i = 0; i < wl; i++) {
+                if (attempt[i] && attempt[i] === puzzleState.secretWord[i]) {
+                  marks[i] = 'correct';
+                  counts[attempt[i]] -= 1;
                 }
               }
-              
-              // Add newline for all rows except the last one
-              if (attemptIndex < puzzleState.attempts.length - 1) {
-                emojiGrid += row + '\n';
-              } else {
-                emojiGrid += row; // No newline for the last row
+              for (let i = 0; i < wl; i++) {
+                if (marks[i] !== 'absent') continue;
+                const ch = attempt[i];
+                if (ch && counts[ch] > 0) {
+                  marks[i] = 'present';
+                  counts[ch] -= 1;
+                }
               }
+              for (let i = 0; i < wl; i++) {
+                row += marks[i] === 'correct' ? '🟩' : marks[i] === 'present' ? '🟨' : '⬛';
+              }
+              emojiGrid += attemptIndex < puzzleState.attempts.length - 1 ? row + '\n' : row;
             });
           } else {
             // Fallback to placeholder if no valid game state
-            emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
+            emojiGrid = `Wordibble #${puzzleNumber} ${guessesUsed}/3\nhttps://wordibble.com\n`;
+            emojiGrid += generatePlaceholderGrid(guessesUsed, latestResult.wordLength);
           }
         } catch (error) {
           console.error('Error getting game state from new storage:', error);
           // Fallback to placeholder
-          emojiGrid += generatePlaceholderGrid(latestResult.guesses, latestResult.wordLength);
+          emojiGrid = `Wordibble #${puzzleNumber} ${guessesUsed}/3\nhttps://wordibble.com\n`;
+          emojiGrid += generatePlaceholderGrid(guessesUsed, latestResult.wordLength);
         }
 
         // Copy to clipboard
@@ -254,7 +266,7 @@ export default function StatsPage() {
                     {result.won ? '✓' : '✗'}
                   </div>
                   <div className="flex-1 text-sm text-gray-600">
-                    Puzzle #{getPuzzleNumber(result.dateISO)} • {new Date(result.dateISO).toLocaleDateString()} • <span className="font-mono text-gray-500">{result.solution || 'Unknown'}</span> • {result.won ? 'Won:' : 'Lost:'} {result.won ? `${result.guesses - 1}/3` : 'X/3'}
+                    Puzzle #{getPuzzleNumber(result.dateISO)} • {new Date(result.dateISO).toLocaleDateString()} • <span className="font-mono text-gray-500">{result.solution || 'Unknown'}</span> • {result.won ? 'Won:' : 'Lost:'} {result.won ? `${result.guesses}/3` : 'X/3'}
                   </div>
                 </div>
               </div>

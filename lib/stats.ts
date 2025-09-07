@@ -48,7 +48,8 @@ function puzzleToGameResult(puzzle: PuzzleStateV2): GameResult {
     dateISO: puzzle.dateISO,
     wordLength: puzzle.wordLength,
     won: puzzle.gameStatus === 'won',
-    guesses: puzzle.gameStatus === 'won' ? puzzle.attemptIndex + 1 : puzzle.attempts.length,
+    // Use the actual number of submitted attempts
+    guesses: puzzle.attempts.length,
     solution: puzzle.secretWord,
   };
 }

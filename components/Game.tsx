@@ -477,18 +477,39 @@ export default function Game({ openSettings, resetSettings, refreshScriptureLink
     const attemptsUsed = gameState.attempts.length;
     let emojiGrid = `Wordibble #${puzzleNumber} ${attemptsUsed}/${settings.maxGuesses}\nhttps://wordibble.com\n`;
     
-    // Add each submitted attempt as emoji rows (exclude the top input row)
-    gameState.attempts.forEach((attempt, attemptIndex) => {
-      const evaluations = (historyEvaluations && historyEvaluations[attemptIndex])
-        ? historyEvaluations[attemptIndex]
-        : evaluateGuess(attempt, gameState.secretWord);
-      let row = '';
-      for (let i = 0; i < attempt.length; i++) {
-        const evaluation = evaluations[i];
-        row += evaluation === 'correct' ? '🟩' : evaluation === 'present' ? '🟨' : '⬛';
+    // Two-pass evaluator for duplicate letters per attempt
+    for (let r = 0; r < gameState.attempts.length; r++) {
+      const attempt = gameState.attempts[r];
+      const secret = gameState.secretWord;
+      const wl = gameState.wordLength;
+      const counts: Record<string, number> = {};
+      for (let i = 0; i < wl; i++) {
+        const ch = secret[i];
+        counts[ch] = (counts[ch] || 0) + 1;
       }
-      emojiGrid += row + '\n';
-    });
+      const marks: ('correct'|'present'|'absent')[] = new Array(wl).fill('absent');
+      // First pass: correct
+      for (let i = 0; i < wl; i++) {
+        if (attempt[i] && attempt[i] === secret[i]) {
+          marks[i] = 'correct';
+          counts[attempt[i]] -= 1;
+        }
+      }
+      // Second pass: present
+      for (let i = 0; i < wl; i++) {
+        if (marks[i] !== 'absent') continue;
+        const ch = attempt[i];
+        if (ch && counts[ch] > 0) {
+          marks[i] = 'present';
+          counts[ch] -= 1;
+        }
+      }
+      let row = '';
+      for (let i = 0; i < wl; i++) {
+        row += marks[i] === 'correct' ? '🟩' : marks[i] === 'present' ? '🟨' : '⬛';
+      }
+      emojiGrid += r < gameState.attempts.length - 1 ? row + '\n' : row;
+    }
 
     // Copy to clipboard
     navigator.clipboard.writeText(emojiGrid).then(() => {
@@ -675,11 +696,9 @@ export default function Game({ openSettings, resetSettings, refreshScriptureLink
         let wordLength: WordLength;
         
         if (router.query.date && router.query.archive === 'true') {
-          // Parse the date string directly to avoid timezone issues
+          // Use the date string directly for archive puzzles (avoids timezone shifts)
           const dateString = router.query.date as string;
-          const [year, month, day] = dateString.split('-').map(Number);
-          const archiveDate = new Date(year, month - 1, day); // month is 0-indexed
-          dateISO = toDateISO(archiveDate);
+          dateISO = dateString;
           wordLength = puzzleWordLength;
         } else {
           dateISO = toDateISO(new Date());
@@ -1336,10 +1355,11 @@ export default function Game({ openSettings, resetSettings, refreshScriptureLink
         }
         
         // Save puzzle state to localStorage
-        const puzzleId = makeId(router.query.date as string || getESTDateString(), gameState.wordLength as 5 | 6 | 7);
+        const completionDateISO = (router.query.date && router.query.archive === 'true') ? (router.query.date as string) : getESTDateString();
+        const puzzleId = makeId(completionDateISO, gameState.wordLength as 5 | 6 | 7);
         const puzzleState: PuzzleStateV2 = {
           id: puzzleId,
-          dateISO: router.query.date as string || getESTDateString(),
+          dateISO: completionDateISO,
           wordLength: gameState.wordLength as 5 | 6 | 7,
           secretWord: gameState.secretWord,
           attempts: [...gameState.attempts, completeGuess],
